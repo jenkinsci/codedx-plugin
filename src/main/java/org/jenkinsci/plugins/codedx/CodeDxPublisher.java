@@ -48,6 +48,7 @@ public class CodeDxPublisher extends Recorder {
         this.outputFileEntries = outputFileEntries;
     }	
 
+    
     /**
      * We'll use this from the <tt>config.jelly</tt>.
      */
