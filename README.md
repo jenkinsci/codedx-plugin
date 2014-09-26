@@ -19,4 +19,4 @@ mvn package
 
 ```
 
-Too install the package, use the Jenkins web interface.
+To install the package, use the Jenkins web interface.
