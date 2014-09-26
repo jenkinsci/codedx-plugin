@@ -11,7 +11,7 @@ set MAVEN_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspe
 mvn hpi:run
 ```
 
-To package up run:
+To package the plugin run:
 
 ```
 
@@ -19,4 +19,4 @@ mvn package
 
 ```
 
-and then install using the Jenkins web interface.
+Too install the package, use the Jenkins web interface.
