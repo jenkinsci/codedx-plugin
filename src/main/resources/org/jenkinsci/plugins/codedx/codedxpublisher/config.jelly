@@ -9,7 +9,7 @@
 	    <f:select />
 	</f:entry>
     
-	<f:entry title="Source Path List">
+	<f:entry title="Source Path List" help="/plugin/codedx/help-sourcePathEntries.html">
 
         <f:repeatable var="sourcePathEntry" field="sourcePathEntries" minimum="1" add="Add Source Path">
             <table width="100%">
@@ -30,7 +30,7 @@
 
     </f:entry>
     
-    <f:entry title="Binary Path List">
+    <f:entry title="Binary Path List" help="/plugin/codedx/help-binaryPathEntries.html">
 
         <f:repeatable var="binaryPathEntry" field="binaryPathEntries" minimum="1" add="Add Binary Path">
             <table width="100%">
@@ -52,7 +52,7 @@
     </f:entry>
     
     
-    <f:entry title="Tool Output File List">
+    <f:entry title="Tool Output File List" help="/plugin/codedx/help-outputFileEntries.html">
 
         <f:repeatable var="outputFileEntry" field="outputFileEntries" minimum="1" add="Add Output File">
             <table width="100%">
