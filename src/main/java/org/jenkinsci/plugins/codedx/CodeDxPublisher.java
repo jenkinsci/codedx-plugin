@@ -1,3 +1,20 @@
+/*
+ * 
+ * Copyright 2014 Applied Visions
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License
+ *  
+ */
+
 package org.jenkinsci.plugins.codedx;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -8,19 +25,18 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import net.sf.json.JSONObject;
 
-import org.jenkinsci.plugins.codedx.client.AnalysisArtifact;
-import org.jenkinsci.plugins.codedx.client.CodeDxClient;
-import org.jenkinsci.plugins.codedx.client.CodeDxClientException;
-import org.jenkinsci.plugins.codedx.client.Project;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
+
+import com.secdec.codedx.api.client.CodeDxClient;
+import com.secdec.codedx.api.client.CodeDxClientException;
+import com.secdec.codedx.api.client.Project;
 
 import javax.servlet.ServletException;
 
@@ -29,37 +45,37 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * Jenkins publisher that publishes project source, binaries, and 
+ * analysis tool output files to a CodeDx server.
+ * @author anthonyd
+ *
+ */
 public class CodeDxPublisher extends Recorder {
 
 	private final String projectId;
-	private final String bin;
 	private final PathEntry[] sourcePathEntries;
 	private final PathEntry[] binaryPathEntries;
 	private final PathEntry[] outputFileEntries;
 	
-    // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
+	/**
+	 * 
+	 * @param projectId The CodeDx project ID to publish to
+	 * @param sourcePathEntries An array of source path filters in Ant GLOB format
+	 * @param binaryPathEntries An array of binary path filters in Ant GLOB format
+	 * @param outputFileEntries An array of analysis tool output file paths
+	 */
     @DataBoundConstructor
-    public CodeDxPublisher(final String projectId, final String bin, final PathEntry[] sourcePathEntries,final PathEntry[] binaryPathEntries, final PathEntry[] outputFileEntries) {
+    public CodeDxPublisher(final String projectId, final PathEntry[] sourcePathEntries,final PathEntry[] binaryPathEntries, final PathEntry[] outputFileEntries) {
         this.projectId = projectId;
-        this.bin = bin;
         this.sourcePathEntries = sourcePathEntries;
         this.binaryPathEntries = binaryPathEntries;
         this.outputFileEntries = outputFileEntries;
     }	
 
-    
-    /**
-     * We'll use this from the <tt>config.jelly</tt>.
-     */
     public String getProjectId() {
         return projectId;
     }
-    
-    public String getBin() {
-        return bin;
-    }
-    
     
     public PathEntry[] getSourcePathEntries() {
         return sourcePathEntries;
@@ -73,13 +89,14 @@ public class CodeDxPublisher extends Recorder {
         return outputFileEntries;
     }
 
+    
     @Override
     public boolean perform(
 			final AbstractBuild<?, ?> build,
 			final Launcher launcher, 
 			final BuildListener listener) throws InterruptedException, IOException {
     	
-    	final List<AnalysisArtifact> toSend = new ArrayList<AnalysisArtifact>();
+    	final List<InputStream> toSend = new ArrayList<InputStream>();
     	
     	final String key = getDescriptor().getKey();
     	final String url = getDescriptor().getUrl();
@@ -89,9 +106,18 @@ public class CodeDxPublisher extends Recorder {
         listener.getLogger().println("Creating source zip...");
         FilePath sourceZip = Archiver.Archive(build.getWorkspace(), sourcePathEntries, "source");
         
+        
         if(sourceZip != null){
         	
-        	toSend.add(new JenkinsFileArtifact(sourceZip));
+    		try { 
+    			
+    			toSend.add(sourceZip.read()); 
+    		} 
+    		catch (IOException e) { 
+    			
+    			listener.getLogger().println("Failed to add source zip");
+    		}
+    	
         }
         else{
         	
@@ -103,7 +129,14 @@ public class CodeDxPublisher extends Recorder {
      
         if(binaryZip != null){
         	
-        	toSend.add(new JenkinsFileArtifact(binaryZip));
+    		try { 
+    			
+    			toSend.add(binaryZip.read()); 
+    		} 
+    		catch (IOException e) { 
+    			
+    			listener.getLogger().println("Failed to add binary zip");
+    		}
         }
         else{
         	
@@ -122,7 +155,14 @@ public class CodeDxPublisher extends Recorder {
         			
         			if(path.exists()){
         				
-        				toSend.add(new JenkinsFileArtifact(path));
+        	    		try { 
+        	    			
+        	    			toSend.add(path.read()); 
+        	    		} 
+        	    		catch (IOException e) { 
+        	    			
+        	    			listener.getLogger().println("Failed to add tool output file: " + path);
+        	    		}
         			}
         		}
         	}
@@ -133,7 +173,7 @@ public class CodeDxPublisher extends Recorder {
         	final CodeDxClient client = new CodeDxClient(url,key);
         	
         	try {
-				client.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new AnalysisArtifact[0]));
+				client.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
 			} catch (NumberFormatException e) {
 
 				listener.getLogger().println("Invalid project Id");
@@ -162,9 +202,6 @@ public class CodeDxPublisher extends Recorder {
      * Descriptor for {@link CodeDxPublisher}. Used as a singleton.
      * The class is marked as public so that it can be accessed from views.
      *
-     * <p>
-     * See <tt>src/main/resources/hudson/plugins/hello_world/HelloWorldBuilder/*.jelly</tt>
-     * for the actual HTML fragment for the configuration screen.
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
