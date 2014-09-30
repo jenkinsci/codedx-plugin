@@ -42,6 +42,8 @@ import javax.servlet.ServletException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -216,7 +218,8 @@ public class CodeDxPublisher extends Recorder {
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-        /**
+        
+    	/**
          * To persist global configuration information,
          * simply store it in a field and call save().
          *
@@ -252,6 +255,7 @@ public class CodeDxPublisher extends Recorder {
                 return FormValidation.error("Please set a project. If none are shown above, then be sure that system settings are configured.");
             if (Integer.parseInt(value) == -1)
                 return FormValidation.error("Failed to get available projects, please ensure systems settings are configured.");
+
             return FormValidation.ok();
         }
         
@@ -270,7 +274,25 @@ public class CodeDxPublisher extends Recorder {
         	if (value.length() == 0)
                 return FormValidation.error("Please set a URL.");
 
-            return FormValidation.ok();
+            try {
+                new URL(value);
+
+            } catch (MalformedURLException malformedURLException) {
+            	return FormValidation.error("Malformed URL");
+            }
+            
+            if(value.toLowerCase().startsWith("http:")){
+            	
+            	return FormValidation.warning("HTTP is considered insecure, it is recommended that you use HTTPS.");
+            }
+            else if(value.toLowerCase().startsWith("https:")){
+            	
+                return FormValidation.ok(); 
+            }
+            else{
+            	
+            	return FormValidation.error("Invalid protocol, please use HTTPS or HTTP.");
+            }
         }
 
 		public FormValidation doTestConnection(@QueryParameter final String url, @QueryParameter final String key) throws IOException, ServletException {
@@ -285,7 +307,7 @@ public class CodeDxPublisher extends Recorder {
 			    e.printStackTrace();
 				return FormValidation.error("Unable to connect to CodeDx server.");
 			}
-			
+
 			return FormValidation.ok("CodeDx connection success!");
 		}
 		
@@ -293,7 +315,7 @@ public class CodeDxPublisher extends Recorder {
 			final ListBoxModel listBox = new ListBoxModel();
 			
 			final CodeDxClient client = new CodeDxClient(url,key);
-			
+				
 			try{
 				final List<Project> projects = client.getProjects();
 
@@ -304,9 +326,8 @@ public class CodeDxPublisher extends Recorder {
 			}
 			catch(Exception e){
 				
-				listBox.add("ERROR RETRIEVING PROJECTS", "-1");
+				listBox.add("","-1");
 			}
-
 
             return listBox;
         }
@@ -317,7 +338,8 @@ public class CodeDxPublisher extends Recorder {
             // set that to properties and call save().
             // ^Can also use req.bindJSON(this, formData);
             //  (easier when there are many fields; need set* methods for this, like setUseFrench)
-            save();
+            
+        	save();
             return super.configure(req,formData);
         } 	
     }
