@@ -5,6 +5,17 @@
     See global.jelly for a general discussion about jelly script.
   -->
 
+	<f:entry title="CodeDx Server URL" field="url" description="Your CodeDx API URL" help="/plugin/codedx/help-url.html">
+    	<f:textbox />
+    </f:entry>
+    
+    <f:entry title="CodeDx Server API Key" field="key" description="Your CodeDx API Key" help="/plugin/codedx/help-key.html">
+    	<f:textbox />
+    </f:entry>
+    
+    <f:validateButton title="Test Connection" progress="Testing..." method="testConnection" with="url,key"/>
+     
+     
 	<f:entry title="Available Projects" description="The available projects on the CodeDx server." field="projectId">
 	    <f:select />
 	</f:entry>

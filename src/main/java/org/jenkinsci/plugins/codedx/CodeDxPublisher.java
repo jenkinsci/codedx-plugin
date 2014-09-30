@@ -53,6 +53,8 @@ import java.util.List;
  */
 public class CodeDxPublisher extends Recorder {
 
+    private final String url;
+    private final String key;
 	private final String projectId;
 	private final PathEntry[] sourcePathEntries;
 	private final PathEntry[] binaryPathEntries;
@@ -66,15 +68,27 @@ public class CodeDxPublisher extends Recorder {
 	 * @param outputFileEntries An array of analysis tool output file paths
 	 */
     @DataBoundConstructor
-    public CodeDxPublisher(final String projectId, final PathEntry[] sourcePathEntries,final PathEntry[] binaryPathEntries, final PathEntry[] outputFileEntries) {
+    public CodeDxPublisher(final String url, final String key, final String projectId, final PathEntry[] sourcePathEntries,final PathEntry[] binaryPathEntries, final PathEntry[] outputFileEntries) {
         this.projectId = projectId;
         this.sourcePathEntries = sourcePathEntries;
         this.binaryPathEntries = binaryPathEntries;
         this.outputFileEntries = outputFileEntries;
+        this.url = url;
+        this.key = key;
     }	
 
     public String getProjectId() {
         return projectId;
+    }
+    
+    public String getUrl(){
+    	
+    	return url;
+    }
+    
+    public String getKey(){
+    	
+    	return key;
     }
     
     public PathEntry[] getSourcePathEntries() {
@@ -97,9 +111,6 @@ public class CodeDxPublisher extends Recorder {
 			final BuildListener listener) throws InterruptedException, IOException {
     	
     	final List<InputStream> toSend = new ArrayList<InputStream>();
-    	
-    	final String key = getDescriptor().getKey();
-    	final String url = getDescriptor().getUrl();
     	
         listener.getLogger().println("CodeDx URL: " + url);
         
@@ -212,8 +223,6 @@ public class CodeDxPublisher extends Recorder {
          * <p>
          * If you don't want fields to be persisted, use <tt>transient</tt>.
          */
-        private String url;
-        private String key;
 
         /**
          * In order to load the persisted global configuration, you have to 
@@ -222,6 +231,19 @@ public class CodeDxPublisher extends Recorder {
         public DescriptorImpl() {
             load();
         }
+    	
+        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+            // Indicates that this builder can be used with all kinds of project types 
+            return true;
+        }
+
+        /**
+         * This human readable name is used in the configuration screen.
+         */
+        public String getDisplayName() {
+            return "Publish to CodeDx";
+        }
+
 
 
         public FormValidation doCheckProjectId(@QueryParameter final String value)
@@ -267,31 +289,7 @@ public class CodeDxPublisher extends Recorder {
 			return FormValidation.ok("CodeDx connection success!");
 		}
 		
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-            // Indicates that this builder can be used with all kinds of project types 
-            return true;
-        }
-
-        /**
-         * This human readable name is used in the configuration screen.
-         */
-        public String getDisplayName() {
-            return "Publish to CodeDx";
-        }
-
-        @Override
-        public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
-            // To persist global configuration information,
-            // set that to properties and call save().
-            url = formData.getString("url");
-            key = formData.getString("key");
-            // ^Can also use req.bindJSON(this, formData);
-            //  (easier when there are many fields; need set* methods for this, like setUseFrench)
-            save();
-            return super.configure(req,formData);
-        }
-
-    	public ListBoxModel doFillProjectIdItems() {
+    	public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String key) {
 			final ListBoxModel listBox = new ListBoxModel();
 			
 			final CodeDxClient client = new CodeDxClient(url,key);
@@ -313,14 +311,15 @@ public class CodeDxPublisher extends Recorder {
             return listBox;
         }
     	
-        
-        public String getUrl() {
-            return url;
-        }
-        
-        public String getKey() {
-            return key;
-        }
+        @Override
+        public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
+            // To persist global configuration information,
+            // set that to properties and call save().
+            // ^Can also use req.bindJSON(this, formData);
+            //  (easier when there are many fields; need set* methods for this, like setUseFrench)
+            save();
+            return super.configure(req,formData);
+        } 	
     }
 }
 
