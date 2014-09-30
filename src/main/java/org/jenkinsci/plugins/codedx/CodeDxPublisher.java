@@ -114,7 +114,7 @@ public class CodeDxPublisher extends Recorder {
     	
     	final List<InputStream> toSend = new ArrayList<InputStream>();
     	
-        listener.getLogger().println("CodeDx URL: " + url);
+        listener.getLogger().println("Code Dx URL: " + url);
         
         listener.getLogger().println("Creating source zip...");
         FilePath sourceZip = Archiver.Archive(build.getWorkspace(), sourcePathEntries, "source");
@@ -244,7 +244,7 @@ public class CodeDxPublisher extends Recorder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Publish to CodeDx";
+            return "Publish to Code Dx";
         }
 
 
@@ -294,22 +294,6 @@ public class CodeDxPublisher extends Recorder {
             	return FormValidation.error("Invalid protocol, please use HTTPS or HTTP.");
             }
         }
-
-		public FormValidation doTestConnection(@QueryParameter final String url, @QueryParameter final String key) throws IOException, ServletException {
-
-			final CodeDxClient client = new CodeDxClient(url,key);
-			
-			try{
-			
-				client.getProjects();
-				
-			} catch(Exception e){
-			    e.printStackTrace();
-				return FormValidation.error("Unable to connect to CodeDx server.");
-			}
-
-			return FormValidation.ok("CodeDx connection success!");
-		}
 		
     	public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String key) {
 			final ListBoxModel listBox = new ListBoxModel();
