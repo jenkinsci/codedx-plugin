@@ -30,6 +30,7 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import net.sf.json.JSONObject;
 
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
@@ -58,9 +59,10 @@ public class CodeDxPublisher extends Recorder {
     private final String url;
     private final String key;
 	private final String projectId;
-	private final PathEntry[] sourcePathEntries;
-	private final PathEntry[] binaryPathEntries;
-	private final PathEntry[] outputFileEntries;
+
+	private final String sourceAndBinaryFiles;
+	private final String toolOutputFiles;
+	private final String excludedSourceAndBinaryFiles;
 	
 	/**
 	 * 
@@ -70,13 +72,18 @@ public class CodeDxPublisher extends Recorder {
 	 * @param outputFileEntries An array of analysis tool output file paths
 	 */
     @DataBoundConstructor
-    public CodeDxPublisher(final String url, final String key, final String projectId, final PathEntry[] sourcePathEntries,final PathEntry[] binaryPathEntries, final PathEntry[] outputFileEntries) {
+    public CodeDxPublisher(final String url, 
+    		final String key, 
+    		final String projectId, 
+    		final String sourceAndBinaryFiles, 
+    		final String toolOutputFiles, 
+    		final String excludedSourceAndBinaryFiles) {
         this.projectId = projectId;
-        this.sourcePathEntries = sourcePathEntries;
-        this.binaryPathEntries = binaryPathEntries;
-        this.outputFileEntries = outputFileEntries;
         this.url = url;
         this.key = key;
+        this.sourceAndBinaryFiles = sourceAndBinaryFiles;
+        this.excludedSourceAndBinaryFiles = excludedSourceAndBinaryFiles;
+        this.toolOutputFiles = toolOutputFiles;
     }	
 
     public String getProjectId() {
@@ -93,19 +100,21 @@ public class CodeDxPublisher extends Recorder {
     	return key;
     }
     
-    public PathEntry[] getSourcePathEntries() {
-        return sourcePathEntries;
-    }
-    
-    public PathEntry[] getBinaryPathEntries() {
-        return binaryPathEntries;
-    }
-    
-    public PathEntry[] getOutputFileEntries() {
-        return outputFileEntries;
-    }
+	public String getSourceAndBinaryFiles() {
+		return sourceAndBinaryFiles;
+	}
 
-    
+
+	public String getToolOutputFiles() {
+		return toolOutputFiles;
+	}
+
+	public String getExcludedSourceAndBinaryFiles() {
+		return excludedSourceAndBinaryFiles;
+	}
+
+	
+
     @Override
     public boolean perform(
 			final AbstractBuild<?, ?> build,
@@ -116,15 +125,19 @@ public class CodeDxPublisher extends Recorder {
     	
         listener.getLogger().println("Code Dx URL: " + url);
         
-        listener.getLogger().println("Creating source zip...");
-        FilePath sourceZip = Archiver.Archive(build.getWorkspace(), sourcePathEntries, "source");
+        listener.getLogger().println("Creating source/binary zip...");
+        
+        FilePath sourceAndBinaryZip = Archiver.Archive(build.getWorkspace(), 
+        		Util.commaSeparatedToArray(sourceAndBinaryFiles), 
+        		Util.commaSeparatedToArray(excludedSourceAndBinaryFiles), 
+        		"source");
         
         
-        if(sourceZip != null){
+        if(sourceAndBinaryZip != null){
         	
     		try { 
     			
-    			toSend.add(sourceZip.read()); 
+    			toSend.add(sourceAndBinaryZip.read()); 
     		} 
     		catch (IOException e) { 
     			
@@ -134,52 +147,30 @@ public class CodeDxPublisher extends Recorder {
         }
         else{
         	
-        	listener.getLogger().println("No matching source files");
+        	listener.getLogger().println("No matching source/binary files");
         }
+           
+        String[] files = Util.commaSeparatedToArray(toolOutputFiles);
         
-        listener.getLogger().println("Creating binary zip...");
-        FilePath binaryZip = Archiver.Archive(build.getWorkspace(), binaryPathEntries, "binary");
-     
-        if(binaryZip != null){
-        	
-    		try { 
+    	for(String file : files){
+    		
+    		if(file.length() != 0){
     			
-    			toSend.add(binaryZip.read()); 
-    		} 
-    		catch (IOException e) { 
+    			FilePath path = build.getWorkspace().child(file);
     			
-    			listener.getLogger().println("Failed to add binary zip");
+    			if(path.exists()){
+    				
+    	    		try { 
+    	    			
+    	    			toSend.add(path.read()); 
+    	    		} 
+    	    		catch (IOException e) { 
+    	    			
+    	    			listener.getLogger().println("Failed to add tool output file: " + path);
+    	    		}
+    			}
     		}
-        }
-        else{
-        	
-        	listener.getLogger().println("No matching binary files");
-        }
-        
-        if(outputFileEntries.length != 0){
-        	
-        	for(PathEntry entry : outputFileEntries){
-        		
-        		String value = entry.getValue();
-        		
-        		if(value != null && value.length() != 0){
-        			
-        			FilePath path = build.getWorkspace().child(value);
-        			
-        			if(path.exists()){
-        				
-        	    		try { 
-        	    			
-        	    			toSend.add(path.read()); 
-        	    		} 
-        	    		catch (IOException e) { 
-        	    			
-        	    			listener.getLogger().println("Failed to add tool output file: " + path);
-        	    		}
-        			}
-        		}
-        	}
-        }
+    	}
         
         if(toSend.size() > 0){
         	
@@ -198,7 +189,7 @@ public class CodeDxPublisher extends Recorder {
         }
         return true;
     }
-
+    
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.NONE; // NONE since this is not dependent on the last step
 	}
@@ -294,10 +285,38 @@ public class CodeDxPublisher extends Recorder {
             	return FormValidation.error("Invalid protocol, please use HTTPS or HTTP.");
             }
         }
-		
+        
+        public FormValidation doCheckSourceAndBinaryFiles(@QueryParameter final String value, @QueryParameter final String toolOutputFiles, @AncestorInPath AbstractProject project){
+        	
+        	if(value.length() == 0){
+        		
+        		if(toolOutputFiles.length() == 0)
+        			return FormValidation.error("You must specify \"Tool Output Files\" and/or \"Source and Binary Files\"");
+        		else
+        			return FormValidation.warning("It is recommended that at least source files are provided to Code Dx.");
+        	}
+        	
+        	return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
+        }
+        
+        public FormValidation doCheckExcludedSourceAndBinaryFiles(@QueryParameter final String value, @AncestorInPath AbstractProject project){
+
+        	return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
+        }
+        
+        public FormValidation doCheckToolOutputFiles(@QueryParameter final String value, @QueryParameter final String sourceAndBinaryFiles, @AncestorInPath AbstractProject project){
+
+        	if(value.length() == 0 && sourceAndBinaryFiles.length() == 0){
+        		
+        		return FormValidation.error("You must specify \"Tool Output Files\" and/or \"Source and Binary Files\"");
+        	}
+        	
+        	return Util.checkCSVFileMatches(value, project.getSomeWorkspace());
+        }
+        
     	public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String key) {
 			final ListBoxModel listBox = new ListBoxModel();
-			
+		
 			final CodeDxClient client = new CodeDxClient(url,key);
 				
 			try{

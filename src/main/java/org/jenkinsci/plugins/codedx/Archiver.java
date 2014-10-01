@@ -40,29 +40,43 @@ public class Archiver {
      * name with a specified prefix.
      * 
 	 * @param workspace Workspace for the job.
-	 * @param paths An array of path filters in the Ant GLOB format.
+	 * @param paths Paths in the ANT Glob format to include.
+	 * @param excludePaths Paths in the ANT Glob format to exclude.
 	 * @param prefix Prefix of the zip file to create.
 	 * @return The zip archive FilePath.
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public static FilePath Archive(FilePath workspace, PathEntry[] paths, String prefix) throws IOException, InterruptedException{
+	public static FilePath Archive(FilePath workspace, String[] paths, String[] excludePaths, String prefix) throws IOException, InterruptedException{
 		
-		final Set<String> bigSetOFiles = new HashSet<String>();
+		final Set<String> includeFiles = new HashSet<String>();
+		final Set<String> excludeFiles = new HashSet<String>();
 		
 		//Build up a set of all files to include
-		for(PathEntry path : paths){
+		for(String path : paths){
 			
-			if(path != null && path.getValue().length() > 0){
+			if(path != null && path.length() > 0){
 				
-				for(FilePath match : workspace.list(path.getValue())){
+				for(FilePath match : workspace.list(path)){
 					
-					bigSetOFiles.add(match.getRemote());
+					includeFiles.add(match.getRemote());
 				};
 			}
 		}
 		
-		if(bigSetOFiles.size() == 0){
+		//Build up a set of all files to excluded
+		for(String path : excludePaths){
+			
+			if(path != null && path.length() > 0){
+				
+				for(FilePath match : workspace.list(path)){
+					
+					excludeFiles.add(match.getRemote());
+				};
+			}
+		}
+		
+		if(includeFiles.size() == 0){
 			
 			return null;
 		}
@@ -75,7 +89,7 @@ public class Archiver {
 
 			public boolean accept(File file) {
 
-				return bigSetOFiles.contains(file.getAbsolutePath());		
+				return includeFiles.contains(file.getAbsolutePath()) && !excludeFiles.contains(file.getAbsolutePath());		
 			}
 			
 		});

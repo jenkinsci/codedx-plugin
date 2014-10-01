@@ -17,70 +17,20 @@
 	    <f:select />
 	</f:entry>
     
-	<f:entry title="Source Path List" help="/plugin/codedx/help-sourcePathEntries.html">
+    <f:entry title="Source and Binary Files" field="sourceAndBinaryFiles" help="/plugin/codedx/help-sourceAndBinaryFiles.html">
+    	<f:textbox default="**" />
+    </f:entry>
 
-        <f:repeatable var="sourcePathEntry" field="sourcePathEntries" minimum="1" add="Add Source Path">
-            <table width="100%">
-
-                <f:entry title="Source Path" description="Relative to workspace root.  Supports Ant-style filtering.">
-                    <f:textbox name="pathEntry.value" field="value"/>
-                </f:entry>
-
-
-                <f:entry title="">
-                    <div align="right">
-                        <f:repeatableDeleteButton/>
-                    </div>
-                </f:entry>
-
-            </table>
-        </f:repeatable>
-
+    <f:entry title="Tool Output Files" field="toolOutputFiles" help="/plugin/codedx/help-toolOutputFiles.html">
+    	<f:textbox />
     </f:entry>
     
-    <f:entry title="Binary Path List" help="/plugin/codedx/help-binaryPathEntries.html">
+    <f:section title="Advanced Options">
+	  <f:advanced>
+	    <f:entry title="Excluded Source and Binary Files" field="excludedSourceAndBinaryFiles" help="/plugin/codedx/help-excludedSourceAndBinaryFiles.html">
+	    	<f:textbox />
+	    </f:entry>
+	  </f:advanced>
+	</f:section>
 
-        <f:repeatable var="binaryPathEntry" field="binaryPathEntries" minimum="1" add="Add Binary Path">
-            <table width="100%">
-
-                <f:entry title="Binary Path" description="Relative to workspace root.  Supports Ant-style filtering.">
-                    <f:textbox name="pathEntry.value" field="value"/>
-                </f:entry>
-
-
-                <f:entry title="">
-                    <div align="right">
-                        <f:repeatableDeleteButton/>
-                    </div>
-                </f:entry>
-
-            </table>
-        </f:repeatable>
-
-    </f:entry>
-    
-    
-    <f:entry title="Tool Output File List" help="/plugin/codedx/help-outputFileEntries.html">
-
-        <f:repeatable var="outputFileEntry" field="outputFileEntries" minimum="1" add="Add Output File">
-            <table width="100%">
-
-                <f:entry title="Output File Path" description="Relative to workspace root.">
-                    <f:textbox name="pathEntry.value" field="value"/>
-                </f:entry>
-
-
-                <f:entry title="">
-                    <div align="right">
-                        <f:repeatableDeleteButton/>
-                    </div>
-                </f:entry>
-
-            </table>
-        </f:repeatable>
-
-    </f:entry>
-    
-    
-    
 </j:jelly>
