@@ -64,13 +64,15 @@ public class CodeDxPublisher extends Recorder {
 	private final String toolOutputFiles;
 	private final String excludedSourceAndBinaryFiles;
 	
-	/**
-	 * 
-	 * @param projectId The CodeDx project ID to publish to
-	 * @param sourcePathEntries An array of source path filters in Ant GLOB format
-	 * @param binaryPathEntries An array of binary path filters in Ant GLOB format
-	 * @param outputFileEntries An array of analysis tool output file paths
-	 */
+/**
+ * 
+ * @param url URL of the Code Dx server
+ * @param key API key of the Code Dx server
+ * @param projectId Code Dx project ID
+ * @param sourceAndBinaryFiles Comma separated list of source/binary file Ant GLOB patterns
+ * @param toolOutputFiles List of paths to tool output files
+ * @param excludedSourceAndBinaryFiles Comma separated list of source/binary file Ant GLOB patterns to exclude
+ */
     @DataBoundConstructor
     public CodeDxPublisher(final String url, 
     		final String key, 
@@ -123,6 +125,15 @@ public class CodeDxPublisher extends Recorder {
     	
     	final List<InputStream> toSend = new ArrayList<InputStream>();
     	
+    	listener.getLogger().println("Starting Code Dx Publish");
+    	
+    	if(projectId.length() == 0 || projectId.equals("-1")){
+    		
+    		listener.getLogger().println("No project has been selected");
+    		return true;
+    	}
+    	
+    	listener.getLogger().println("Code Dx Project ID: " + projectId);
         listener.getLogger().println("Code Dx URL: " + url);
         
         listener.getLogger().println("Creating source/binary zip...");
@@ -130,24 +141,26 @@ public class CodeDxPublisher extends Recorder {
         FilePath sourceAndBinaryZip = Archiver.Archive(build.getWorkspace(), 
         		Util.commaSeparatedToArray(sourceAndBinaryFiles), 
         		Util.commaSeparatedToArray(excludedSourceAndBinaryFiles), 
-        		"source");
+        		"source", listener.getLogger());
         
         
         if(sourceAndBinaryZip != null){
         	
     		try { 
     			
+    			listener.getLogger().println("Adding source/binary zip...");
+    			
     			toSend.add(sourceAndBinaryZip.read()); 
     		} 
     		catch (IOException e) { 
     			
-    			listener.getLogger().println("Failed to add source zip");
+    			listener.getLogger().println("Failed to add source/binary zip.");
     		}
     	
         }
         else{
         	
-        	listener.getLogger().println("No matching source/binary files");
+        	listener.getLogger().println("No matching source/binary files.");
         }
            
         String[] files = Util.commaSeparatedToArray(toolOutputFiles);
@@ -162,6 +175,7 @@ public class CodeDxPublisher extends Recorder {
     				
     	    		try { 
     	    			
+    	    			listener.getLogger().println("Add tool output file " + path.getRemote() + " to request.");
     	    			toSend.add(path.read()); 
     	    		} 
     	    		catch (IOException e) { 
@@ -177,14 +191,17 @@ public class CodeDxPublisher extends Recorder {
         	final CodeDxClient client = new CodeDxClient(url,key);
         	
         	try {
+        		listener.getLogger().println("Sending analysis request");
 				client.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
+				listener.getLogger().println("Analysis request succeeded");
 			} catch (NumberFormatException e) {
 
 				listener.getLogger().println("Invalid project Id");
 				
 			} catch (CodeDxClientException e) {
 
-				e.printStackTrace();
+				listener.getLogger().println("Failed push analysis to Code Dx server.");
+				e.printStackTrace(listener.getLogger());
 			}
         }
         return true;

@@ -20,6 +20,7 @@ package org.jenkinsci.plugins.codedx;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -47,7 +48,7 @@ public class Archiver {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public static FilePath Archive(FilePath workspace, String[] paths, String[] excludePaths, String prefix) throws IOException, InterruptedException{
+	public static FilePath Archive(FilePath workspace, String[] paths, String[] excludePaths, String prefix, final PrintStream logger) throws IOException, InterruptedException{
 		
 		final Set<String> includeFiles = new HashSet<String>();
 		final Set<String> excludeFiles = new HashSet<String>();
@@ -89,6 +90,7 @@ public class Archiver {
 
 			public boolean accept(File file) {
 
+				logger.println("Adding " + file + " to zip.");
 				return includeFiles.contains(file.getAbsolutePath()) && !excludeFiles.contains(file.getAbsolutePath());		
 			}
 			

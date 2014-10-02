@@ -184,9 +184,8 @@ public class CodeDxClient {
 		
 		if(responseCode != 202){
 			
-			System.out.println(IOUtils.toString(response.getEntity().getContent()));
-			
-			throw new CodeDxClientException("failed to start analysis.", responseCode);
+
+			throw new CodeDxClientException("Failed to start analysis.  " + IOUtils.toString(response.getEntity().getContent()), responseCode);
 		}
 		
 		//Eventually this method should return a Job ID but this is not yet supported by the API
