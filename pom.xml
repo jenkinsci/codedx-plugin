@@ -56,8 +56,8 @@
 	</dependencies>
 
 	<scm>
-	    <connection>scm:git:ssh://github.com/jenkinsci/codedx-plugin.git</connection>
-	    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/codedx-plugin.git</developerConnection>
+	    <connection>https://github.com/jenkinsci/codedx-plugin.git</connection>
+	    <developerConnection>https://github.com/jenkinsci/codedx-plugin.git</developerConnection>
 	    <url>https://github.com/jenkinsci/codedx-plugin</url>
   	</scm>
   
