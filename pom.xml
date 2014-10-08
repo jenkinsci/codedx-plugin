@@ -8,7 +8,7 @@
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>codedx</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <licenses>
@@ -57,8 +57,8 @@
 
 
 	<scm>
-            <connection>scm:git:git://github.com/jenkinsci/codedx-plugin.git</connection>
-            <developerConnection>scm:git:git@github.com:jenkinsci/codedx-plugin.git</developerConnection>
+    	    <connection>scm:git:ssh://github.com/jenkinsci/codedx-plugin.git</connection>
+            <developerConnection>scm:git:ssh://git@github.com/jenkinsci/codedx-plugin.git</developerConnection>
 	    <url>https://github.com/jenkinsci/codedx-plugin</url>
   	</scm>
   
