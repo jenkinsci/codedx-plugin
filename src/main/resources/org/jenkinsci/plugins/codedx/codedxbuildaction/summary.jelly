@@ -1,0 +1,9 @@
+<j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson" xmlns:st="jelly:stapler">
+    <t:summary icon="/plugin/codedx/icons/Code-Dx-Checkmark-48.png">
+
+		<span>Code Dx Results</span> 
+        <j:set var="diff" value="${it.diffSummary}"/>
+        <st:include page="statistics.jelly" />
+
+    </t:summary>
+</j:jelly>

@@ -22,6 +22,7 @@ import hudson.Extension;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.model.AbstractBuild;
+import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepMonitor;
@@ -30,6 +31,8 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
+import org.jenkinsci.plugins.codedx.model.CodeDxSeverityStatistics;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -37,7 +40,10 @@ import org.kohsuke.stapler.QueryParameter;
 
 import com.secdec.codedx.api.client.CodeDxClient;
 import com.secdec.codedx.api.client.CodeDxClientException;
+import com.secdec.codedx.api.client.CountGroup;
+import com.secdec.codedx.api.client.Job;
 import com.secdec.codedx.api.client.Project;
+import com.secdec.codedx.api.client.StartAnalysisResponse;
 
 import javax.servlet.ServletException;
 
@@ -87,7 +93,7 @@ public class CodeDxPublisher extends Recorder {
         this.excludedSourceAndBinaryFiles = excludedSourceAndBinaryFiles;
         this.toolOutputFiles = toolOutputFiles;
     }	
-
+    
     public String getProjectId() {
         return projectId;
     }
@@ -192,19 +198,70 @@ public class CodeDxPublisher extends Recorder {
         	
         	try {
         		listener.getLogger().println("Sending analysis request");
-				client.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
+				
+        		StartAnalysisResponse response = client.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
+				
 				listener.getLogger().println("Analysis request succeeded");
+				
+				listener.getLogger().println("Waiting for analysis to complete");
+				
+				String status = null;
+				
+				do{
+					
+					Thread.sleep(3000);
+					status = client.getJobStatus(response.getJobId());
+					
+					listener.getLogger().println("The STATUS IS: " + status);
+					
+				} while(Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
+
+				if(Job.COMPLETED.equals(status)){
+					
+					listener.getLogger().println("Analysis succeeded");
+					
+					listener.getLogger().println("Fetching severity counts");
+					
+					List<CountGroup> counts = client.getFindingsGroupedCounts(response.getRunId(), null, "severity");
+					
+					listener.getLogger().println("Got severity counts");
+					
+					List<CodeDxSeverityStatistics> severities = new ArrayList<CodeDxSeverityStatistics>();
+					
+					for(CountGroup group : counts){
+					
+						CodeDxSeverityStatistics stats = new CodeDxSeverityStatistics(group.getName(),group.getCount());
+						listener.getLogger().println(stats);
+						severities.add(stats);
+					}
+					
+			        CodeDxResult result = new CodeDxResult(new CodeDxReportStatistics(severities),build);
+			        
+			        listener.getLogger().println("Adding CodeDx build action");
+			        build.addAction(new CodeDxBuildAction(build, result));
+			        return true;
+				}
+				else{
+					listener.getLogger().println("Analysis status: " + status);
+					return false;
+				}
+		        
 			} catch (NumberFormatException e) {
 
 				listener.getLogger().println("Invalid project Id");
 				
 			} catch (CodeDxClientException e) {
 
-				listener.getLogger().println("Failed push analysis to Code Dx server.");
+				listener.getLogger().println("Fatal Error!");
 				e.printStackTrace(listener.getLogger());
 			}
         }
-        return true;
+        else{
+        	
+        	listener.getLogger().println("Nothing to send, this doesn't seem right!");
+        }
+        
+        return false;
     }
     
 	public BuildStepMonitor getRequiredMonitorService() {

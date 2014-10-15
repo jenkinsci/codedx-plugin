@@ -17,6 +17,8 @@
 
 package com.secdec.codedx.api.client;
 
+import java.util.Date;
+
 /**
  * Represents the JSON data for a CodeDx analysis run.
  * 
@@ -26,25 +28,33 @@ package com.secdec.codedx.api.client;
 public class AnalysisRun {
 
 	private int id;
-	private String date;
-	private String inputDate;
+	private Date inputDate;
+	private Date startTime;
+	private Date endTime;
 	
+	public Date getInputDate() {
+		return inputDate;
+	}
+	public void setInputDate(Date inputDate) {
+		this.inputDate = inputDate;
+	}
+	public Date getStartTime() {
+		return startTime;
+	}
+	public void setStartTime(Date startTime) {
+		this.startTime = startTime;
+	}
+	public Date getEndTime() {
+		return endTime;
+	}
+	public void setEndTime(Date endTime) {
+		this.endTime = endTime;
+	}
 	public int getId() {
 		return id;
 	}
 	public void setId(int id) {
 		this.id = id;
 	}
-	public String getDate() {
-		return date;
-	}
-	public void setDate(String date) {
-		this.date = date;
-	}
-	public String getInputDate() {
-		return inputDate;
-	}
-	public void setInputDate(String inputDate) {
-		this.inputDate = inputDate;
-	}
+
 }
