@@ -1,0 +1,17 @@
+<j:jelly xmlns:j="jelly:core">
+    <j:if test="${from.hasValidResults()}">
+        <div align="right">
+            <p/>
+            <div class="test-trend-caption">
+                Code Dx Findings Trend
+            </div>
+            <div>
+                <img src="${from.urlName}/trend" lazymap="${from.urlName}/trendMap"/>
+            </div>
+            <hr/>
+            <div>
+                <img src="${from.urlName}/trendDelta" lazymap="${from.urlName}/trendDeltaMap"/>
+            </div>
+        </div>
+    </j:if>
+</j:jelly>

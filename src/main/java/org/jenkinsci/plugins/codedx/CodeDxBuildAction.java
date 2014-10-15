@@ -10,7 +10,7 @@ import org.kohsuke.stapler.StaplerProxy;
 
 /**
  *
- * @author ademartini
+ * @author ademartini This file is heavily derived from the sloccount-plugin (author: lordofthepigs)
  */
 public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     /** Serial version UID. */

@@ -11,7 +11,7 @@ import org.jenkinsci.plugins.codedx.model.CodeDxSeverityStatistics;
 
 /**
  * 
- * @author anthonyd
+ * @author ademartini This file is heavily derived from the sloccount-plugin (author: Michal Turek)
  *
  */
 public class CodeDxDiffSummary extends CodeDxDiff{

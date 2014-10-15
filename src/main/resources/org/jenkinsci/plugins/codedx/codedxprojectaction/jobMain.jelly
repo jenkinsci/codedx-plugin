@@ -1,0 +1,14 @@
+<j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson" xmlns:st="jelly:stapler">
+    <table style="margin-left:1em;">
+        <t:summary icon="/plugin/codedx/icons/Code-Dx-Checkmark-48.png">
+            <span>Code Dx Results</span>
+
+            <j:set var="lastBuildAction" value="${it.lastFinishedBuildAction}"/>
+
+            <j:if test="${lastBuildAction != null}">
+                <j:set var="diff" value="${lastBuildAction.diffSummary}"/>
+                <st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly"/>
+            </j:if>
+        </t:summary>
+    </table>
+</j:jelly>

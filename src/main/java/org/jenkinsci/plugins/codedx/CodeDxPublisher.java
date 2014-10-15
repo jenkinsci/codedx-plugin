@@ -122,6 +122,10 @@ public class CodeDxPublisher extends Recorder {
 	}
 
 	
+    @Override
+    public Action getProjectAction(AbstractProject<?,?> project){
+        return new CodeDxProjectAction(project, 10);
+    }
 
     @Override
     public boolean perform(

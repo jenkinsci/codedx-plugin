@@ -2,7 +2,7 @@ package org.jenkinsci.plugins.codedx;
 
 /**
  * 
- * @author anthonyd
+ * @author ademartini This file is heavily derived from the sloccount-plugin (author: Michal Turek)
  *
  */
 public class CodeDxDiffSeverity extends CodeDxDiff{

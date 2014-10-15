@@ -8,7 +8,7 @@ import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 
 /**
  * 
- * @author anthonyd
+ * @author ademartini This file is heavily derived from the sloccount-plugin (author: lordofthepigs)
  *
  */
 public class CodeDxResult implements Serializable{
