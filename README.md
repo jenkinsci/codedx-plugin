@@ -28,7 +28,7 @@ mvn package
 
 To install the package, use the Jenkins web interface.
 
-** Releasing to Jenkins plugin repository (for end-users to install easily within Jenkins) **
+**Releasing to Jenkins plugin repository (for end-users to install easily within Jenkins)**
 
 I had some difficulties releasing this plugin.  Below are the steps I ended up needing to take (on windows).  
 
