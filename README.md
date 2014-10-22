@@ -32,10 +32,11 @@ To install the package, use the Jenkins web interface.
 
 I had some difficulties releasing this plugin.  Below are the steps I ended up needing to take (on windows).  
 
-1. Sign up for a Jenkins account (https://jenkins-ci.org/account/signup).   
-2. Have git bash installed.  You will want to do the release using git bash. 
-3. Have the code code checked out and ready to be released.
-4. Edit your Maven settings.xml file (in C:\users\YOUR_USERNAME\.m2\ on Windows) for  so that it contains the following:
+* Sign up for a Jenkins account (https://jenkins-ci.org/account/signup).   
+* Have git bash installed.  You will want to do the release using git bash. 
+* Have the code code checked out and ready to be released.
+* Edit your Maven settings.xml file (in C:\users\YOUR_USERNAME\.m2\ on Windows) for  so that it contains the following:
+
 
 ```
   <servers>
@@ -48,8 +49,9 @@ I had some difficulties releasing this plugin.  Below are the steps I ended up n
   
   ```
   
-5. Follow the instructions here: https://help.github.com/articles/generating-ssh-keys/ to generate an SSH key and add to github (if you don't already have this in place).  Make sure you have an ssh agent started and thet you add your key.
-6. Run the following commands to prepare and perform the release.  You will be prompted about the new version number.
+  
+* Follow the instructions here: https://help.github.com/articles/generating-ssh-keys/ to generate an SSH key and add to github (if you don't already have this in place).  Make sure you have an ssh agent started and thet you add your key.
+* Run the following commands to prepare and perform the release.  You will be prompted about the new version number.
 
 ```
 mvn org.apache.maven.plugins:maven-release-plugin:2.5:prepare
