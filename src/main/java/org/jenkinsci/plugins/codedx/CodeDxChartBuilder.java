@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
-import org.jenkinsci.plugins.codedx.model.CodeDxSeverityStatistics;
+import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
@@ -33,10 +33,10 @@ public class CodeDxChartBuilder implements Serializable {
     }
 
     public static JFreeChart buildChart(CodeDxBuildAction action,
-            int numBuildsInGraph){
+            int numBuildsInGraph, String statisticsName){
 
         JFreeChart chart = ChartFactory.createStackedAreaChart(null, null,
-                "Findings", buildDataset(action, numBuildsInGraph),
+                "Findings", buildDataset(action, numBuildsInGraph, statisticsName),
                 PlotOrientation.VERTICAL, true, false, true);
 
         chart.setBackgroundPaint(Color.white);
@@ -68,7 +68,7 @@ public class CodeDxChartBuilder implements Serializable {
     }
 
     private static CategoryDataset buildDataset(CodeDxBuildAction lastAction,
-            int numBuildsInGraph){
+            int numBuildsInGraph, String statisticsName){
         DataSetBuilder<String, NumberOnlyBuildLabel> builder = new DataSetBuilder<String, NumberOnlyBuildLabel>();
         Set<String> allSeverities = new HashSet<String>();
 
@@ -81,12 +81,12 @@ public class CodeDxChartBuilder implements Serializable {
             if(result != null){
                 NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel(action.getBuild());
 
-                allSeverities.addAll(result.getStatistics().getAllSeverities());
+                allSeverities.addAll(result.getStatistics(statisticsName).getAllGroups());
                 Set<String> remainingSeverities = new HashSet<String>(allSeverities);
 
-                for(CodeDxSeverityStatistics severityStats : result.getStatistics().getStatistics()){
-                    builder.add(severityStats.getFindings(), severityStats.getSeverity(), buildLabel);
-                    remainingSeverities.remove(severityStats.getSeverity());
+                for(CodeDxGroupStatistics severityStats : result.getStatistics(statisticsName).getStatistics()){
+                    builder.add(severityStats.getFindings(), severityStats.getGroup(), buildLabel);
+                    remainingSeverities.remove(severityStats.getGroup());
                 }
                 
                 for(String language : remainingSeverities) {
@@ -104,10 +104,10 @@ public class CodeDxChartBuilder implements Serializable {
     }
     
     public static JFreeChart buildChartDelta(CodeDxBuildAction action,
-            int numBuildsInGraph){
+            int numBuildsInGraph, String statisticsName){
 
         JFreeChart chart = ChartFactory.createStackedAreaChart(null, null,
-                "Findings Delta", buildDatasetDelta(action, numBuildsInGraph),
+                "Findings Delta", buildDatasetDelta(action, numBuildsInGraph, statisticsName),
                 PlotOrientation.VERTICAL, true, false, true);
 
         chart.setBackgroundPaint(Color.white);
@@ -139,14 +139,14 @@ public class CodeDxChartBuilder implements Serializable {
     }
 
     private static CategoryDataset buildDatasetDelta(CodeDxBuildAction lastAction,
-            int numBuildsInGraph){
+            int numBuildsInGraph, String statisticsName){
         DataSetBuilder<String, NumberOnlyBuildLabel> builder = new DataSetBuilder<String, NumberOnlyBuildLabel>();
         Set<String> allSeverities = new HashSet<String>();
         CodeDxBuildAction action = lastAction;
 
         // Initial languages from the first action
         if(action != null && action.getResult() != null) {
-            allSeverities.addAll(action.getResult().getStatistics().getAllSeverities());
+            allSeverities.addAll(action.getResult().getStatistics(statisticsName).getAllGroups());
         }
 
         int numBuilds = 0;
@@ -161,27 +161,27 @@ public class CodeDxChartBuilder implements Serializable {
                 NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel(action.getBuild());
 
                 if(previousAction != null && previousAction.getResult() != null){
-                    previousStatistics = previousAction.getResult().getStatistics();
+                    previousStatistics = previousAction.getResult().getStatistics(statisticsName);
                 } else {
                     // This will produce zero delta for the first build
-                    previousStatistics = result.getStatistics();
+                    previousStatistics = result.getStatistics(statisticsName);
                 }
 
-                allSeverities.addAll(previousStatistics.getAllSeverities());
+                allSeverities.addAll(previousStatistics.getAllGroups());
                 Set<String> remainingSeverities = new HashSet<String>(allSeverities);
 
-                for(CodeDxSeverityStatistics current : result.getStatistics().getStatistics()){
-                    CodeDxSeverityStatistics previous = previousStatistics.getSeverity(current.getSeverity());
+                for(CodeDxGroupStatistics current : result.getStatistics(statisticsName).getStatistics()){
+                    CodeDxGroupStatistics previous = previousStatistics.getGroup(current.getGroup());
 
                     builder.add(current.getFindings() - previous.getFindings(),
-                            current.getSeverity(), buildLabel);
+                            current.getGroup(), buildLabel);
 
-                    remainingSeverities.remove(current.getSeverity());
+                    remainingSeverities.remove(current.getGroup());
                 }
 
                 for(String severity : remainingSeverities) {
-                    CodeDxSeverityStatistics previous
-                            = previousStatistics.getSeverity(severity);
+                    CodeDxGroupStatistics previous
+                            = previousStatistics.getGroup(severity);
 
                     // Language disappeared (current - previous = 0 - previous)
                     builder.add(-previous.getFindings(), severity, buildLabel);

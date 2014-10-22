@@ -1,32 +1,33 @@
 <j:jelly xmlns:j="jelly:core">
 
     <style type="text/css">
-        #codeDxSummary { width: auto; }
+        #codeDxSummary { width: 95%; table-layout:fixed;}
         #codeDxSummary .number { text-align: right; }
+        #codeDxSummary thead td {text-align:center;}
     </style>
 
     <table class="pane sortable" id="codeDxSummary">
         <thead>
             <tr>
-                <td class="pane-header">Severity</td>
+                <td class="pane-header">${it.name}</td>
                 <td class="pane-header">Findings</td>
                 <td class="pane-header">Findings Delta</td>
             </tr>
         </thead>
         <tbody>
-            <j:forEach var="severity" items="${diff.severityDiffs}">
+            <j:forEach var="group" items="${it.groupDiffs}">
                 <tr>
-                    <td class="pane">${severity.name}</td>
-                    <td class="pane number" data="${severity.findings}">${severity.findingsString}</td>
-                    <td class="pane number" data="${severity.findingsDelta}">${severity.findingsDeltaString}</td>
+                    <td class="pane">${group.name}</td>
+                    <td class="pane number" data="${group.findings}">${group.findingsString}</td>
+                    <td class="pane number" data="${group.findingsDelta}">${group.findingsDeltaString}</td>
                 </tr>
             </j:forEach>
         </tbody>
         <tfoot>
             <tr class="sortbottom">
                 <td class="pane-header">Total</td>
-                <td class="pane-header number" data="${diff.findings}">${diff.findingsString}</td>
-                <td class="pane-header number" data="${diff.findingsDelta}">${diff.findingsDeltaString}</td>
+                <td class="pane-header number" data="${it.findings}">${it.findingsString}</td>
+                <td class="pane-header number" data="${it.findingsDelta}">${it.findingsDeltaString}</td>
             </tr>
         </tfoot>
     </table>

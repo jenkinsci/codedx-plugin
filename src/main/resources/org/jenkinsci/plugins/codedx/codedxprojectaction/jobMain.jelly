@@ -1,14 +1,22 @@
 <j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson" xmlns:st="jelly:stapler">
-    <table style="margin-left:1em;">
-        <t:summary icon="/plugin/codedx/icons/Code-Dx-Checkmark-48.png">
-            <span>Code Dx Results</span>
+    
+    <j:set var="lastBuildAction" value="${it.lastFinishedBuildAction}"/>
+    
+    <j:if test="${lastBuildAction != null}">
+	
+	    <table style="margin-left:1em;">
+	        <t:summary icon="/plugin/codedx/icons/Code-Dx-Checkmark-48.png">
+	            <h3>Code Dx Results</h3>
+	
+	            
+			    <st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly" it="${lastBuildAction.severityDiffSummary}"/>
+				<st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly" it="${lastBuildAction.statusDiffSummary}"/>
+				<br/>
+				<a href="${lastBuildAction.browsableAnalysisRunUrl}">View in Code Dx</a>	
+					
+	        </t:summary>
+   		</table>		 
 
-            <j:set var="lastBuildAction" value="${it.lastFinishedBuildAction}"/>
-
-            <j:if test="${lastBuildAction != null}">
-                <j:set var="diff" value="${lastBuildAction.diffSummary}"/>
-                <st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly"/>
-            </j:if>
-        </t:summary>
-    </table>
+    </j:if>
+            
 </j:jelly>

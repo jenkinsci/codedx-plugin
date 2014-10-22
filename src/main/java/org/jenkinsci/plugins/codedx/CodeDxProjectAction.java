@@ -120,7 +120,7 @@ public class CodeDxProjectAction implements Action, Serializable {
     }
 
     /**
-     * Display the trend map.
+     * Display the severity trend map.
      *
      * @param request
      *            Stapler request
@@ -129,20 +129,20 @@ public class CodeDxProjectAction implements Action, Serializable {
      * @throws IOException
      *             in case of an error
      */
-    public void doTrendMap(final StaplerRequest request, final StaplerResponse response) throws IOException {
+    public void doSeverityTrendMap(final StaplerRequest request, final StaplerResponse response) throws IOException {
         AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
         CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
 
         ChartUtil.generateClickableMap(
                 request,
                 response,
-                CodeDxChartBuilder.buildChart(lastAction, numBuildsInGraph),
+                CodeDxChartBuilder.buildChart(lastAction, numBuildsInGraph,"severity"),
                 CHART_WIDTH,
                 CHART_HEIGHT);
     }
 
     /**
-     * Display the trend graph.
+     * Display the severity trend graph.
      *
      * @param request
      *            Stapler request
@@ -151,20 +151,20 @@ public class CodeDxProjectAction implements Action, Serializable {
      * @throws IOException
      *             in case of an error
      */
-    public void doTrend(final StaplerRequest request, final StaplerResponse response) throws IOException {
+    public void doSeverityTrend(final StaplerRequest request, final StaplerResponse response) throws IOException {
         AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
         CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
 
         ChartUtil.generateGraph(
                 request,
                 response,
-                CodeDxChartBuilder.buildChart(lastAction, numBuildsInGraph),
+                CodeDxChartBuilder.buildChart(lastAction, numBuildsInGraph,"severity"),
                 CHART_WIDTH,
                 CHART_HEIGHT);
     }
     
     /**
-     * Display the trend delta map.
+     * Display the severity trend map.
      *
      * @param request
      *            Stapler request
@@ -173,20 +173,20 @@ public class CodeDxProjectAction implements Action, Serializable {
      * @throws IOException
      *             in case of an error
      */
-    public void doTrendDeltaMap(final StaplerRequest request, final StaplerResponse response) throws IOException {
+    public void doStatusTrendMap(final StaplerRequest request, final StaplerResponse response) throws IOException {
         AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
         CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
 
         ChartUtil.generateClickableMap(
                 request,
                 response,
-                CodeDxChartBuilder.buildChartDelta(lastAction, numBuildsInGraph),
+                CodeDxChartBuilder.buildChart(lastAction, numBuildsInGraph,"status"),
                 CHART_WIDTH,
                 CHART_HEIGHT);
     }
 
     /**
-     * Display the trend delta graph.
+     * Display the status trend graph.
      *
      * @param request
      *            Stapler request
@@ -195,14 +195,14 @@ public class CodeDxProjectAction implements Action, Serializable {
      * @throws IOException
      *             in case of an error
      */
-    public void doTrendDelta(final StaplerRequest request, final StaplerResponse response) throws IOException {
+    public void doStatusTrend(final StaplerRequest request, final StaplerResponse response) throws IOException {
         AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
         CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
 
         ChartUtil.generateGraph(
                 request,
                 response,
-                CodeDxChartBuilder.buildChartDelta(lastAction, numBuildsInGraph),
+                CodeDxChartBuilder.buildChart(lastAction, numBuildsInGraph,"status"),
                 CHART_WIDTH,
                 CHART_HEIGHT);
     }

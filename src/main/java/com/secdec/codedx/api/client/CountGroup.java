@@ -2,6 +2,13 @@ package com.secdec.codedx.api.client;
 
 import java.util.List;
 
+
+/**
+ * Represents the JSON data for a CountGroup
+ * 
+ * @author anthonyd
+ *
+ */
 public class CountGroup {
 
 	String id;

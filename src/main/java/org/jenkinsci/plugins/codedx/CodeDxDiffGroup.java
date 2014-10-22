@@ -5,11 +5,11 @@ package org.jenkinsci.plugins.codedx;
  * @author ademartini This file is heavily derived from the sloccount-plugin (author: Michal Turek)
  *
  */
-public class CodeDxDiffSeverity extends CodeDxDiff{
+public class CodeDxDiffGroup extends CodeDxDiff{
 
 	private final String name;
 
-	public CodeDxDiffSeverity(String name, int findings, int findingsDelta) {
+	public CodeDxDiffGroup(String name, int findings, int findingsDelta) {
 		super(findings, findingsDelta);
 		// TODO Auto-generated constructor stub
 		

@@ -16,16 +16,16 @@ public class CodeDxReportStatistics implements Serializable{
 	/** Serial version UID. */
     private static final long serialVersionUID = 0L;
     
-    private List<CodeDxSeverityStatistics> statistics;
+    private List<CodeDxGroupStatistics> statistics;
 
-	public CodeDxReportStatistics(List<CodeDxSeverityStatistics> statistics) {
+	public CodeDxReportStatistics(List<CodeDxGroupStatistics> statistics) {
 
 		System.out.println("Statistics is: " + statistics);
 		this.statistics = statistics;
 	}
     
-	@Exported(name="severities")
-	public List<CodeDxSeverityStatistics> getStatistics() {
+	@Exported(name="groups")
+	public List<CodeDxGroupStatistics> getStatistics() {
 		return statistics;
 	}
 	
@@ -33,31 +33,30 @@ public class CodeDxReportStatistics implements Serializable{
     public int getFindings() {
         int findings = 0;
 
-        System.out.println("getFindings Statistics is: " + statistics);
-        for(CodeDxSeverityStatistics it : statistics) {
+        for(CodeDxGroupStatistics it : statistics) {
             findings += it.getFindings();
         }
 
         return findings;
     }
     
-    public List<String> getAllSeverities() {
-        List<String> severities = new LinkedList<String>();
+    public List<String> getAllGroups() {
+        List<String> groups = new LinkedList<String>();
 
-        for(CodeDxSeverityStatistics it : statistics) {
-            severities.add(it.getSeverity());
+        for(CodeDxGroupStatistics it : statistics) {
+            groups.add(it.getGroup());
         }
 
-        return severities;
+        return groups;
     }
     
-    public CodeDxSeverityStatistics getSeverity(String severity) {
-        for(CodeDxSeverityStatistics it : statistics) {
-            if(it.getSeverity().equals(severity)) {
+    public CodeDxGroupStatistics getGroup(String group) {
+        for(CodeDxGroupStatistics it : statistics) {
+            if(it.getGroup().equals(group)) {
                 return it;
             }
         }
 
-        return new CodeDxSeverityStatistics(severity, 0);
+        return new CodeDxGroupStatistics(group, 0);
     }
 }

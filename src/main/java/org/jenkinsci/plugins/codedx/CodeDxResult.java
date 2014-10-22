@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.codedx;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import hudson.model.AbstractBuild;
 
@@ -14,34 +15,50 @@ import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 public class CodeDxResult implements Serializable{
 
     /** Serial version UID. */
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 0L;
 
     private final AbstractBuild<?,?> owner;
     
-	private CodeDxReportStatistics statistics;
+	private Map<String, CodeDxReportStatistics> statisticsMap;
 
-	public CodeDxResult(CodeDxReportStatistics statistics,AbstractBuild<?,?> owner){
+	private String browsableAnalysisRunUrl;
+
+	public CodeDxResult(Map<String,CodeDxReportStatistics> statisticsMap, AbstractBuild<?,?> owner, String browsableAnalysisRunUrl){
 		
 		this.owner = owner;
-		this.statistics = statistics;
+		this.statisticsMap = statisticsMap;
+		this.browsableAnalysisRunUrl = browsableAnalysisRunUrl;
 	}
 
     public AbstractBuild<?,?> getOwner() {
         return owner;
     }
     
-	public CodeDxReportStatistics getStatistics() {
+	public CodeDxReportStatistics getStatistics(String name) {
 
-		return statistics;
+		return statisticsMap.get(name);
 	}
 
-	public boolean isEmpty() {
+	public Map<String, CodeDxReportStatistics> getStatisticsMap() {
 
-        if(statistics != null) {
-            return statistics.getFindings() <= 0;
-        }
-        
-        return true;
+		return statisticsMap;
 	}
 
+
+	public String getBrowsableAnalysisRunUrl() {
+		return browsableAnalysisRunUrl;
+	}
+	
+	public boolean isEmpty(){
+		
+		for(CodeDxReportStatistics stats: statisticsMap.values()){
+			
+			if(stats.getFindings() > 0){
+				
+				return false;
+			}
+		}
+		
+		return true;
+	}
 }

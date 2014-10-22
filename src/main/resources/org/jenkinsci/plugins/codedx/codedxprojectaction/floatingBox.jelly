@@ -3,14 +3,17 @@
         <div align="right">
             <p/>
             <div class="test-trend-caption">
-                Code Dx Findings Trend
+                Code Dx Findings Trend (Severities)
             </div>
             <div>
-                <img src="${from.urlName}/trend" lazymap="${from.urlName}/trendMap"/>
+                <img src="${from.urlName}/severityTrend" lazymap="${from.urlName}/severityTrendMap"/>
             </div>
             <hr/>
+            <div class="test-trend-caption">
+                Code Dx Findings Trend (Status)
+            </div>
             <div>
-                <img src="${from.urlName}/trendDelta" lazymap="${from.urlName}/trendDeltaMap"/>
+                <img src="${from.urlName}/statusTrend" lazymap="${from.urlName}/statusTrendMap"/>
             </div>
         </div>
     </j:if>

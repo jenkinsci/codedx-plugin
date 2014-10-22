@@ -1,5 +1,11 @@
 package com.secdec.codedx.api.client;
 
+/**
+ * Represents the response JSON data containing a count.
+ * 
+ * @author anthonyd
+ *
+ */
 public class CountResponse {
 
 	int count;

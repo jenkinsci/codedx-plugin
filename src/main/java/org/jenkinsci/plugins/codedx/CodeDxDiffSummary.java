@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
-import org.jenkinsci.plugins.codedx.model.CodeDxSeverityStatistics;
+import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
 
 /**
  * 
@@ -16,41 +16,48 @@ import org.jenkinsci.plugins.codedx.model.CodeDxSeverityStatistics;
  */
 public class CodeDxDiffSummary extends CodeDxDiff{
 
-	private final List<CodeDxDiffSeverity> severityDiffs;
+	private final List<CodeDxDiffGroup> groupDiffs;
+	private String name;
 	
-	public CodeDxDiffSummary(List<CodeDxDiffSeverity> severityDiffs, int findings, int findingsDelta) {
+	public CodeDxDiffSummary(List<CodeDxDiffGroup> groupDiffs, int findings, int findingsDelta, String name) {
 		super(findings, findingsDelta);
-		this.severityDiffs = severityDiffs;
+		this.groupDiffs = groupDiffs;
+		this.name = name;
 		// TODO Auto-generated constructor stub
 	}
 
 
-	public List<CodeDxDiffSeverity> getSeverityDiffs() {
-		return severityDiffs;
+	public List<CodeDxDiffGroup> getGroupDiffs() {
+		return groupDiffs;
 	}
 
 
+	public String getName(){
+		
+		return name;
+	}
+	
     public static CodeDxDiffSummary getDiffSummary(
             CodeDxReportStatistics previous,
-            CodeDxReportStatistics current) {
+            CodeDxReportStatistics current, String name) {
         if(previous == null) {
-            return getDiffSummary(current);
+            return getDiffSummary(current,name);
         }
 
-        Set<String> severities = new HashSet<String>();
-        severities.addAll(previous.getAllSeverities());
-        severities.addAll(current.getAllSeverities());
+        Set<String> groups = new HashSet<String>();
+        groups.addAll(previous.getAllGroups());
+        groups.addAll(current.getAllGroups());
 
-        List<CodeDxDiffSeverity> result = new ArrayList<CodeDxDiffSeverity>();
+        List<CodeDxDiffGroup> result = new ArrayList<CodeDxDiffGroup>();
         int findings = 0;
         int findingsDelta = 0;
 
-        for(String severity: severities) {
-            // Quadratic complexity can be optimized, but severities count is small
-            CodeDxSeverityStatistics curStats = current.getSeverity(severity);
-            CodeDxSeverityStatistics prevStats = previous.getSeverity(severity);
+        for(String group: groups) {
+            // Quadratic complexity can be optimized, but groups count is small
+            CodeDxGroupStatistics curStats = current.getGroup(group);
+            CodeDxGroupStatistics prevStats = previous.getGroup(group);
 
-            result.add(new CodeDxDiffSeverity(curStats.getSeverity(),
+            result.add(new CodeDxDiffGroup(curStats.getGroup(),
                     curStats.getFindings(),
                     curStats.getFindings() - prevStats.getFindings()));
 
@@ -58,30 +65,30 @@ public class CodeDxDiffSummary extends CodeDxDiff{
             findingsDelta += curStats.getFindings() - prevStats.getFindings();
         }
 
-        return new CodeDxDiffSummary(result, findings,findingsDelta);
+        return new CodeDxDiffSummary(result, findings,findingsDelta, name);
     }
 
-    private static CodeDxDiffSummary getDiffSummary(CodeDxReportStatistics current) {
+    private static CodeDxDiffSummary getDiffSummary(CodeDxReportStatistics current, String name) {
         if(current == null) {
-            return getDiffSummary();
+            return getDiffSummary(name);
         }
 
-        List<CodeDxDiffSeverity> result = new ArrayList<CodeDxDiffSeverity>();
+        List<CodeDxDiffGroup> result = new ArrayList<CodeDxDiffGroup>();
         int findings = 0;
 
-        for(CodeDxSeverityStatistics language: current.getStatistics()) {
-            result.add(new CodeDxDiffSeverity(language.getSeverity(),
-                    language.getFindings(), 0));
+        for(CodeDxGroupStatistics groupStats: current.getStatistics()) {
+            result.add(new CodeDxDiffGroup(groupStats.getGroup(),
+                    groupStats.getFindings(), 0));
 
-            findings += language.getFindings();
+            findings += groupStats.getFindings();
         }
 
-        return new CodeDxDiffSummary(result, findings, 0);
+        return new CodeDxDiffSummary(result, findings, 0, name);
     }
 
 
-    private static CodeDxDiffSummary getDiffSummary() {
+    private static CodeDxDiffSummary getDiffSummary(String name) {
         return new CodeDxDiffSummary(
-                Collections.<CodeDxDiffSeverity>emptyList(), 0, 0);
+                Collections.<CodeDxDiffGroup>emptyList(), 0, 0, name);
     }
 }

@@ -1,5 +1,11 @@
 package com.secdec.codedx.api.client;
 
+/**
+ * Represents the JSON data for a Job
+ * 
+ * @author anthonyd
+ *
+ */
 public class Job {
 
 	private String jobId;

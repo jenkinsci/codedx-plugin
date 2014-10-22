@@ -24,6 +24,7 @@ import hudson.util.ListBoxModel;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.BuildStepDescriptor;
@@ -32,7 +33,7 @@ import hudson.tasks.Recorder;
 import net.sf.json.JSONObject;
 
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
-import org.jenkinsci.plugins.codedx.model.CodeDxSeverityStatistics;
+import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -52,7 +53,9 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Jenkins publisher that publishes project source, binaries, and 
@@ -69,7 +72,9 @@ public class CodeDxPublisher extends Recorder {
 	private final String sourceAndBinaryFiles;
 	private final String toolOutputFiles;
 	private final String excludedSourceAndBinaryFiles;
-	
+
+	private final AnalysisResultConfiguration analysisResultConfiguration;
+
 /**
  * 
  * @param url URL of the Code Dx server
@@ -78,6 +83,8 @@ public class CodeDxPublisher extends Recorder {
  * @param sourceAndBinaryFiles Comma separated list of source/binary file Ant GLOB patterns
  * @param toolOutputFiles List of paths to tool output files
  * @param excludedSourceAndBinaryFiles Comma separated list of source/binary file Ant GLOB patterns to exclude
+ * @param analysisResultConfiguration Contains the fields applicable when the user chooses to have Jenkins wait for 
+ * analysis runs to complete.
  */
     @DataBoundConstructor
     public CodeDxPublisher(final String url, 
@@ -85,15 +92,21 @@ public class CodeDxPublisher extends Recorder {
     		final String projectId, 
     		final String sourceAndBinaryFiles, 
     		final String toolOutputFiles, 
-    		final String excludedSourceAndBinaryFiles) {
+    		final String excludedSourceAndBinaryFiles,
+    		final AnalysisResultConfiguration analysisResultConfiguration) {
         this.projectId = projectId;
         this.url = url;
         this.key = key;
         this.sourceAndBinaryFiles = sourceAndBinaryFiles;
         this.excludedSourceAndBinaryFiles = excludedSourceAndBinaryFiles;
         this.toolOutputFiles = toolOutputFiles;
+        this.analysisResultConfiguration = analysisResultConfiguration;
     }	
     
+    public AnalysisResultConfiguration getAnalysisResultConfiguration() {
+		return analysisResultConfiguration;
+    }
+
     public String getProjectId() {
         return projectId;
     }
@@ -124,7 +137,13 @@ public class CodeDxPublisher extends Recorder {
 	
     @Override
     public Action getProjectAction(AbstractProject<?,?> project){
-        return new CodeDxProjectAction(project, 10);
+    	
+    	if(analysisResultConfiguration == null){
+    		
+    		return null;
+    	}
+    	
+        return new CodeDxProjectAction(project, analysisResultConfiguration.getNumBuildsInGraph());
     }
 
     @Override
@@ -134,7 +153,7 @@ public class CodeDxPublisher extends Recorder {
 			final BuildListener listener) throws InterruptedException, IOException {
     	
     	final List<InputStream> toSend = new ArrayList<InputStream>();
-    	
+
     	listener.getLogger().println("Starting Code Dx Publish");
     	
     	if(projectId.length() == 0 || projectId.equals("-1")){
@@ -207,6 +226,12 @@ public class CodeDxPublisher extends Recorder {
 				
 				listener.getLogger().println("Analysis request succeeded");
 				
+				if(analysisResultConfiguration == null){
+					
+					listener.getLogger().println("No need to wait for analysis to complete.  We are done here.");
+					return true;
+				}
+				
 				listener.getLogger().println("Waiting for analysis to complete");
 				
 				String status = null;
@@ -226,23 +251,33 @@ public class CodeDxPublisher extends Recorder {
 					
 					listener.getLogger().println("Fetching severity counts");
 					
-					List<CountGroup> counts = client.getFindingsGroupedCounts(response.getRunId(), null, "severity");
-					
+					List<CountGroup> severityCounts = client.getFindingsGroupedCounts(response.getRunId(), null, "severity");
+
 					listener.getLogger().println("Got severity counts");
 					
-					List<CodeDxSeverityStatistics> severities = new ArrayList<CodeDxSeverityStatistics>();
+					List<CountGroup> statusCounts = client.getFindingsGroupedCounts(response.getRunId(), null, "status");
 					
-					for(CountGroup group : counts){
+					listener.getLogger().println("Got status counts");
 					
-						CodeDxSeverityStatistics stats = new CodeDxSeverityStatistics(group.getName(),group.getCount());
-						listener.getLogger().println(stats);
-						severities.add(stats);
-					}
+					Map<String,CodeDxReportStatistics> statMap = new HashMap<String,CodeDxReportStatistics>();
 					
-			        CodeDxResult result = new CodeDxResult(new CodeDxReportStatistics(severities),build);
+					statMap.put("severity", createStatistics(severityCounts));
+					statMap.put("status", createStatistics(statusCounts));
+					
+			        CodeDxResult result = new CodeDxResult(statMap,build,client.buildBrowsableAnalysisRunUrl(response.getRunId()));
 			        
 			        listener.getLogger().println("Adding CodeDx build action");
 			        build.addAction(new CodeDxBuildAction(build, result));
+			        
+			        AnalysisResultChecker checker = new AnalysisResultChecker(client, 
+																	    analysisResultConfiguration.getFailureSeverity(), 
+																	    analysisResultConfiguration.getUnstableSeverity(), 
+																	    analysisResultConfiguration.isFailureOnlyNew(), 
+																	    analysisResultConfiguration.isUnstableOnlyNew(), 
+																	    response.getRunId(), 
+																	    listener.getLogger());
+			        build.setResult(checker.checkResult());
+			        
 			        return true;
 				}
 				else{
@@ -266,6 +301,19 @@ public class CodeDxPublisher extends Recorder {
         }
         
         return false;
+    }
+    
+    public CodeDxReportStatistics createStatistics(List<CountGroup> countGroups){
+    	
+		List<CodeDxGroupStatistics> severities = new ArrayList<CodeDxGroupStatistics>();
+		
+		for(CountGroup group : countGroups){
+		
+			CodeDxGroupStatistics stats = new CodeDxGroupStatistics(group.getName(),group.getCount());
+			severities.add(stats);
+		}
+		
+		return new CodeDxReportStatistics(severities);
     }
     
 	public BuildStepMonitor getRequiredMonitorService() {
@@ -412,6 +460,29 @@ public class CodeDxPublisher extends Recorder {
 
             return listBox;
         }
+    	
+    	public ListBoxModel doFillFailureSeverityItems() {
+
+    		return getSeverityItems();
+        }
+
+    	public ListBoxModel doFillUnstableSeverityItems() {
+
+    		return getSeverityItems();
+        }
+    	
+    	private ListBoxModel getSeverityItems(){
+    		
+			final ListBoxModel listBox = new ListBoxModel();
+			
+			listBox.add("None", "None");
+			listBox.add("Info or Higher", "Info");
+			listBox.add("Low or Higher", "Low");
+			listBox.add("Medium or Higher", "Medium");
+			listBox.add("High","High");
+			
+            return listBox;
+    	}
     	
         @Override
         public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {

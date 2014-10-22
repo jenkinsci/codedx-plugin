@@ -2,6 +2,8 @@ package org.jenkinsci.plugins.codedx;
 
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
+import hudson.model.HealthReport;
+import hudson.model.HealthReportingAction;
 
 import java.io.Serializable;
 
@@ -39,25 +41,49 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     }
 
     /**
-     * Get differences between two report statistics.
+     * Get differences between two severity statistics.
      * 
      * @return the differences
      */
-    public CodeDxDiffSummary getDiffSummary() {
-        return CodeDxDiffSummary.getDiffSummary(getPreviousStatistics(),
-                result.getStatistics());
+    public CodeDxDiffSummary getSeverityDiffSummary() {
+        return CodeDxDiffSummary.getDiffSummary(getPreviousSeverityStats(),
+                result.getStatistics("severity"), "Severity");
+    }
+
+    /**
+     * Get differences between two status statistics.
+     * 
+     * @return the differences
+     */
+    public CodeDxDiffSummary getStatusDiffSummary() {
+        return CodeDxDiffSummary.getDiffSummary(getPreviousStatusStats(),
+                result.getStatistics("status"), "Status");
     }
 
     public CodeDxResult getResult(){
         return this.result;
     }
 
-    private CodeDxReportStatistics getPreviousStatistics(){
+    public String getBrowsableAnalysisRunUrl(){
+    	
+    	return this.result.getBrowsableAnalysisRunUrl();
+    }
+    
+    private CodeDxReportStatistics getPreviousSeverityStats(){
         CodeDxResult previous = this.getPreviousResult();
         if(previous == null){
             return null;
         }else{
-           return previous.getStatistics();
+           return previous.getStatistics("severity");
+        }
+    }
+    
+    private CodeDxReportStatistics getPreviousStatusStats(){
+        CodeDxResult previous = this.getPreviousResult();
+        if(previous == null){
+            return null;
+        }else{
+           return previous.getStatistics("status");
         }
     }
 

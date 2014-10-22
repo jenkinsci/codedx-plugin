@@ -1,5 +1,13 @@
 package com.secdec.codedx.api.client;
 
+import java.util.Arrays;
+
+/**
+ * Represents the JSON data for a Filter
+ * 
+ * @author anthonyd
+ *
+ */
 public class Filter {
 
 	private String[] cwe;
@@ -9,6 +17,19 @@ public class Filter {
 	private String[] severity;
 	private String[] status;
 	private String[] toolOverlap;
+
+	public static final String STATUS_NEW = "1";
+	public static final String STATUS_ESCALATED = "2";
+	public static final String STATUS_IGNORED = "3";
+	public static final String STATUS_FALSE_POSITIVE = "4";
+	public static final String STATUS_FIXED = "5";
+	public static final String STATUS_UNRESOLVED = "6";
+	public static final String STATUS_GONE = "7";
+	
+	public static final String SEVERITY_INFO = "Info";
+	public static final String SEVERITY_LOW = "Low";
+	public static final String SEVERITY_MEDIUM = "Medium";
+	public static final String SEVERITY_HIGH = "High";
 	
 	public String[] getCwe() {
 		return cwe;
@@ -53,5 +74,14 @@ public class Filter {
 		this.toolOverlap = toolOverlap;
 	}
 
+	@Override
+	public String toString() {
+		return "Filter [cwe=" + Arrays.toString(cwe) + ", finding="
+				+ Arrays.toString(finding) + ", path=" + Arrays.toString(path)
+				+ ", rule=" + Arrays.toString(rule) + ", severity="
+				+ Arrays.toString(severity) + ", status="
+				+ Arrays.toString(status) + ", toolOverlap="
+				+ Arrays.toString(toolOverlap) + "]";
+	}
 	
 }

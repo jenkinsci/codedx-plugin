@@ -1,5 +1,11 @@
 package com.secdec.codedx.api.client;
 
+/**
+ * Represents the request JSON data to get a count.
+ * 
+ * @author anthonyd
+ *
+ */
 public class CountRequest {
 
 	private Filter filter;

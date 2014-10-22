@@ -9,6 +9,11 @@ import java.io.IOException;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 
+/**
+ * Contains string and GLOB pattern matching utility methods.
+ * @author anthonyd
+ *
+ */
 public class Util {
 
     public static String[] commaSeparatedToArray(String str){

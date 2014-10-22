@@ -56,7 +56,8 @@ public class CodeDxClient {
 	
 	private String key;
 	private String url;
-
+	private String serverUrl;
+	
 	private DefaultHttpClient httpClient;
 	
 	private Gson gson;
@@ -87,10 +88,16 @@ public class CodeDxClient {
 		}
 		
 		this.url = url;
+		this.serverUrl = url.replace("/api/", "/");
 		
 		httpClient = new DefaultHttpClient();
 		
 		gson = new Gson();
+	}
+	
+	public String buildBrowsableAnalysisRunUrl(int id){
+		
+		return serverUrl + "run/" + id + "/";
 	}
 	
 	/**

@@ -9,28 +9,28 @@ import org.kohsuke.stapler.export.Exported;
  * @author anthonyd
  *
  */
-public class CodeDxSeverityStatistics implements Serializable{
+public class CodeDxGroupStatistics implements Serializable{
 	
     /** Serial version UID. */
     private static final long serialVersionUID = 0L;
 
     
-	private String severity;
+	private String group;
 	private int findings;
 	
-	public CodeDxSeverityStatistics(String severity, int count) {
+	public CodeDxGroupStatistics(String group, int count) {
 
-		this.severity = severity;
+		this.group = group;
 		this.findings = count;
 	}
 	
-	@Exported(name="severity")
-	public String getSeverity() {
-		return severity;
+	@Exported(name="group")
+	public String getGroup() {
+		return group;
 	}
 	
 	public void setSeverity(String severity) {
-		this.severity = severity;
+		this.group = severity;
 	}
 	
 	@Exported(name="findings")
@@ -44,7 +44,7 @@ public class CodeDxSeverityStatistics implements Serializable{
 
 	@Override
 	public String toString() {
-		return "CodeDxSeverityStatistics [severity=" + severity + ", findings="
+		return "CodeDxSeverityStatistics [group=" + group + ", findings="
 				+ findings + "]";
 	}
 	

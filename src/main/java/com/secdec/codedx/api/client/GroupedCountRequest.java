@@ -1,5 +1,11 @@
 package com.secdec.codedx.api.client;
 
+/**
+ * Represents the JSON request data to get grouped counts
+ * 
+ * @author anthonyd
+ *
+ */
 public class GroupedCountRequest extends CountRequest{
 
 	public GroupedCountRequest() {

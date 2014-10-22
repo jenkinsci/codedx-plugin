@@ -1,5 +1,11 @@
 package com.secdec.codedx.api.client;
 
+/**
+ * Represents the JSON response data when starting an analysis run.
+ * 
+ * @author anthonyd
+ *
+ */
 public class StartAnalysisResponse {
 
 	private int runId;
