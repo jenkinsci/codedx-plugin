@@ -17,44 +17,54 @@
 
 package com.secdec.codedx.api.client;
 
-import java.util.Date;
+import java.util.List;
+
 
 /**
- * Represents the JSON data for a CodeDx analysis run.
+ * Represents the JSON data for a CountGroup
  * 
  * @author anthonyd
  *
  */
-public class AnalysisRun {
+public class CountGroup {
 
-	private int id;
-	private Date inputDate;
-	private Date startTime;
-	private Date endTime;
+	String id;
+	String name;
+	int count;
 	
-	public Date getInputDate() {
-		return inputDate;
-	}
-	public void setInputDate(Date inputDate) {
-		this.inputDate = inputDate;
-	}
-	public Date getStartTime() {
-		return startTime;
-	}
-	public void setStartTime(Date startTime) {
-		this.startTime = startTime;
-	}
-	public Date getEndTime() {
-		return endTime;
-	}
-	public void setEndTime(Date endTime) {
-		this.endTime = endTime;
-	}
-	public int getId() {
+	List<CountGroup> children;
+
+	public String getId() {
 		return id;
 	}
-	public void setId(int id) {
+
+	public void setId(String id) {
 		this.id = id;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public int getCount() {
+		return count;
+	}
+
+	public void setCount(int count) {
+		this.count = count;
+	}
+
+	public List<CountGroup> getChildren() {
+		return children;
+	}
+
+	public void setChildren(List<CountGroup> children) {
+		this.children = children;
+	}
+	
+	
 }

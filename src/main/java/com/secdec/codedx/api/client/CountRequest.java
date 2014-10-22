@@ -17,44 +17,30 @@
 
 package com.secdec.codedx.api.client;
 
-import java.util.Date;
-
 /**
- * Represents the JSON data for a CodeDx analysis run.
+ * Represents the request JSON data to get a count.
  * 
  * @author anthonyd
  *
  */
-public class AnalysisRun {
+public class CountRequest {
 
-	private int id;
-	private Date inputDate;
-	private Date startTime;
-	private Date endTime;
+	private Filter filter;
+
+	public CountRequest(){
+			
+	}
 	
-	public Date getInputDate() {
-		return inputDate;
+	public CountRequest(Filter filter){
+		
+		this.filter = filter;
 	}
-	public void setInputDate(Date inputDate) {
-		this.inputDate = inputDate;
-	}
-	public Date getStartTime() {
-		return startTime;
-	}
-	public void setStartTime(Date startTime) {
-		this.startTime = startTime;
-	}
-	public Date getEndTime() {
-		return endTime;
-	}
-	public void setEndTime(Date endTime) {
-		this.endTime = endTime;
-	}
-	public int getId() {
-		return id;
-	}
-	public void setId(int id) {
-		this.id = id;
+	
+	public Filter getFilter() {
+		return filter;
 	}
 
+	public void setFilter(Filter filter) {
+		this.filter = filter;
+	}	
 }

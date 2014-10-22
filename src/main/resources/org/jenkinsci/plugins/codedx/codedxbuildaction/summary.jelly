@@ -1,0 +1,13 @@
+<j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson" xmlns:st="jelly:stapler">
+    <t:summary icon="/plugin/codedx/icons/Code-Dx-Checkmark-48.png">
+
+		<h3>Code Dx Results</h3> 
+
+        <st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly" it="${it.severityDiffSummary}"/>
+		<st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly" it="${it.statusDiffSummary}"/>
+		
+		<br/>
+		<a href="${it.browsableAnalysisRunUrl}">View in Code Dx</a>
+		
+    </t:summary>
+</j:jelly>

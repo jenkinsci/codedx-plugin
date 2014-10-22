@@ -30,8 +30,7 @@ public class Project {
 
 	private int id;
 	private String name;
-	private List<AnalysisRun> analysisRuns;
-	
+
 	public int getId() {
 		return id;
 	}
@@ -44,12 +43,4 @@ public class Project {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
-	public List<AnalysisRun> getAnalysisRuns() {
-		return analysisRuns;
-	}
-	public void setAnalysisRuns(List<AnalysisRun> analysisRuns) {
-		this.analysisRuns = analysisRuns;
-	}
-
 }

@@ -17,44 +17,30 @@
 
 package com.secdec.codedx.api.client;
 
-import java.util.Date;
-
 /**
- * Represents the JSON data for a CodeDx analysis run.
+ * Represents the JSON request data to get grouped counts
  * 
  * @author anthonyd
  *
  */
-public class AnalysisRun {
+public class GroupedCountRequest extends CountRequest{
 
-	private int id;
-	private Date inputDate;
-	private Date startTime;
-	private Date endTime;
-	
-	public Date getInputDate() {
-		return inputDate;
-	}
-	public void setInputDate(Date inputDate) {
-		this.inputDate = inputDate;
-	}
-	public Date getStartTime() {
-		return startTime;
-	}
-	public void setStartTime(Date startTime) {
-		this.startTime = startTime;
-	}
-	public Date getEndTime() {
-		return endTime;
-	}
-	public void setEndTime(Date endTime) {
-		this.endTime = endTime;
-	}
-	public int getId() {
-		return id;
-	}
-	public void setId(int id) {
-		this.id = id;
+	public GroupedCountRequest() {
+
 	}
 
+	public GroupedCountRequest(Filter filter, String countBy) {
+		super(filter);
+		this.countBy = countBy;
+	}
+
+	private String countBy;
+
+	public String getCountBy() {
+		return countBy;
+	}
+
+	public void setCountBy(String countBy) {
+		this.countBy = countBy;
+	}
 }
