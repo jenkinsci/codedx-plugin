@@ -138,12 +138,16 @@ public class CodeDxPublisher extends Recorder {
     @Override
     public Action getProjectAction(AbstractProject<?,?> project){
     	
-    	if(analysisResultConfiguration == null){
+    	CodeDxClient client = new CodeDxClient(url,key);
+    	
+    	String latestUrl = null;
+    	
+    	if(projectId.length() != 0 && !projectId.equals("-1")){
     		
-    		return null;
+    		latestUrl = client.buildLatestAnalysisRunUrl(Integer.parseInt(projectId));
     	}
     	
-        return new CodeDxProjectAction(project, analysisResultConfiguration.getNumBuildsInGraph());
+        return new CodeDxProjectAction(project, analysisResultConfiguration,latestUrl);
     }
 
     @Override
@@ -264,7 +268,7 @@ public class CodeDxPublisher extends Recorder {
 					statMap.put("severity", createStatistics(severityCounts));
 					statMap.put("status", createStatistics(statusCounts));
 					
-			        CodeDxResult result = new CodeDxResult(statMap,build,client.buildBrowsableAnalysisRunUrl(response.getRunId()));
+			        CodeDxResult result = new CodeDxResult(statMap,build);
 			        
 			        listener.getLogger().println("Adding CodeDx build action");
 			        build.addAction(new CodeDxBuildAction(build, result));

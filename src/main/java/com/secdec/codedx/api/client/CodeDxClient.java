@@ -95,9 +95,14 @@ public class CodeDxClient {
 		gson = new Gson();
 	}
 	
-	public String buildBrowsableAnalysisRunUrl(int id){
+	public String buildBrowsableAnalysisRunUrl(int analysisRunId){
 		
-		return serverUrl + "run/" + id + "/";
+		return serverUrl + "run/" + analysisRunId + "/";
+	}
+	
+	public String buildLatestAnalysisRunUrl(int projectId){
+		
+		return serverUrl + "projects/" + projectId + "/latest";
 	}
 	
 	/**

@@ -64,11 +64,6 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
         return this.result;
     }
 
-    public String getBrowsableAnalysisRunUrl(){
-    	
-    	return this.result.getBrowsableAnalysisRunUrl();
-    }
-    
     private CodeDxReportStatistics getPreviousSeverityStats(){
         CodeDxResult previous = this.getPreviousResult();
         if(previous == null){

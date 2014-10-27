@@ -21,13 +21,10 @@ public class CodeDxResult implements Serializable{
     
 	private Map<String, CodeDxReportStatistics> statisticsMap;
 
-	private String browsableAnalysisRunUrl;
-
-	public CodeDxResult(Map<String,CodeDxReportStatistics> statisticsMap, AbstractBuild<?,?> owner, String browsableAnalysisRunUrl){
+	public CodeDxResult(Map<String,CodeDxReportStatistics> statisticsMap, AbstractBuild<?,?> owner){
 		
 		this.owner = owner;
 		this.statisticsMap = statisticsMap;
-		this.browsableAnalysisRunUrl = browsableAnalysisRunUrl;
 	}
 
     public AbstractBuild<?,?> getOwner() {
@@ -44,11 +41,6 @@ public class CodeDxResult implements Serializable{
 		return statisticsMap;
 	}
 
-
-	public String getBrowsableAnalysisRunUrl() {
-		return browsableAnalysisRunUrl;
-	}
-	
 	public boolean isEmpty(){
 		
 		for(CodeDxReportStatistics stats: statisticsMap.values()){

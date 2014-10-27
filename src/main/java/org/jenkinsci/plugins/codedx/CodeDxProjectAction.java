@@ -24,16 +24,15 @@ public class CodeDxProjectAction implements Action, Serializable {
 
     public AbstractProject<?,?> project;
 
-    /** 
-     * Maximal number of last successful builds displayed in the trend graphs.
-     * One or less means unlimited.
-     */
-    private final int numBuildsInGraph;
+    private final String latestAnalysisUrl;
+  
+    private AnalysisResultConfiguration analysisResultConfiguration;
 
     public CodeDxProjectAction(final AbstractProject<?, ?> project,
-            int numBuildsInGraph) {
+            AnalysisResultConfiguration analysisResultConfiguration, String latestAnalysisUrl) {
         this.project = project;
-        this.numBuildsInGraph = numBuildsInGraph;
+        this.analysisResultConfiguration = analysisResultConfiguration;
+        this.latestAnalysisUrl = latestAnalysisUrl;
     }
 
     public String getIconFileName() {
@@ -48,6 +47,20 @@ public class CodeDxProjectAction implements Action, Serializable {
         return URL_NAME;
     }
 
+    public String getLatestAnalysisUrl(){
+    	
+    	return latestAnalysisUrl;
+    }
+    
+    public AnalysisResultConfiguration getAnalysisResultConfiguration(){
+    	
+    	return analysisResultConfiguration;
+    }
+    
+    public boolean showTablesAndCharts(){
+    	
+    	return analysisResultConfiguration != null;
+    }
     /**
      *
      * Redirects the index page to the last result.
@@ -136,7 +149,7 @@ public class CodeDxProjectAction implements Action, Serializable {
         ChartUtil.generateGraph(
                 request,
                 response,
-                CodeDxChartBuilder.buildChart(lastAction, numBuildsInGraph,"severity"),
+                CodeDxChartBuilder.buildChart(lastAction, analysisResultConfiguration.getNumBuildsInGraph(),"severity"),
                 CHART_WIDTH,
                 CHART_HEIGHT);
     }
@@ -159,7 +172,7 @@ public class CodeDxProjectAction implements Action, Serializable {
         ChartUtil.generateGraph(
                 request,
                 response,
-                CodeDxChartBuilder.buildChart(lastAction, numBuildsInGraph,"status"),
+                CodeDxChartBuilder.buildChart(lastAction, analysisResultConfiguration.getNumBuildsInGraph(),"status"),
                 CHART_WIDTH,
                 CHART_HEIGHT);
     }

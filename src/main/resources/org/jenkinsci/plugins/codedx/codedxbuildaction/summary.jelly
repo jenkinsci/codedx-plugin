@@ -6,8 +6,5 @@
         <st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly" it="${it.severityDiffSummary}"/>
 		<st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly" it="${it.statusDiffSummary}"/>
 		
-		<br/>
-		<a href="${it.browsableAnalysisRunUrl}">View in Code Dx</a>
-		
     </t:summary>
 </j:jelly>

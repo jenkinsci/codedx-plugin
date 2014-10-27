@@ -1,5 +1,5 @@
 <j:jelly xmlns:j="jelly:core">
-    <j:if test="${from.hasValidResults()}">
+    <j:if test="${from.showTablesAndCharts() &amp;&amp; from.hasValidResults()}">
         <div align="right">
             <p/>
             <div class="test-trend-caption">
