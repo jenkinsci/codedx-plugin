@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.codedx;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,9 +40,9 @@ public class CodeDxDiffSummary extends CodeDxDiff{
 	
     public static CodeDxDiffSummary getDiffSummary(
             CodeDxReportStatistics previous,
-            CodeDxReportStatistics current, String name) {
+            CodeDxReportStatistics current, String name, Comparator<CodeDxDiffGroup> comparator) {
         if(previous == null) {
-            return getDiffSummary(current,name);
+            return getDiffSummary(current,name,comparator);
         }
 
         Set<String> groups = new HashSet<String>();
@@ -65,10 +66,11 @@ public class CodeDxDiffSummary extends CodeDxDiff{
             findingsDelta += curStats.getFindings() - prevStats.getFindings();
         }
 
+        Collections.sort(result, comparator);
         return new CodeDxDiffSummary(result, findings,findingsDelta, name);
     }
 
-    private static CodeDxDiffSummary getDiffSummary(CodeDxReportStatistics current, String name) {
+    private static CodeDxDiffSummary getDiffSummary(CodeDxReportStatistics current, String name, Comparator<CodeDxDiffGroup> comparator) {
         if(current == null) {
             return getDiffSummary(name);
         }
@@ -83,6 +85,7 @@ public class CodeDxDiffSummary extends CodeDxDiff{
             findings += groupStats.getFindings();
         }
 
+        Collections.sort(result,comparator);
         return new CodeDxDiffSummary(result, findings, 0, name);
     }
 

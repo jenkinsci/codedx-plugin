@@ -54,6 +54,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -260,7 +261,7 @@ public class CodeDxPublisher extends Recorder {
 					listener.getLogger().println("Got severity counts");
 					
 					List<CountGroup> statusCounts = client.getFindingsGroupedCounts(response.getRunId(), null, "status");
-					
+							
 					listener.getLogger().println("Got status counts");
 					
 					Map<String,CodeDxReportStatistics> statMap = new HashMap<String,CodeDxReportStatistics>();
@@ -309,15 +310,30 @@ public class CodeDxPublisher extends Recorder {
     
     public CodeDxReportStatistics createStatistics(List<CountGroup> countGroups){
     	
-		List<CodeDxGroupStatistics> severities = new ArrayList<CodeDxGroupStatistics>();
+		List<CodeDxGroupStatistics> groupStatsList = new ArrayList<CodeDxGroupStatistics>();
+		
+		int assignedCount = 0;
 		
 		for(CountGroup group : countGroups){
 		
-			CodeDxGroupStatistics stats = new CodeDxGroupStatistics(group.getName(),group.getCount());
-			severities.add(stats);
+			if(group.getName().toLowerCase().startsWith("assigned")){
+				
+				assignedCount += group.getCount();
+			}
+			else{
+				
+				CodeDxGroupStatistics stats = new CodeDxGroupStatistics(group.getName(),group.getCount());
+				groupStatsList.add(stats);
+			}
 		}
 		
-		return new CodeDxReportStatistics(severities);
+		if(assignedCount > 0){
+			
+			CodeDxGroupStatistics stats = new CodeDxGroupStatistics("Assigned",assignedCount);
+			groupStatsList.add(stats);
+		}
+		
+		return new CodeDxReportStatistics(groupStatsList);
     }
     
 	public BuildStepMonitor getRequiredMonitorService() {

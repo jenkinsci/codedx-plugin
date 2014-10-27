@@ -6,6 +6,9 @@ import hudson.model.HealthReport;
 import hudson.model.HealthReportingAction;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 import org.kohsuke.stapler.StaplerProxy;
@@ -40,14 +43,40 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
         return URL_NAME;
     }
 
+    private class DiffGroupComparator implements Comparator<CodeDxDiffGroup>{
+
+		List<String> groupOrdering = new ArrayList<String>();
+		
+    	public DiffGroupComparator(List<String> groupOrdering){
+    		
+    		this.groupOrdering = groupOrdering;
+    	}
+    	
+		public int compare(CodeDxDiffGroup o1, CodeDxDiffGroup o2) {
+
+			int index1 = groupOrdering.indexOf(o1.getName().toLowerCase());
+			int index2 = groupOrdering.indexOf(o2.getName().toLowerCase());
+			
+			return Integer.compare(index1, index2);
+		}
+    	
+    	
+    }
     /**
      * Get differences between two severity statistics.
      * 
      * @return the differences
      */
     public CodeDxDiffSummary getSeverityDiffSummary() {
+    
+    	List<String> order = new ArrayList<String>();
+    	order.add("high");
+    	order.add("medium");
+    	order.add("low");
+    	order.add("info");
+    	
         return CodeDxDiffSummary.getDiffSummary(getPreviousSeverityStats(),
-                result.getStatistics("severity"), "Severity");
+                result.getStatistics("severity"), "Severity",new DiffGroupComparator(order));
     }
 
     /**
@@ -56,8 +85,18 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
      * @return the differences
      */
     public CodeDxDiffSummary getStatusDiffSummary() {
+    	
+    	List<String> order = new ArrayList<String>();
+    	order.add("fixed");
+    	order.add("assigned");
+    	order.add("escalated");
+    	order.add("new");
+    	order.add("unresolved");
+    	order.add("false positive");
+    	order.add("gone");
+    	
         return CodeDxDiffSummary.getDiffSummary(getPreviousStatusStats(),
-                result.getStatistics("status"), "Status");
+                result.getStatistics("status"), "Status",new DiffGroupComparator(order));
     }
 
     public CodeDxResult getResult(){

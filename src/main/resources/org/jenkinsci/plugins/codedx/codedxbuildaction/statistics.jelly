@@ -6,7 +6,7 @@
         #codeDxSummary thead td {text-align:center;}
     </style>
 
-    <table class="pane sortable" id="codeDxSummary">
+    <table class="pane" id="codeDxSummary">
         <thead>
             <tr>
                 <td class="pane-header">${it.name}</td>
