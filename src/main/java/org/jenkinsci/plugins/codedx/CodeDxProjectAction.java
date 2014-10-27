@@ -120,28 +120,6 @@ public class CodeDxProjectAction implements Action, Serializable {
     }
 
     /**
-     * Display the severity trend map.
-     *
-     * @param request
-     *            Stapler request
-     * @param response
-     *            Stapler response
-     * @throws IOException
-     *             in case of an error
-     */
-    public void doSeverityTrendMap(final StaplerRequest request, final StaplerResponse response) throws IOException {
-        AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
-        CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
-
-        ChartUtil.generateClickableMap(
-                request,
-                response,
-                CodeDxChartBuilder.buildChart(lastAction, numBuildsInGraph,"severity"),
-                CHART_WIDTH,
-                CHART_HEIGHT);
-    }
-
-    /**
      * Display the severity trend graph.
      *
      * @param request
@@ -163,27 +141,6 @@ public class CodeDxProjectAction implements Action, Serializable {
                 CHART_HEIGHT);
     }
     
-    /**
-     * Display the severity trend map.
-     *
-     * @param request
-     *            Stapler request
-     * @param response
-     *            Stapler response
-     * @throws IOException
-     *             in case of an error
-     */
-    public void doStatusTrendMap(final StaplerRequest request, final StaplerResponse response) throws IOException {
-        AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
-        CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
-
-        ChartUtil.generateClickableMap(
-                request,
-                response,
-                CodeDxChartBuilder.buildChart(lastAction, numBuildsInGraph,"status"),
-                CHART_WIDTH,
-                CHART_HEIGHT);
-    }
 
     /**
      * Display the status trend graph.

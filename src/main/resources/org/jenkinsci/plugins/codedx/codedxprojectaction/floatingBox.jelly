@@ -6,14 +6,14 @@
                 Code Dx Findings Trend (Severities)
             </div>
             <div>
-                <img src="${from.urlName}/severityTrend" lazymap="${from.urlName}/severityTrendMap"/>
+                <img src="${from.urlName}/severityTrend"/>
             </div>
             <hr/>
             <div class="test-trend-caption">
                 Code Dx Findings Trend (Status)
             </div>
             <div>
-                <img src="${from.urlName}/statusTrend" lazymap="${from.urlName}/statusTrendMap"/>
+                <img src="${from.urlName}/statusTrend"/>
             </div>
         </div>
     </j:if>
