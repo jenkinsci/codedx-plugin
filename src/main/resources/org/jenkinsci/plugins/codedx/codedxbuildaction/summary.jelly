@@ -1,10 +1,16 @@
 <j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson" xmlns:st="jelly:stapler">
+    
+    <style type="text/css">
+        #statisticsArea { width: 400px;}
+    </style>
+    
     <t:summary icon="/plugin/codedx/icons/Code-Dx-Checkmark-48.png">
 
 		<h3>Code Dx Results</h3> 
 
+		<div id="statisticsArea">
         <st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly" it="${it.severityDiffSummary}"/>
 		<st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly" it="${it.statusDiffSummary}"/>
-		
+		</div>
     </t:summary>
 </j:jelly>
