@@ -42,9 +42,11 @@ import org.kohsuke.stapler.QueryParameter;
 import com.secdec.codedx.api.client.CodeDxClient;
 import com.secdec.codedx.api.client.CodeDxClientException;
 import com.secdec.codedx.api.client.CountGroup;
+import com.secdec.codedx.api.client.Filter;
 import com.secdec.codedx.api.client.Job;
 import com.secdec.codedx.api.client.Project;
 import com.secdec.codedx.api.client.StartAnalysisResponse;
+import com.secdec.codedx.api.client.TriageStatus;
 
 import javax.servlet.ServletException;
 
@@ -57,6 +59,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Jenkins publisher that publishes project source, binaries, and 
@@ -254,11 +257,19 @@ public class CodeDxPublisher extends Recorder {
 					
 					listener.getLogger().println("Analysis succeeded");
 					
+					listener.getLogger().println("Fetching Assigned TriageStatus codes");
+					
+					Map<String,TriageStatus> assignedStatuses = client.getAssignedTriageStatuses(Integer.parseInt(projectId));
+					
+					listener.getLogger().println("Got TriageStatus codes");
+					
 					listener.getLogger().println("Fetching severity counts");
 					
 					List<CountGroup> severityCounts = client.getFindingsGroupedCounts(response.getRunId(), null, "severity");
 
 					listener.getLogger().println("Got severity counts");
+					
+					listener.getLogger().println("Fetching status counts");
 					
 					List<CountGroup> statusCounts = client.getFindingsGroupedCounts(response.getRunId(), null, "status");
 							
@@ -272,9 +283,15 @@ public class CodeDxPublisher extends Recorder {
 			        CodeDxResult result = new CodeDxResult(statMap,build);
 			        
 			        listener.getLogger().println("Adding CodeDx build action");
-			        build.addAction(new CodeDxBuildAction(build, result));
+			        build.addAction(new CodeDxBuildAction(build, result,getUsers(assignedStatuses)));
+			        
+			        List<String> defaultStatuses = new ArrayList<String>(assignedStatuses.keySet());
+			        defaultStatuses.add(Filter.STATUS_ESCALATED);
+			        defaultStatuses.add(Filter.STATUS_NEW);
+			        defaultStatuses.add(Filter.STATUS_UNRESOLVED);
 			        
 			        AnalysisResultChecker checker = new AnalysisResultChecker(client, 
+			        													defaultStatuses.toArray(new String[0]),
 																	    analysisResultConfiguration.getFailureSeverity(), 
 																	    analysisResultConfiguration.getUnstableSeverity(), 
 																	    analysisResultConfiguration.isFailureOnlyNew(), 
@@ -308,31 +325,32 @@ public class CodeDxPublisher extends Recorder {
         return false;
     }
     
-    public CodeDxReportStatistics createStatistics(List<CountGroup> countGroups){
+    private String[] getUsers(Map<String,TriageStatus> assignedStatuses){
+    	
+    	List<String> users = new ArrayList<String>();
+    	
+
+		for(TriageStatus status : assignedStatuses.values()){
+			
+			if(status.getType().equals(TriageStatus.TYPE_USER)){
+				users.add(status.getDisplay());
+			}
+		}
+
+		return users.toArray(new String[0]);
+    }
+   
+    private CodeDxReportStatistics createStatistics(List<CountGroup> countGroups){
     	
 		List<CodeDxGroupStatistics> groupStatsList = new ArrayList<CodeDxGroupStatistics>();
 		
-		int assignedCount = 0;
-		
+
 		for(CountGroup group : countGroups){
 		
-			if(group.getName().toLowerCase().startsWith("assigned")){
-				
-				assignedCount += group.getCount();
-			}
-			else{
-				
-				CodeDxGroupStatistics stats = new CodeDxGroupStatistics(group.getName(),group.getCount());
-				groupStatsList.add(stats);
-			}
-		}
-		
-		if(assignedCount > 0){
-			
-			CodeDxGroupStatistics stats = new CodeDxGroupStatistics("Assigned",assignedCount);
+			CodeDxGroupStatistics stats = new CodeDxGroupStatistics(group.getName(),group.getCount());
 			groupStatsList.add(stats);
 		}
-		
+
 		return new CodeDxReportStatistics(groupStatsList);
     }
     

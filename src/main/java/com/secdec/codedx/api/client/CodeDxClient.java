@@ -21,7 +21,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -132,9 +136,52 @@ public class CodeDxClient {
 	 */
 	public Project getProject(int id) throws CodeDxClientException, ClientProtocolException, IOException{
 
-	return doGet("projects" + id,new TypeToken<Project>(){}.getType(),true);
+		return doGet("projects/" + id,new TypeToken<Project>(){}.getType(),true);
 	}
+	
+	
+	/**
+	 * Retrieves all Triage statuses for a given project.
+	 * 
+	 * @param id The project ID
+	 * @return A map from status code String to TriageStatus
+	 * @throws CodeDxClientException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	public Map<String,TriageStatus> getTriageStatuses(int id) throws CodeDxClientException, ClientProtocolException, IOException{
 
+		return doGet("projects/" + id + "/statuses",new TypeToken<Map<String,TriageStatus>>(){}.getType(),true);
+	}	
+	
+	/**
+	 * Retrieves all Assigned Triage statuses for a given project.
+	 * 
+	 * @param id The project ID
+	 * @return A map from status code String to TriageStatus
+	 * @throws CodeDxClientException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	public Map<String,TriageStatus> getAssignedTriageStatuses(int id) throws CodeDxClientException, ClientProtocolException, IOException{
+
+		Map<String,TriageStatus> all = getTriageStatuses(id);
+		Map<String,TriageStatus> assigned = new HashMap<String,TriageStatus>();
+		
+		Iterator<Entry<String,TriageStatus>> it = all.entrySet().iterator();
+		
+		while(it.hasNext()){
+			
+			Map.Entry<String, TriageStatus> item = it.next();
+		
+			if(item.getKey().startsWith(Filter.STATUS_ASSIGNED_PREFIX)){
+				assigned.put(item.getKey(), item.getValue());
+			}
+		}
+
+		return assigned;
+	}	
+	
 	/**
 	 * Retrieves a specific analysis run from CodeDx
 	 * 
@@ -146,7 +193,7 @@ public class CodeDxClient {
 	 */
 	public AnalysisRun getAnalysisRun(int id) throws CodeDxClientException, ClientProtocolException, IOException{
 
-		return doGet("runs" + id,new TypeToken<AnalysisRun>(){}.getType(),true);
+		return doGet("runs/" + id,new TypeToken<AnalysisRun>(){}.getType(),true);
 	}
 	
 	/**

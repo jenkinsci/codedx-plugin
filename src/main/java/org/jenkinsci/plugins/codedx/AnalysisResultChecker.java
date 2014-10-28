@@ -47,14 +47,15 @@ public class AnalysisResultChecker {
 	private boolean unstableOnlyNew;
 	private int runId;
 	private PrintStream logger;
+	private String[] defaultStatuses;
 	
 	
-	
-	public AnalysisResultChecker(CodeDxClient client, String failureSeverity,
+	public AnalysisResultChecker(CodeDxClient client, String[] defaultStatuses, String failureSeverity,
 			String unstableSeverity, boolean failureOnlyNew,
 			boolean unstableOnlyNew, int runId, PrintStream logger) {
 
 		this.client = client;
+		this.defaultStatuses = defaultStatuses;
 		this.failureSeverity = failureSeverity;
 		this.unstableSeverity = unstableSeverity;
 		this.failureOnlyNew = failureOnlyNew;
@@ -121,7 +122,7 @@ public class AnalysisResultChecker {
 		}
 		else{
 			
-			return new String[]{Filter.STATUS_NEW, Filter.STATUS_UNRESOLVED, Filter.STATUS_ESCALATED};
+			return defaultStatuses;
 		}
 	}
 }

@@ -42,6 +42,7 @@ public class Filter {
 	public static final String STATUS_FIXED = "5";
 	public static final String STATUS_UNRESOLVED = "6";
 	public static final String STATUS_GONE = "7";
+	public static final String STATUS_ASSIGNED_PREFIX = "8:";
 	
 	public static final String SEVERITY_INFO = "Info";
 	public static final String SEVERITY_LOW = "Low";

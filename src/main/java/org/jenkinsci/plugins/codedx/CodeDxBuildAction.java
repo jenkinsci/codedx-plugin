@@ -25,10 +25,12 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 
     private AbstractBuild<?,?> build;
     private CodeDxResult result;
-
-    public CodeDxBuildAction(AbstractBuild<?,?> build, CodeDxResult result){
+    private String[] projectUsers;
+    
+    public CodeDxBuildAction(AbstractBuild<?,?> build, CodeDxResult result, String[] projectUsers){
         this.build = build;
         this.result = result;
+        this.projectUsers = projectUsers;
     }
 
     public String getIconFileName() {
@@ -43,6 +45,11 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
         return URL_NAME;
     }
 
+    public String[] getProjectUsers(){
+    	
+    	return projectUsers;
+    }
+    
     private class DiffGroupComparator implements Comparator<CodeDxDiffGroup>{
 
 		List<String> groupOrdering = new ArrayList<String>();
@@ -88,7 +95,12 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     	
     	List<String> order = new ArrayList<String>();
     	order.add("fixed");
-    	order.add("assigned");
+    	
+    	for(String user: projectUsers){
+    		
+    		order.add("assigned to " + user.toLowerCase());
+    	}
+
     	order.add("escalated");
     	order.add("new");
     	order.add("unresolved");
