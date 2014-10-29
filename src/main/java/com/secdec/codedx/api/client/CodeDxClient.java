@@ -154,33 +154,6 @@ public class CodeDxClient {
 		return doGet("projects/" + id + "/statuses",new TypeToken<Map<String,TriageStatus>>(){}.getType(),true);
 	}	
 	
-	/**
-	 * Retrieves all Assigned Triage statuses for a given project.
-	 * 
-	 * @param id The project ID
-	 * @return A map from status code String to TriageStatus
-	 * @throws CodeDxClientException
-	 * @throws ClientProtocolException
-	 * @throws IOException
-	 */
-	public Map<String,TriageStatus> getAssignedTriageStatuses(int id) throws CodeDxClientException, ClientProtocolException, IOException{
-
-		Map<String,TriageStatus> all = getTriageStatuses(id);
-		Map<String,TriageStatus> assigned = new HashMap<String,TriageStatus>();
-		
-		Iterator<Entry<String,TriageStatus>> it = all.entrySet().iterator();
-		
-		while(it.hasNext()){
-			
-			Map.Entry<String, TriageStatus> item = it.next();
-		
-			if(item.getKey().startsWith(Filter.STATUS_ASSIGNED_PREFIX)){
-				assigned.put(item.getKey(), item.getValue());
-			}
-		}
-
-		return assigned;
-	}	
 	
 	/**
 	 * Retrieves a specific analysis run from CodeDx

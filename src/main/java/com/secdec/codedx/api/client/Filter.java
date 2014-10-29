@@ -35,14 +35,14 @@ public class Filter {
 	private String[] status;
 	private String[] toolOverlap;
 
-	public static final String STATUS_NEW = "1";
-	public static final String STATUS_ESCALATED = "2";
-	public static final String STATUS_IGNORED = "3";
-	public static final String STATUS_FALSE_POSITIVE = "4";
-	public static final String STATUS_FIXED = "5";
-	public static final String STATUS_UNRESOLVED = "6";
-	public static final String STATUS_GONE = "7";
-	public static final String STATUS_ASSIGNED_PREFIX = "8:";
+	public static final String STATUS_NEW = "new";
+	public static final String STATUS_ESCALATED = "escalated";
+	public static final String STATUS_IGNORED = "ignored";
+	public static final String STATUS_FALSE_POSITIVE = "false-positive";
+	public static final String STATUS_FIXED = "fixed";
+	public static final String STATUS_UNRESOLVED = "unresolved";
+	public static final String STATUS_GONE = "gone";
+	public static final String STATUS_ASSIGNED = "assigned";
 	
 	public static final String SEVERITY_INFO = "Info";
 	public static final String SEVERITY_LOW = "Low";

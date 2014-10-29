@@ -257,12 +257,6 @@ public class CodeDxPublisher extends Recorder {
 					
 					listener.getLogger().println("Analysis succeeded");
 					
-					listener.getLogger().println("Fetching Assigned TriageStatus codes");
-					
-					Map<String,TriageStatus> assignedStatuses = client.getAssignedTriageStatuses(Integer.parseInt(projectId));
-					
-					listener.getLogger().println("Got TriageStatus codes");
-					
 					listener.getLogger().println("Fetching severity counts");
 					
 					List<CountGroup> severityCounts = client.getFindingsGroupedCounts(response.getRunId(), null, "severity");
@@ -270,10 +264,40 @@ public class CodeDxPublisher extends Recorder {
 					listener.getLogger().println("Got severity counts");
 					
 					listener.getLogger().println("Fetching status counts");
+
+					Filter notAssignedFilter = new Filter();
+					notAssignedFilter.setStatus(new String[]{
+							Filter.STATUS_ESCALATED,
+							Filter.STATUS_FALSE_POSITIVE,
+							Filter.STATUS_FIXED,
+							Filter.STATUS_GONE,
+							Filter.STATUS_IGNORED,
+							Filter.STATUS_NEW,
+							Filter.STATUS_UNRESOLVED});
 					
-					List<CountGroup> statusCounts = client.getFindingsGroupedCounts(response.getRunId(), null, "status");
-							
+					List<CountGroup> statusCounts = client.getFindingsGroupedCounts(response.getRunId(), notAssignedFilter, "status");
+					
 					listener.getLogger().println("Got status counts");
+					
+					Filter assignedFilter = new Filter();
+					assignedFilter.setStatus(new String[]{Filter.STATUS_ASSIGNED});
+					
+					listener.getLogger().println("Fetching assigned count");
+					
+					//Since CodeDx splits assigned status into different statuses (one per user),
+					//we need to get the total assigned count and add our own CountGroup.
+					int assignedCount = client.getFindingsCount(response.getRunId(), assignedFilter);
+					
+					if(assignedCount > 0){
+						
+						CountGroup assignedGroup = new CountGroup();
+						assignedGroup.setName("Assigned");
+						assignedGroup.setCount(assignedCount);
+						statusCounts.add(assignedGroup);
+					}
+					
+					listener.getLogger().println("Got assigned count");
+				
 					
 					Map<String,CodeDxReportStatistics> statMap = new HashMap<String,CodeDxReportStatistics>();
 					
@@ -283,15 +307,9 @@ public class CodeDxPublisher extends Recorder {
 			        CodeDxResult result = new CodeDxResult(statMap,build);
 			        
 			        listener.getLogger().println("Adding CodeDx build action");
-			        build.addAction(new CodeDxBuildAction(build, result,getUsers(assignedStatuses)));
-			        
-			        List<String> defaultStatuses = new ArrayList<String>(assignedStatuses.keySet());
-			        defaultStatuses.add(Filter.STATUS_ESCALATED);
-			        defaultStatuses.add(Filter.STATUS_NEW);
-			        defaultStatuses.add(Filter.STATUS_UNRESOLVED);
+			        build.addAction(new CodeDxBuildAction(build, result));
 			        
 			        AnalysisResultChecker checker = new AnalysisResultChecker(client, 
-			        													defaultStatuses.toArray(new String[0]),
 																	    analysisResultConfiguration.getFailureSeverity(), 
 																	    analysisResultConfiguration.getUnstableSeverity(), 
 																	    analysisResultConfiguration.isFailureOnlyNew(), 

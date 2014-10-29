@@ -27,12 +27,10 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 
     private AbstractBuild<?,?> build;
     private CodeDxResult result;
-    private String[] projectUsers;
-    
-    public CodeDxBuildAction(AbstractBuild<?,?> build, CodeDxResult result, String[] projectUsers){
+
+    public CodeDxBuildAction(AbstractBuild<?,?> build, CodeDxResult result){
         this.build = build;
         this.result = result;
-        this.projectUsers = projectUsers;
     }
 
     public String getIconFileName() {
@@ -47,11 +45,6 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
         return URL_NAME;
     }
 
-    public String[] getProjectUsers(){
-    	
-    	return projectUsers;
-    }
-    
     private class DiffGroupComparator implements Comparator<CodeDxDiffGroup>{
 
 		List<String> groupOrdering = new ArrayList<String>();
@@ -63,8 +56,8 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     	
 		public int compare(CodeDxDiffGroup o1, CodeDxDiffGroup o2) {
 
-			int index1 = groupOrdering.indexOf(o1.getName().toLowerCase());
-			int index2 = groupOrdering.indexOf(o2.getName().toLowerCase());
+			int index1 = groupOrdering.indexOf(o1.getName());
+			int index2 = groupOrdering.indexOf(o2.getName());
 			
 			return Integer.compare(index1, index2);
 		}
@@ -79,10 +72,10 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     public CodeDxDiffSummary getSeverityDiffSummary() {
     
     	List<String> order = new ArrayList<String>();
-    	order.add("high");
-    	order.add("medium");
-    	order.add("low");
-    	order.add("info");
+    	order.add("High");
+    	order.add("Medium");
+    	order.add("Low");
+    	order.add("Info");
     	
     	Map<String,String> iconMap = new HashMap<String,String>();
     	
@@ -103,18 +96,13 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     public CodeDxDiffSummary getStatusDiffSummary() {
     	
     	List<String> order = new ArrayList<String>();
-    	order.add("fixed");
-    	
-    	for(String user: projectUsers){
-    		
-    		order.add("assigned to " + user.toLowerCase());
-    	}
-
-    	order.add("escalated");
-    	order.add("new");
-    	order.add("unresolved");
-    	order.add("false positive");
-    	order.add("gone");
+    	order.add("Fixed");
+    	order.add("Assigned");
+    	order.add("Escalated");
+    	order.add("New");
+    	order.add("Unresolved");
+    	order.add("False Positive");
+    	order.add("Gone");
     	
         return CodeDxDiffSummary.getDiffSummary(getPreviousStatusStats(),
                 result.getStatistics("status"), "Status",new DiffGroupComparator(order), new HashMap<String,String>());
