@@ -486,9 +486,30 @@ public class CodeDxPublisher extends Recorder {
 			try{
 				final List<Project> projects = client.getProjects();
 
-				for (final Project proj : projects) {
+				Map<String,Boolean> duplicates = new HashMap<String,Boolean>();
+				
+				for (Project proj : projects){
+					
+					if(!duplicates.containsKey(proj.getName())){
+						duplicates.put(proj.getName(), false);
+					}
+					else{
+						
+						duplicates.put(proj.getName(), true);
+					}
+				}
+				
+				for (Project proj : projects) {
 
-					listBox.add(proj.getName() + " (id=" + proj.getId() +")", Integer.toString(proj.getId()));
+					if(!duplicates.get(proj.getName())){
+						
+						listBox.add(proj.getName(), Integer.toString(proj.getId()));
+					}
+					else{
+						
+						listBox.add(proj.getName() + " (id:" + proj.getId() +")", Integer.toString(proj.getId()));
+					}
+					
 				}
 			}
 			catch(Exception e){
