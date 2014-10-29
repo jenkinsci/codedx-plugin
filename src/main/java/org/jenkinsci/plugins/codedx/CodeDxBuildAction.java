@@ -8,7 +8,9 @@ import hudson.model.HealthReportingAction;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 import org.kohsuke.stapler.StaplerProxy;
@@ -82,8 +84,15 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     	order.add("low");
     	order.add("info");
     	
+    	Map<String,String> iconMap = new HashMap<String,String>();
+    	
+    	iconMap.put("High", "/plugin/codedx/icons/high.png");
+    	iconMap.put("Medium", "/plugin/codedx/icons/medium.png");
+    	iconMap.put("Low", "/plugin/codedx/icons/low.png");
+    	iconMap.put("Info", "/plugin/codedx/icons/info.png");
+    	
         return CodeDxDiffSummary.getDiffSummary(getPreviousSeverityStats(),
-                result.getStatistics("severity"), "Severity",new DiffGroupComparator(order));
+                result.getStatistics("severity"), "Severity",new DiffGroupComparator(order),iconMap);
     }
 
     /**
@@ -108,7 +117,7 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     	order.add("gone");
     	
         return CodeDxDiffSummary.getDiffSummary(getPreviousStatusStats(),
-                result.getStatistics("status"), "Status",new DiffGroupComparator(order));
+                result.getStatistics("status"), "Status",new DiffGroupComparator(order), new HashMap<String,String>());
     }
 
     public CodeDxResult getResult(){

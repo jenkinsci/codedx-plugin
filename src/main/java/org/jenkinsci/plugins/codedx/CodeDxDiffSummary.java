@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
@@ -40,9 +41,13 @@ public class CodeDxDiffSummary extends CodeDxDiff{
 	
     public static CodeDxDiffSummary getDiffSummary(
             CodeDxReportStatistics previous,
-            CodeDxReportStatistics current, String name, Comparator<CodeDxDiffGroup> comparator) {
+            CodeDxReportStatistics current, 
+            String name, 
+            Comparator<CodeDxDiffGroup> comparator,
+            Map<String,String> iconMap) {
+    	
         if(previous == null) {
-            return getDiffSummary(current,name,comparator);
+            return getDiffSummary(current,name,comparator,iconMap);
         }
 
         Set<String> groups = new HashSet<String>();
@@ -60,7 +65,7 @@ public class CodeDxDiffSummary extends CodeDxDiff{
 
             result.add(new CodeDxDiffGroup(curStats.getGroup(),
                     curStats.getFindings(),
-                    curStats.getFindings() - prevStats.getFindings()));
+                    curStats.getFindings() - prevStats.getFindings(),iconMap.get(curStats.getGroup())));
 
             findings += curStats.getFindings();
             findingsDelta += curStats.getFindings() - prevStats.getFindings();
@@ -70,7 +75,12 @@ public class CodeDxDiffSummary extends CodeDxDiff{
         return new CodeDxDiffSummary(result, findings,findingsDelta, name);
     }
 
-    private static CodeDxDiffSummary getDiffSummary(CodeDxReportStatistics current, String name, Comparator<CodeDxDiffGroup> comparator) {
+    private static CodeDxDiffSummary getDiffSummary(
+    		CodeDxReportStatistics current, 
+    		String name, 
+    		Comparator<CodeDxDiffGroup> comparator,
+    		Map<String,String> iconMap) {
+    	
         if(current == null) {
             return getDiffSummary(name);
         }
@@ -80,7 +90,7 @@ public class CodeDxDiffSummary extends CodeDxDiff{
 
         for(CodeDxGroupStatistics groupStats: current.getStatistics()) {
             result.add(new CodeDxDiffGroup(groupStats.getGroup(),
-                    groupStats.getFindings(), 0));
+                    groupStats.getFindings(), 0,iconMap.get(groupStats.getGroup())));
 
             findings += groupStats.getFindings();
         }

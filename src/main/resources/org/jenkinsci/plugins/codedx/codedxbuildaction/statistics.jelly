@@ -1,4 +1,4 @@
-<j:jelly xmlns:j="jelly:core">
+<j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson">
 
     <style type="text/css">
         #codeDxSummary { width: 95%; table-layout:fixed;}
@@ -17,7 +17,14 @@
         <tbody>
             <j:forEach var="group" items="${it.groupDiffs}">
                 <tr>
-                    <td class="pane">${group.name}</td>
+                    <td class="pane">
+                    
+                    <j:if test="${group.icon != null}">
+						<img src="${resURL}${group.icon}"/>
+					</j:if>
+				
+                    ${group.name}
+                    </td>
                     <td class="pane number" data="${group.findings}">${group.findingsString}</td>
                     <td class="pane number" data="${group.findingsDelta}">${group.findingsDeltaString}</td>
                 </tr>
