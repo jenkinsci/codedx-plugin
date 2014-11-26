@@ -17,7 +17,6 @@
 
 package com.secdec.codedx.api.client;
 
-import java.util.List;
 
 /**
  * Represents the JSON data for a CodeDx project.

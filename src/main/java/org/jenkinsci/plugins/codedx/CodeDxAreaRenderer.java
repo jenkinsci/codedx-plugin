@@ -1,5 +1,9 @@
 package org.jenkinsci.plugins.codedx;
 
+import java.awt.Color;
+import java.awt.Paint;
+import java.util.List;
+
 import hudson.util.StackedAreaRenderer2;
 import hudson.util.ChartUtil.NumberOnlyBuildLabel;
 
@@ -13,9 +17,16 @@ import org.jfree.data.category.CategoryDataset;
  * @author ademartini This file is heavily derived from the sloccount-plugin
  */
 public class CodeDxAreaRenderer extends StackedAreaRenderer2 {
-    /** Unique identifier of this class. */
-    private static final long serialVersionUID = 1440842055316682192L;
 
+	/** Unique identifier of this class. */
+    private static final long serialVersionUID = 1440842055316682192L;
+	private List<Color> rowColors;
+
+    public CodeDxAreaRenderer(List<Color> rowColors){
+    	
+    	this.rowColors = rowColors;
+    }
+    
     /** {@inheritDoc} */
     @Override
     public final String generateURL(final CategoryDataset dataset, final int row, final int column) {
@@ -34,4 +45,26 @@ public class CodeDxAreaRenderer extends StackedAreaRenderer2 {
     private NumberOnlyBuildLabel getLabel(final CategoryDataset dataset, final int column) {
         return (NumberOnlyBuildLabel)dataset.getColumnKey(column);
     }
+    
+    @Override
+	public Paint getItemPaint(int row, int column) {
+
+    	if(rowColors == null){
+    		
+        	return super.getItemPaint(row, column);
+    	}
+    	
+    	return rowColors.get(row);
+	}
+    
+	@Override
+	public Paint getSeriesPaint(int series) {
+		
+		if(rowColors == null){
+			
+			return super.getSeriesPaint(series);
+		}
+
+		return rowColors.get(series);
+	}
 }

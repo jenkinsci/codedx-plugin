@@ -19,9 +19,7 @@ package org.jenkinsci.plugins.codedx;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import org.apache.http.client.ClientProtocolException;
 
@@ -99,7 +97,7 @@ public class AnalysisResultChecker {
 	
 	private String[] getSeverities(String minSeverity){
 		
-		String[] possibleSeverities = {Filter.SEVERITY_INFO, Filter.SEVERITY_LOW, Filter.SEVERITY_MEDIUM, Filter.SEVERITY_HIGH};
+		String[] possibleSeverities = {Filter.SEVERITY_INFO, Filter.SEVERITY_LOW, Filter.SEVERITY_MEDIUM, Filter.SEVERITY_HIGH, Filter.SEVERITY_UNSPECIFIED};
 		
 		for(int i = 0; i < possibleSeverities.length; i++){
 			

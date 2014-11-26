@@ -2,9 +2,6 @@ package org.jenkinsci.plugins.codedx;
 
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
-import hudson.model.HealthReport;
-import hudson.model.HealthReportingAction;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -76,6 +73,7 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     	order.add("Medium");
     	order.add("Low");
     	order.add("Info");
+    	order.add("Unspecified");
     	
     	Map<String,String> iconMap = new HashMap<String,String>();
     	
@@ -83,6 +81,7 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     	iconMap.put("Medium", "/plugin/codedx/icons/medium.png");
     	iconMap.put("Low", "/plugin/codedx/icons/low.png");
     	iconMap.put("Info", "/plugin/codedx/icons/info.png");
+    	iconMap.put("Unspecified", "/plugin/codedx/icons/unspecified.png");
     	
         return CodeDxDiffSummary.getDiffSummary(getPreviousSeverityStats(),
                 result.getStatistics("severity"), "Severity",new DiffGroupComparator(order),iconMap);

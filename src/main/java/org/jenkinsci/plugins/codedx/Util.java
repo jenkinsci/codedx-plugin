@@ -18,13 +18,9 @@
 package org.jenkinsci.plugins.codedx;
 
 import hudson.FilePath;
-import hudson.model.AbstractProject;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
-
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.QueryParameter;
 
 /**
  * Contains string and GLOB pattern matching utility methods.

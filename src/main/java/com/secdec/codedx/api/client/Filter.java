@@ -48,6 +48,7 @@ public class Filter {
 	public static final String SEVERITY_LOW = "Low";
 	public static final String SEVERITY_MEDIUM = "Medium";
 	public static final String SEVERITY_HIGH = "High";
+	public static final String SEVERITY_UNSPECIFIED = "Unspecified";
 	
 	public String[] getCwe() {
 		return cwe;

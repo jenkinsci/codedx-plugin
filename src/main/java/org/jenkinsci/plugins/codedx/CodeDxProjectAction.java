@@ -4,10 +4,17 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.util.ChartUtil;
+
+import java.awt.Color;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+
+import com.secdec.codedx.api.client.Filter;
 
 /**
  *
@@ -146,10 +153,18 @@ public class CodeDxProjectAction implements Action, Serializable {
         AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
         CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
 
+        Map<String,Color> colorMap = new HashMap<String,Color>();
+        
+        colorMap.put(Filter.SEVERITY_HIGH, new Color(0xbd0026));
+        colorMap.put(Filter.SEVERITY_MEDIUM, new Color(0xfd8d3c));
+        colorMap.put(Filter.SEVERITY_LOW, new Color(0xfed976));
+        colorMap.put(Filter.SEVERITY_INFO, new Color(0x888888));
+        colorMap.put(Filter.SEVERITY_UNSPECIFIED, new Color(0xadadad));
+        
         ChartUtil.generateGraph(
                 request,
                 response,
-                CodeDxChartBuilder.buildChart(lastAction, analysisResultConfiguration.getNumBuildsInGraph(),"severity"),
+                CodeDxChartBuilder.buildChart(lastAction, analysisResultConfiguration.getNumBuildsInGraph(),"severity",colorMap),
                 CHART_WIDTH,
                 CHART_HEIGHT);
     }
@@ -172,7 +187,7 @@ public class CodeDxProjectAction implements Action, Serializable {
         ChartUtil.generateGraph(
                 request,
                 response,
-                CodeDxChartBuilder.buildChart(lastAction, analysisResultConfiguration.getNumBuildsInGraph(),"status"),
+                CodeDxChartBuilder.buildChart(lastAction, analysisResultConfiguration.getNumBuildsInGraph(),"status",null),
                 CHART_WIDTH,
                 CHART_HEIGHT);
     }
