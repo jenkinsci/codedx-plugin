@@ -9,8 +9,8 @@
 			    
 			<j:if test="${it.showTablesAndCharts() &amp;&amp; lastBuildAction != null}">
 			 
-			    <st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly" it="${lastBuildAction.severityDiffSummary}"/>
-				<st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly" it="${lastBuildAction.statusDiffSummary}"/>
+			    <st:include page="/org/jenkinsci/plugins/codedx/CodeDxBuildAction/statistics.jelly" it="${lastBuildAction.severityDiffSummary}"/>
+				<st:include page="/org/jenkinsci/plugins/codedx/CodeDxBuildAction/statistics.jelly" it="${lastBuildAction.statusDiffSummary}"/>
 				<br/>
 				
     		</j:if>

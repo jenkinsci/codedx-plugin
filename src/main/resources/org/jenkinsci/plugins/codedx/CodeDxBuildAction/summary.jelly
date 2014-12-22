@@ -9,8 +9,8 @@
 		<h3>Code Dx Results</h3> 
 
 		<div id="statisticsArea">
-        <st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly" it="${it.severityDiffSummary}"/>
-		<st:include page="/org/jenkinsci/plugins/codedx/codedxbuildaction/statistics.jelly" it="${it.statusDiffSummary}"/>
+        <st:include page="/org/jenkinsci/plugins/codedx/CodeDxBuildAction/statistics.jelly" it="${it.severityDiffSummary}"/>
+		<st:include page="/org/jenkinsci/plugins/codedx/CodeDxBuildAction/statistics.jelly" it="${it.statusDiffSummary}"/>
 		</div>
     </t:summary>
 </j:jelly>
