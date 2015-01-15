@@ -16,7 +16,7 @@
     		</j:if>
             
 			<j:if test="${it.latestAnalysisUrl != null}">
-				<a href="${it.latestAnalysisUrl}">View latest in Code Dx</a>	
+				<a href="${it.latestAnalysisUrl}" target="_blank">View latest in Code Dx</a>
 			</j:if>
 			
         </t:summary>
