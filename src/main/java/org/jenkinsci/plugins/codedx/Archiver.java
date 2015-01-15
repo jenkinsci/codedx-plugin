@@ -90,8 +90,14 @@ public class Archiver {
 
 			public boolean accept(File file) {
 
-				logger.println("Adding " + file + " to zip.");
-				return includeFiles.contains(file.getAbsolutePath()) && !excludeFiles.contains(file.getAbsolutePath());		
+				boolean include = includeFiles.contains(file.getAbsolutePath()) && !excludeFiles.contains(file.getAbsolutePath());
+				
+				if(include){
+				
+					logger.println("Adding " + file + " to zip.");
+				}
+				
+				return include; 		
 			}
 			
 		});
