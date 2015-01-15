@@ -66,7 +66,7 @@ public class AnalysisResultChecker {
 		logger.println("Checking for findings that indicate build failure...");
 		if(!"None".equalsIgnoreCase(failureSeverity) && client.getFindingsCount(runId, createFilter(failureSeverity,failureOnlyNew)) > 0){
 			
-			logger.println("Failure!");
+			logger.println(String.format("Failure: Code Dx reported %s or higher severity issues.", failureSeverity));
 			return Result.FAILURE;
 		}
 

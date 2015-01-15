@@ -334,7 +334,7 @@ public class CodeDxPublisher extends Recorder {
         }
         else{
         	
-        	listener.getLogger().println("Nothing to send, this doesn't seem right!");
+        	listener.getLogger().println("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
         }
         
         return false;
