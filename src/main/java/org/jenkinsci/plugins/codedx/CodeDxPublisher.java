@@ -330,6 +330,10 @@ public class CodeDxPublisher extends Recorder {
 
 				listener.getLogger().println("Fatal Error!");
 				e.printStackTrace(listener.getLogger());
+				
+			} finally{
+				
+				sourceAndBinaryZip.delete();
 			}
         }
         else{
