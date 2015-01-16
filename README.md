@@ -3,7 +3,6 @@ codedx-jenkins-plugin
 
 A Code Dx plugin for Jenkins
 
-
 To compile and run use the following commands in the root directory:
 
 **Windows**
