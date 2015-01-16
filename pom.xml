@@ -70,8 +70,13 @@
 	    <developer>
 	      <id>ademartini</id>
 	      <name>Anthony DeMartini</name>
-	      <email>anthony.demartini@avi.com</email>
+	      <email>anthony.demartini@securedecisions.com</email>
 	    </developer>
+      <developer>
+        <id>leRadwan</id>
+        <name>Hassan Radwan</name>
+        <email>hassan.radwan@securedecisions.com</email>
+      </developer>
   	</developers>
   
 </project>
