@@ -94,3 +94,11 @@ mvn org.apache.maven.plugins:maven-release-plugin:2.5:perform
 ```
 
 It is important to use 2.5 because some prior versions of the maven-release-plugin have issues that cause things to fail silently.
+
+Check if the files were pushed here:
+
+http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/codedx/
+
+Eventually the information will be published to the JSON catalog here:
+
+https://ci.jenkins-ci.org/job/infra_update_center/
