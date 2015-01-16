@@ -39,7 +39,7 @@ I had some difficulties releasing this plugin.  Below are the steps I ended up n
 * Edit your Maven settings.xml file (in C:\users\YOUR_USERNAME\.m2\ on Windows) for  so that it contains the following:
 
 
-```
+```xml
 <settings>
   <pluginGroups>
     <pluginGroup>org.jenkins-ci.tools</pluginGroup>
