@@ -3,7 +3,6 @@ codedx-jenkins-plugin
 
 A Code Dx plugin for Jenkins
 
-
 To compile and run use the following commands in the root directory:
 
 **Windows**
@@ -39,14 +38,48 @@ I had some difficulties releasing this plugin.  Below are the steps I ended up n
 * Edit your Maven settings.xml file (in C:\users\YOUR_USERNAME\.m2\ on Windows) for  so that it contains the following:
 
 
-```
+```xml
+<settings>
+  <pluginGroups>
+    <pluginGroup>org.jenkins-ci.tools</pluginGroup>
+  </pluginGroups>
+
+  <profiles>
+    <!-- Give access to Jenkins plugins -->
+    <profile>
+      <id>jenkins</id>
+      <activation>
+        <activeByDefault>true</activeByDefault> <!-- change this to false, if you don't like to have it on per default -->
+      </activation>
+      <repositories>
+        <repository>
+          <id>repo.jenkins-ci.org</id>
+          <url>http://repo.jenkins-ci.org/public/</url>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>repo.jenkins-ci.org</id>
+          <url>http://repo.jenkins-ci.org/public/</url>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+  <mirrors>
+    <mirror>
+      <id>repo.jenkins-ci.org</id>
+      <url>http://repo.jenkins-ci.org/public/</url>
+      <mirrorOf>m.g.o-public</mirrorOf>
+    </mirror>
+  </mirrors>
   <servers>
     <server>
       <id>maven.jenkins-ci.org</id> <!-- For parent 1.397 or newer; before this use id java.net-m2-repository -->
-      <username>YOUR_JENKINS_USERNAME</username>
-      <password>YOUR_JENKINS_PASSWORD</password>
+      <username>JENKINS_USERNAME</username>
+      <password>JENKINS_PASSWORD</password>
     </server>
   </servers>
+</settings>
   
   ```
   
@@ -61,3 +94,11 @@ mvn org.apache.maven.plugins:maven-release-plugin:2.5:perform
 ```
 
 It is important to use 2.5 because some prior versions of the maven-release-plugin have issues that cause things to fail silently.
+
+Check if the files were pushed here:
+
+http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/codedx/
+
+Eventually the information will be published to the JSON catalog here:
+
+https://ci.jenkins-ci.org/job/infra_update_center/
