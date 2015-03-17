@@ -371,9 +371,19 @@ public class CodeDxClient {
 		int responseCode = response.getStatusLine().getStatusCode();
 		
 		if(responseCode != 202){
-			
-
-			throw new CodeDxClientException("Failed to start analysis.  " + IOUtils.toString(response.getEntity().getContent()), responseCode);
+			switch(responseCode) {
+                case 400:
+                    throw new CodeDxClientException("Failed to start analysis (Bad Request).  " + IOUtils.toString(response.getEntity().getContent()), responseCode);
+                case 403:
+                    throw new CodeDxClientException("Failed to start analysis (Forbidden: have you configured your key and permissions correctly?).  "
+                            + IOUtils.toString(response.getEntity().getContent()), responseCode);
+                case 404:
+                    throw new CodeDxClientException("Failed to start analysis (Project Not Found).  " + IOUtils.toString(response.getEntity().getContent()), responseCode);
+                case 415:
+                    throw new CodeDxClientException("Failed to start analysis (Unsupported Media Type).  " + IOUtils.toString(response.getEntity().getContent()), responseCode);
+                default:
+                    throw new CodeDxClientException("Failed to start analysis (Internal Server Error).  " + IOUtils.toString(response.getEntity().getContent()), responseCode);
+            }
 		}
 		
 		String data = IOUtils.toString(response.getEntity().getContent());
