@@ -77,6 +77,11 @@
         <name>Hassan Radwan</name>
         <email>hassan.radwan@securedecisions.com</email>
       </developer>
+        <developer>
+            <id>samuelbjohnson</id>
+            <name>Samuel B. Johnson</name>
+            <email>samuel.johnson@avi.com</email>
+        </developer>
   	</developers>
   
 </project>
