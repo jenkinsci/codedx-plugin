@@ -7,7 +7,7 @@ public enum StatisticGroup {
     Medium("Medium"),
     High("High"),
 
-    FalsePositives("False Positives"),
+    FalsePositive("False Positive"),
     Ignored("Ignored"),
     Escalated("Escalated"),
     Assigned("Assigned"),
