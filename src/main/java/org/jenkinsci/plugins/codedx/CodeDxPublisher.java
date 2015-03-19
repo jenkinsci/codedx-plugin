@@ -426,9 +426,9 @@ public class CodeDxPublisher extends Recorder {
         public FormValidation doCheckProjectId(@QueryParameter final String value)
                 throws IOException, ServletException {
             if (value.length() == 0)
-                return FormValidation.error("Please set a project. If none are shown above, then be sure that system settings are configured.");
+                return FormValidation.error("Please set a project. If none are shown above, then be sure that system settings are configured correctly.");
             if (Integer.parseInt(value) == -1)
-                return FormValidation.error("Failed to get available projects, please ensure systems settings are configured.");
+                return FormValidation.error("Failed to get available projects, please ensure systems settings are configured correctly.");
 
             return FormValidation.ok();
         }
