@@ -188,7 +188,7 @@ public class CodeDxProjectAction implements Action, Serializable {
 
         colorMap.put(Filter.STATUS_NEW, new Color(0x542788));
         colorMap.put(Filter.STATUS_UNRESOLVED, new Color(0x998ec3));
-        colorMap.put(Filter.STATUS_FIXED, new Color(0x67a9cf));
+        colorMap.put(Filter.STATUS_FIXED, new Color(0x3288bd));
         colorMap.put(Filter.STATUS_ASSIGNED, new Color(0x01665e));
         colorMap.put(Filter.STATUS_ESCALATED, new Color(0x5ab4ac));
         colorMap.put(Filter.STATUS_IGNORED, new Color(0xd8b365));
