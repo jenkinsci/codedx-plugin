@@ -6,13 +6,10 @@ import hudson.util.ShiftedCategoryAxis;
 
 import java.awt.Color;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
+import org.jenkinsci.plugins.codedx.model.StatisticGroup;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
@@ -75,9 +72,9 @@ public class CodeDxChartBuilder implements Serializable {
         	
             for(Object row : rows){
             	
-            	if(colors.containsKey(row)){
+            	if(colors.containsKey(row.toString())){
             		
-            		colorList.add(colors.get(row));
+            		colorList.add(colors.get(row.toString()));
             	}
             }
         }
@@ -96,8 +93,8 @@ public class CodeDxChartBuilder implements Serializable {
 
     private static CategoryDataset buildDataset(CodeDxBuildAction lastAction,
             int numBuildsInGraph, String statisticsName){
-        DataSetBuilder<String, NumberOnlyBuildLabel> builder = new DataSetBuilder<String, NumberOnlyBuildLabel>();
-        Set<String> allGroups = new HashSet<String>();
+        DataSetBuilder<StatisticGroup, NumberOnlyBuildLabel> builder = new DataSetBuilder<StatisticGroup, NumberOnlyBuildLabel>();
+        Set<StatisticGroup> allGroups = new HashSet<StatisticGroup>();
 
         CodeDxBuildAction action = lastAction;
         int numBuilds = 0;
@@ -108,16 +105,17 @@ public class CodeDxChartBuilder implements Serializable {
             if(result != null){
                 NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel(action.getBuild());
 
-                allGroups.addAll(result.getStatistics(statisticsName).getAllGroups());
-                Set<String> remainingGroups = new HashSet<String>(allGroups);
+                for (String group : result.getStatistics(statisticsName).getAllGroups()) {
+                    allGroups.add(StatisticGroup.forValue(group));
+                }
+                Set<StatisticGroup> remainingGroups = new HashSet<StatisticGroup>(allGroups);
 
                 for(CodeDxGroupStatistics groupStats : result.getStatistics(statisticsName).getStatistics()){
-                    builder.add(groupStats.getFindings(), groupStats.getGroup(), buildLabel);
-                    remainingGroups.remove(groupStats.getGroup());
+                    builder.add(groupStats.getFindings(), StatisticGroup.forValue(groupStats.getGroup()), buildLabel);
+                    remainingGroups.remove(StatisticGroup.forValue(groupStats.getGroup()));
                 }
                 
-                for(String group : remainingGroups) {
-                    // Language disappeared
+                for(StatisticGroup group : remainingGroups) {
                     builder.add(0, group, buildLabel);
                 }
 
@@ -129,4 +127,6 @@ public class CodeDxChartBuilder implements Serializable {
 
         return builder.build();
     }
+
+
 }
