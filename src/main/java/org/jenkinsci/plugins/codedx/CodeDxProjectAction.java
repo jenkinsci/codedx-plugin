@@ -184,10 +184,20 @@ public class CodeDxProjectAction implements Action, Serializable {
         AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
         CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
 
+        Map<String,Color> colorMap = new HashMap<String,Color>();
+
+        colorMap.put(Filter.STATUS_NEW, new Color(0x542788));
+        colorMap.put(Filter.STATUS_UNRESOLVED, new Color(0x998ec3));
+        colorMap.put(Filter.STATUS_FIXED, new Color(0x67a9cf));
+        colorMap.put(Filter.STATUS_ASSIGNED, new Color(0x01665e));
+        colorMap.put(Filter.STATUS_ESCALATED, new Color(0x5ab4ac));
+        colorMap.put(Filter.STATUS_IGNORED, new Color(0xd8b365));
+        colorMap.put(Filter.STATUS_FALSE_POSITIVE, new Color(0xd9d9d9));
+
         ChartUtil.generateGraph(
                 request,
                 response,
-                CodeDxChartBuilder.buildChart(lastAction, analysisResultConfiguration.getNumBuildsInGraph(),"status",null),
+                CodeDxChartBuilder.buildChart(lastAction, analysisResultConfiguration.getNumBuildsInGraph(),"status",colorMap),
                 CHART_WIDTH,
                 CHART_HEIGHT);
     }
