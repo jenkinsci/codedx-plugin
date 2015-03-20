@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jenkinsci.plugins.codedx.model.StatisticGroup;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -186,13 +187,13 @@ public class CodeDxProjectAction implements Action, Serializable {
 
         Map<String,Color> colorMap = new HashMap<String,Color>();
 
-        colorMap.put(Filter.STATUS_NEW, new Color(0x542788));
-        colorMap.put(Filter.STATUS_UNRESOLVED, new Color(0x998ec3));
-        colorMap.put(Filter.STATUS_FIXED, new Color(0x3288bd));
-        colorMap.put(Filter.STATUS_ASSIGNED, new Color(0x01665e));
-        colorMap.put(Filter.STATUS_ESCALATED, new Color(0x5ab4ac));
-        colorMap.put(Filter.STATUS_IGNORED, new Color(0xd8b365));
-        colorMap.put(Filter.STATUS_FALSE_POSITIVE, new Color(0xd9d9d9));
+        colorMap.put(StatisticGroup.New.toString(), new Color(0x542788));
+        colorMap.put(StatisticGroup.Unresolved.toString(), new Color(0x998ec3));
+        colorMap.put(StatisticGroup.Fixed.toString(), new Color(0x3288bd));
+        colorMap.put(StatisticGroup.Assigned.toString(), new Color(0x01665e));
+        colorMap.put(StatisticGroup.Escalated.toString(), new Color(0x5ab4ac));
+        colorMap.put(StatisticGroup.Ignored.toString(), new Color(0xd8b365));
+        colorMap.put(StatisticGroup.FalsePositive.toString(), new Color(0xd9d9d9));
 
         ChartUtil.generateGraph(
                 request,
