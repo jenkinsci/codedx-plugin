@@ -6,6 +6,7 @@ import hudson.util.ShiftedCategoryAxis;
 
 import java.awt.Color;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.*;
 
 import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
@@ -108,7 +109,7 @@ public class CodeDxChartBuilder implements Serializable {
                 for (String group : result.getStatistics(statisticsName).getAllGroups()) {
                     allGroups.add(StatisticGroup.forValue(group));
                 }
-                Set<StatisticGroup> remainingGroups = new HashSet<StatisticGroup>(allGroups);
+                Set<StatisticGroup> remainingGroups = StatisticGroup.valuesForStatistic(statisticsName);
 
                 for(CodeDxGroupStatistics groupStats : result.getStatistics(statisticsName).getStatistics()){
                     builder.add(groupStats.getFindings(), StatisticGroup.forValue(groupStats.getGroup()), buildLabel);
