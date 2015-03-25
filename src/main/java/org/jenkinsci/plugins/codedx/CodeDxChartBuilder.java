@@ -13,6 +13,8 @@ import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
 import org.jenkinsci.plugins.codedx.model.StatisticGroup;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.LegendItem;
+import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.NumberAxis;
@@ -88,6 +90,24 @@ public class CodeDxChartBuilder implements Serializable {
         	
             plot.setRenderer(new CodeDxAreaRenderer(null));
         }
+
+
+        ArrayList<LegendItem> legendItems = new ArrayList<LegendItem>();
+        Iterator<LegendItem> itr = plot.getLegendItems().iterator();
+        while (itr.hasNext()) {
+            legendItems.add(itr.next());
+        }
+        //Reverse the order
+        Collections.sort(legendItems, new Comparator<LegendItem>() {
+            public int compare(LegendItem lhs, LegendItem rhs) {
+                return rhs.getSeriesKey().compareTo(lhs.getSeriesKey());
+            }
+        });
+        LegendItemCollection newItems = new LegendItemCollection();
+        for (LegendItem item : legendItems) {
+            newItems.add(item);
+        }
+        plot.setFixedLegendItems(newItems);
        
         return chart;
     }
