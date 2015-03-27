@@ -64,7 +64,7 @@ public class Util {
     		for(String path : Util.commaSeparatedToArray(value)){
 
     			try {
-					if(path.length() == 0 || new FilePath(workspace,value).exists() == false){
+					if(path.length() == 0 || ! new FilePath(workspace, path).exists()){
 						
 						return FormValidation.warning(path + " does not exist in the workspace.");
 					}
