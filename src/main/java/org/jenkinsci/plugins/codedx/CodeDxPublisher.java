@@ -16,6 +16,7 @@
  */
 
 package org.jenkinsci.plugins.codedx;
+
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Extension;
@@ -59,15 +60,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Jenkins publisher that publishes project source, binaries, and 
+ * Jenkins publisher that publishes project source, binaries, and
  * analysis tool output files to a CodeDx server.
- * @author anthonyd
  *
+ * @author anthonyd
  */
 public class CodeDxPublisher extends Recorder {
 
-    private final String url;
-    private final String key;
+	private final String url;
+	private final String key;
 	private final String projectId;
 
 	private final String sourceAndBinaryFiles;
@@ -76,52 +77,51 @@ public class CodeDxPublisher extends Recorder {
 
 	private final AnalysisResultConfiguration analysisResultConfiguration;
 
-/**
- * 
- * @param url URL of the Code Dx server
- * @param key API key of the Code Dx server
- * @param projectId Code Dx project ID
- * @param sourceAndBinaryFiles Comma separated list of source/binary file Ant GLOB patterns
- * @param toolOutputFiles List of paths to tool output files
- * @param excludedSourceAndBinaryFiles Comma separated list of source/binary file Ant GLOB patterns to exclude
- * @param analysisResultConfiguration Contains the fields applicable when the user chooses to have Jenkins wait for 
- * analysis runs to complete.
- */
-    @DataBoundConstructor
-    public CodeDxPublisher(final String url, 
-    		final String key, 
-    		final String projectId, 
-    		final String sourceAndBinaryFiles, 
-    		final String toolOutputFiles, 
-    		final String excludedSourceAndBinaryFiles,
-    		final AnalysisResultConfiguration analysisResultConfiguration) {
-        this.projectId = projectId;
-        this.url = url;
-        this.key = key;
-        this.sourceAndBinaryFiles = sourceAndBinaryFiles;
-        this.excludedSourceAndBinaryFiles = excludedSourceAndBinaryFiles;
-        this.toolOutputFiles = toolOutputFiles;
-        this.analysisResultConfiguration = analysisResultConfiguration;
-    }	
-    
-    public AnalysisResultConfiguration getAnalysisResultConfiguration() {
-		return analysisResultConfiguration;
-    }
+	/**
+	 * @param url                          URL of the Code Dx server
+	 * @param key                          API key of the Code Dx server
+	 * @param projectId                    Code Dx project ID
+	 * @param sourceAndBinaryFiles         Comma separated list of source/binary file Ant GLOB patterns
+	 * @param toolOutputFiles              List of paths to tool output files
+	 * @param excludedSourceAndBinaryFiles Comma separated list of source/binary file Ant GLOB patterns to exclude
+	 * @param analysisResultConfiguration  Contains the fields applicable when the user chooses to have Jenkins wait for
+	 *                                     analysis runs to complete.
+	 */
+	@DataBoundConstructor
+	public CodeDxPublisher(final String url,
+						   final String key,
+						   final String projectId,
+						   final String sourceAndBinaryFiles,
+						   final String toolOutputFiles,
+						   final String excludedSourceAndBinaryFiles,
+						   final AnalysisResultConfiguration analysisResultConfiguration) {
+		this.projectId = projectId;
+		this.url = url;
+		this.key = key;
+		this.sourceAndBinaryFiles = sourceAndBinaryFiles;
+		this.excludedSourceAndBinaryFiles = excludedSourceAndBinaryFiles;
+		this.toolOutputFiles = toolOutputFiles;
+		this.analysisResultConfiguration = analysisResultConfiguration;
+	}
 
-    public String getProjectId() {
-        return projectId;
-    }
-    
-    public String getUrl(){
-    	
-    	return url;
-    }
-    
-    public String getKey(){
-    	
-    	return key;
-    }
-    
+	public AnalysisResultConfiguration getAnalysisResultConfiguration() {
+		return analysisResultConfiguration;
+	}
+
+	public String getProjectId() {
+		return projectId;
+	}
+
+	public String getUrl() {
+
+		return url;
+	}
+
+	public String getKey() {
+
+		return key;
+	}
+
 	public String getSourceAndBinaryFiles() {
 		return sourceAndBinaryFiles;
 	}
@@ -135,131 +135,128 @@ public class CodeDxPublisher extends Recorder {
 		return excludedSourceAndBinaryFiles;
 	}
 
-	
-    @Override
-    public Action getProjectAction(AbstractProject<?,?> project){
-    	
-    	CodeDxClient client = new CodeDxClient(url,key);
-    	
-    	String latestUrl = null;
-    	
-    	if(projectId.length() != 0 && !projectId.equals("-1")){
-    		
-    		latestUrl = client.buildLatestAnalysisRunUrl(Integer.parseInt(projectId));
-    	}
-    	
-        return new CodeDxProjectAction(project, analysisResultConfiguration,latestUrl);
-    }
 
-    @Override
-    public boolean perform(
+	@Override
+	public Action getProjectAction(AbstractProject<?, ?> project) {
+
+		CodeDxClient client = new CodeDxClient(url, key);
+
+		String latestUrl = null;
+
+		if (projectId.length() != 0 && !projectId.equals("-1")) {
+
+			latestUrl = client.buildLatestAnalysisRunUrl(Integer.parseInt(projectId));
+		}
+
+		return new CodeDxProjectAction(project, analysisResultConfiguration, latestUrl);
+	}
+
+	@Override
+	public boolean perform(
 			final AbstractBuild<?, ?> build,
-			final Launcher launcher, 
+			final Launcher launcher,
 			final BuildListener listener) throws InterruptedException, IOException {
-    	
-    	final List<InputStream> toSend = new ArrayList<InputStream>();
 
-    	listener.getLogger().println("Starting Code Dx Publish");
-    	
-    	if(projectId.length() == 0 || projectId.equals("-1")){
-    		
-    		listener.getLogger().println("No project has been selected");
-    		return true;
-    	}
-    	
-    	listener.getLogger().println("Code Dx Project ID: " + projectId);
-        listener.getLogger().println("Code Dx URL: " + url);
-        
-        listener.getLogger().println("Creating source/binary zip...");
-        
-        FilePath sourceAndBinaryZip = Archiver.Archive(build.getWorkspace(), 
-        		Util.commaSeparatedToArray(sourceAndBinaryFiles), 
-        		Util.commaSeparatedToArray(excludedSourceAndBinaryFiles), 
-        		"source", listener.getLogger());
-        
-        
-        if(sourceAndBinaryZip != null){
-        	
-    		try { 
-    			
-    			listener.getLogger().println("Adding source/binary zip...");
-    			
-    			toSend.add(sourceAndBinaryZip.read()); 
-    		} 
-    		catch (IOException e) { 
-    			
-    			listener.getLogger().println("Failed to add source/binary zip.");
-    		}
-    	
-        }
-        else{
-        	
-        	listener.getLogger().println("No matching source/binary files.");
-        }
-           
-        String[] files = Util.commaSeparatedToArray(toolOutputFiles);
-        
-    	for(String file : files){
-    		
-    		if(file.length() != 0){
-    			
-    			FilePath path = build.getWorkspace().child(file);
-    			
-    			if(path.exists()){
-    				
-    	    		try { 
-    	    			
-    	    			listener.getLogger().println("Add tool output file " + path.getRemote() + " to request.");
-    	    			toSend.add(path.read()); 
-    	    		} 
-    	    		catch (IOException e) { 
-    	    			
-    	    			listener.getLogger().println("Failed to add tool output file: " + path);
-    	    		}
-    			}
-    		}
-    	}
-        
-        if(toSend.size() > 0){
-        	
-        	final CodeDxClient client = new CodeDxClient(url,key);
-        	
-        	try {
-        		listener.getLogger().println("Sending analysis request");
-				
-        		StartAnalysisResponse response = client.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
-				
+		final List<InputStream> toSend = new ArrayList<InputStream>();
+
+		listener.getLogger().println("Starting Code Dx Publish");
+
+		if (projectId.length() == 0 || projectId.equals("-1")) {
+
+			listener.getLogger().println("No project has been selected");
+			return true;
+		}
+
+		listener.getLogger().println("Code Dx Project ID: " + projectId);
+		listener.getLogger().println("Code Dx URL: " + url);
+
+		listener.getLogger().println("Creating source/binary zip...");
+
+		FilePath sourceAndBinaryZip = Archiver.Archive(build.getWorkspace(),
+				Util.commaSeparatedToArray(sourceAndBinaryFiles),
+				Util.commaSeparatedToArray(excludedSourceAndBinaryFiles),
+				"source", listener.getLogger());
+
+
+		if (sourceAndBinaryZip != null) {
+
+			try {
+
+				listener.getLogger().println("Adding source/binary zip...");
+
+				toSend.add(sourceAndBinaryZip.read());
+			} catch (IOException e) {
+
+				listener.getLogger().println("Failed to add source/binary zip.");
+			}
+
+		} else {
+
+			listener.getLogger().println("No matching source/binary files.");
+		}
+
+		String[] files = Util.commaSeparatedToArray(toolOutputFiles);
+
+		for (String file : files) {
+
+			if (file.length() != 0) {
+
+				FilePath path = build.getWorkspace().child(file);
+
+				if (path.exists()) {
+
+					try {
+
+						listener.getLogger().println("Add tool output file " + path.getRemote() + " to request.");
+						toSend.add(path.read());
+					} catch (IOException e) {
+
+						listener.getLogger().println("Failed to add tool output file: " + path);
+					}
+				}
+			}
+		}
+
+		if (toSend.size() > 0) {
+
+			final CodeDxClient client = new CodeDxClient(url, key);
+
+			try {
+				listener.getLogger().println("Sending analysis request");
+
+				StartAnalysisResponse response = client.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
+
 				listener.getLogger().println("Analysis request succeeded");
-				
-				if(analysisResultConfiguration == null){
-					
+
+				if (analysisResultConfiguration == null) {
+
 					listener.getLogger().println("No need to wait for analysis to complete.  We are done here.");
 					return true;
 				}
-				
+
 				listener.getLogger().println("Waiting for analysis to complete");
-				
+
 				String status = null;
-				
-				do{
-					
+
+				do {
+
 					Thread.sleep(3000);
 					status = client.getJobStatus(response.getJobId());
-					
-					listener.getLogger().println("The STATUS IS: " + status);
-					
-				} while(Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
 
-				if(Job.COMPLETED.equals(status)){
-					
+					listener.getLogger().println("The STATUS IS: " + status);
+
+				} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
+
+				if (Job.COMPLETED.equals(status)) {
+
 					listener.getLogger().println("Analysis succeeded");
-					
+
 					listener.getLogger().println("Fetching severity counts");
-					
+
 					List<CountGroup> severityCounts = client.getFindingsGroupedCounts(response.getRunId(), null, "severity");
 
 					listener.getLogger().println("Got severity counts");
-					
+
 					listener.getLogger().println("Fetching status counts");
 
 					Filter notAssignedFilter = new Filter();
@@ -271,307 +268,298 @@ public class CodeDxPublisher extends Recorder {
 							Filter.STATUS_IGNORED,
 							Filter.STATUS_NEW,
 							Filter.STATUS_UNRESOLVED});
-					
+
 					List<CountGroup> statusCounts = client.getFindingsGroupedCounts(response.getRunId(), notAssignedFilter, "status");
-					
+
 					listener.getLogger().println("Got status counts");
-					
+
 					Filter assignedFilter = new Filter();
 					assignedFilter.setStatus(new String[]{Filter.STATUS_ASSIGNED});
-					
+
 					listener.getLogger().println("Fetching assigned count");
-					
+
 					//Since CodeDx splits assigned status into different statuses (one per user),
 					//we need to get the total assigned count and add our own CountGroup.
 					int assignedCount = client.getFindingsCount(response.getRunId(), assignedFilter);
-					
-					if(assignedCount > 0){
-						
+
+					if (assignedCount > 0) {
+
 						CountGroup assignedGroup = new CountGroup();
 						assignedGroup.setName("Assigned");
 						assignedGroup.setCount(assignedCount);
 						statusCounts.add(assignedGroup);
 					}
-					
+
 					listener.getLogger().println("Got assigned count");
-				
-					
-					Map<String,CodeDxReportStatistics> statMap = new HashMap<String,CodeDxReportStatistics>();
-					
+
+
+					Map<String, CodeDxReportStatistics> statMap = new HashMap<String, CodeDxReportStatistics>();
+
 					statMap.put("severity", createStatistics(severityCounts));
 					statMap.put("status", createStatistics(statusCounts));
-					
-			        CodeDxResult result = new CodeDxResult(statMap,build);
-			        
-			        listener.getLogger().println("Adding CodeDx build action");
-			        build.addAction(new CodeDxBuildAction(build, result));
-			        
-			        AnalysisResultChecker checker = new AnalysisResultChecker(client, 
-																	    analysisResultConfiguration.getFailureSeverity(), 
-																	    analysisResultConfiguration.getUnstableSeverity(), 
-																	    analysisResultConfiguration.isFailureOnlyNew(), 
-																	    analysisResultConfiguration.isUnstableOnlyNew(), 
-																	    response.getRunId(), 
-																	    listener.getLogger());
-			        build.setResult(checker.checkResult());
-			        
-			        return true;
-				}
-				else{
+
+					CodeDxResult result = new CodeDxResult(statMap, build);
+
+					listener.getLogger().println("Adding CodeDx build action");
+					build.addAction(new CodeDxBuildAction(build, result));
+
+					AnalysisResultChecker checker = new AnalysisResultChecker(client,
+							analysisResultConfiguration.getFailureSeverity(),
+							analysisResultConfiguration.getUnstableSeverity(),
+							analysisResultConfiguration.isFailureOnlyNew(),
+							analysisResultConfiguration.isUnstableOnlyNew(),
+							response.getRunId(),
+							listener.getLogger());
+					build.setResult(checker.checkResult());
+
+					return true;
+				} else {
 					listener.getLogger().println("Analysis status: " + status);
 					return false;
 				}
-		        
+
 			} catch (NumberFormatException e) {
 
 				listener.getLogger().println("Invalid project Id");
-				
+
 			} catch (CodeDxClientException e) {
 
 				listener.getLogger().println("Fatal Error!");
 				e.printStackTrace(listener.getLogger());
-				
-			} finally{
-				
+
+			} finally {
+
 				sourceAndBinaryZip.delete();
 			}
-        }
-        else{
-        	
-        	listener.getLogger().println("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
-        }
-        
-        return false;
-    }
-    
-    private String[] getUsers(Map<String,TriageStatus> assignedStatuses){
-    	
-    	List<String> users = new ArrayList<String>();
-    	
+		} else {
 
-		for(TriageStatus status : assignedStatuses.values()){
-			
-			if(status.getType().equals(TriageStatus.TYPE_USER)){
+			listener.getLogger().println("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
+		}
+
+		return false;
+	}
+
+	private String[] getUsers(Map<String, TriageStatus> assignedStatuses) {
+
+		List<String> users = new ArrayList<String>();
+
+
+		for (TriageStatus status : assignedStatuses.values()) {
+
+			if (status.getType().equals(TriageStatus.TYPE_USER)) {
 				users.add(status.getDisplay());
 			}
 		}
 
 		return users.toArray(new String[0]);
-    }
-   
-    private CodeDxReportStatistics createStatistics(List<CountGroup> countGroups){
-    	
-		List<CodeDxGroupStatistics> groupStatsList = new ArrayList<CodeDxGroupStatistics>();
-		
+	}
 
-		for(CountGroup group : countGroups){
-		
-			CodeDxGroupStatistics stats = new CodeDxGroupStatistics(group.getName(),group.getCount());
+	private CodeDxReportStatistics createStatistics(List<CountGroup> countGroups) {
+
+		List<CodeDxGroupStatistics> groupStatsList = new ArrayList<CodeDxGroupStatistics>();
+
+
+		for (CountGroup group : countGroups) {
+
+			CodeDxGroupStatistics stats = new CodeDxGroupStatistics(group.getName(), group.getCount());
 			groupStatsList.add(stats);
 		}
 
 		return new CodeDxReportStatistics(groupStatsList);
-    }
-    
+	}
+
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.NONE; // NONE since this is not dependent on the last step
 	}
-	
-    // Overridden for better type safety.
-    // If your plugin doesn't really define any property on Descriptor,
-    // you don't have to do this.
-    @Override
-    public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
-    }
 
-    /**
-     * Descriptor for {@link CodeDxPublisher}. Used as a singleton.
-     * The class is marked as public so that it can be accessed from views.
-     *
-     */
-    @Extension // This indicates to Jenkins that this is an implementation of an extension point.
-    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-        
-    	/**
-         * To persist global configuration information,
-         * simply store it in a field and call save().
-         *
-         * <p>
-         * If you don't want fields to be persisted, use <tt>transient</tt>.
-         */
+	// Overridden for better type safety.
+	// If your plugin doesn't really define any property on Descriptor,
+	// you don't have to do this.
+	@Override
+	public DescriptorImpl getDescriptor() {
+		return (DescriptorImpl) super.getDescriptor();
+	}
 
-        /**
-         * In order to load the persisted global configuration, you have to 
-         * call load() in the constructor.
-         */
-        public DescriptorImpl() {
-            load();
-        }
-    	
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-            // Indicates that this builder can be used with all kinds of project types 
-            return true;
-        }
+	/**
+	 * Descriptor for {@link CodeDxPublisher}. Used as a singleton.
+	 * The class is marked as public so that it can be accessed from views.
+	 */
+	@Extension // This indicates to Jenkins that this is an implementation of an extension point.
+	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
-        /**
-         * This human readable name is used in the configuration screen.
-         */
-        public String getDisplayName() {
-            return "Publish to Code Dx";
-        }
+		/**
+		 * To persist global configuration information,
+		 * simply store it in a field and call save().
+		 *
+		 * <p>
+		 * If you don't want fields to be persisted, use <tt>transient</tt>.
+		 */
 
+		/**
+		 * In order to load the persisted global configuration, you have to
+		 * call load() in the constructor.
+		 */
+		public DescriptorImpl() {
+			load();
+		}
+
+		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+			// Indicates that this builder can be used with all kinds of project types
+			return true;
+		}
+
+		/**
+		 * This human readable name is used in the configuration screen.
+		 */
+		public String getDisplayName() {
+			return "Publish to Code Dx";
+		}
 
 
-        public FormValidation doCheckProjectId(@QueryParameter final String value)
-                throws IOException, ServletException {
-            if (value.length() == 0)
-                return FormValidation.error("Please set a project. If none are shown above, then be sure that system settings are configured correctly.");
-            if (Integer.parseInt(value) == -1)
-                return FormValidation.error("Failed to get available projects, please ensure systems settings are configured correctly.");
+		public FormValidation doCheckProjectId(@QueryParameter final String value)
+				throws IOException, ServletException {
+			if (value.length() == 0)
+				return FormValidation.error("Please set a project. If none are shown above, then be sure that system settings are configured correctly.");
+			if (Integer.parseInt(value) == -1)
+				return FormValidation.error("Failed to get available projects, please ensure systems settings are configured correctly.");
 
-            return FormValidation.ok();
-        }
-        
-        public FormValidation doCheckKey(@QueryParameter final String value)
-                throws IOException, ServletException {
-           
-        	if (value.length() == 0)
-                return FormValidation.error("Please set a Key.");
+			return FormValidation.ok();
+		}
 
-            return FormValidation.ok();
-        }
-        
-        public FormValidation doCheckUrl(@QueryParameter final String value)
-                throws IOException, ServletException {
-            
-        	if (value.length() == 0)
-                return FormValidation.error("Please set a URL.");
+		public FormValidation doCheckKey(@QueryParameter final String value)
+				throws IOException, ServletException {
 
-            try {
-                new URL(value);
+			if (value.length() == 0)
+				return FormValidation.error("Please set a Key.");
 
-            } catch (MalformedURLException malformedURLException) {
-            	return FormValidation.error("Malformed URL");
-            }
-            
-            if(value.toLowerCase().startsWith("http:")){
-            	
-            	return FormValidation.warning("HTTP is considered insecure, it is recommended that you use HTTPS.");
-            }
-            else if(value.toLowerCase().startsWith("https:")){
-            	
-                return FormValidation.ok(); 
-            }
-            else{
-            	
-            	return FormValidation.error("Invalid protocol, please use HTTPS or HTTP.");
-            }
-        }
-        
-        public FormValidation doCheckSourceAndBinaryFiles(@QueryParameter final String value, @QueryParameter final String toolOutputFiles, @AncestorInPath AbstractProject project){
-        	
-        	if(value.length() == 0){
-        		
-        		if(toolOutputFiles.length() == 0)
-        			return FormValidation.error("You must specify \"Tool Output Files\" and/or \"Source and Binary Files\"");
-        		else
-        			return FormValidation.warning("It is recommended that at least source files are provided to Code Dx.");
-        	}
-        	
-        	return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
-        }
-        
-        public FormValidation doCheckExcludedSourceAndBinaryFiles(@QueryParameter final String value, @AncestorInPath AbstractProject project){
+			return FormValidation.ok();
+		}
 
-        	return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
-        }
-        
-        public FormValidation doCheckToolOutputFiles(@QueryParameter final String value, @QueryParameter final String sourceAndBinaryFiles, @AncestorInPath AbstractProject project){
+		public FormValidation doCheckUrl(@QueryParameter final String value)
+				throws IOException, ServletException {
 
-        	if(value.length() == 0 && sourceAndBinaryFiles.length() == 0){
-        		
-        		return FormValidation.error("You must specify \"Tool Output Files\" and/or \"Source and Binary Files\"");
-        	}
-        	
-        	return Util.checkCSVFileMatches(value, project.getSomeWorkspace());
-        }
-        
-    	public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String key) {
+			if (value.length() == 0)
+				return FormValidation.error("Please set a URL.");
+
+			try {
+				new URL(value);
+
+			} catch (MalformedURLException malformedURLException) {
+				return FormValidation.error("Malformed URL");
+			}
+
+			if (value.toLowerCase().startsWith("http:")) {
+
+				return FormValidation.warning("HTTP is considered insecure, it is recommended that you use HTTPS.");
+			} else if (value.toLowerCase().startsWith("https:")) {
+
+				return FormValidation.ok();
+			} else {
+
+				return FormValidation.error("Invalid protocol, please use HTTPS or HTTP.");
+			}
+		}
+
+		public FormValidation doCheckSourceAndBinaryFiles(@QueryParameter final String value, @QueryParameter final String toolOutputFiles, @AncestorInPath AbstractProject project) {
+
+			if (value.length() == 0) {
+
+				if (toolOutputFiles.length() == 0)
+					return FormValidation.error("You must specify \"Tool Output Files\" and/or \"Source and Binary Files\"");
+				else
+					return FormValidation.warning("It is recommended that at least source files are provided to Code Dx.");
+			}
+
+			return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
+		}
+
+		public FormValidation doCheckExcludedSourceAndBinaryFiles(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
+
+			return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
+		}
+
+		public FormValidation doCheckToolOutputFiles(@QueryParameter final String value, @QueryParameter final String sourceAndBinaryFiles, @AncestorInPath AbstractProject project) {
+
+			if (value.length() == 0 && sourceAndBinaryFiles.length() == 0) {
+
+				return FormValidation.error("You must specify \"Tool Output Files\" and/or \"Source and Binary Files\"");
+			}
+
+			return Util.checkCSVFileMatches(value, project.getSomeWorkspace());
+		}
+
+		public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String key) {
 			final ListBoxModel listBox = new ListBoxModel();
-		
-			final CodeDxClient client = new CodeDxClient(url,key);
-				
-			try{
+
+			final CodeDxClient client = new CodeDxClient(url, key);
+
+			try {
 				final List<Project> projects = client.getProjects();
 
-				Map<String,Boolean> duplicates = new HashMap<String,Boolean>();
-				
-				for (Project proj : projects){
-					
-					if(!duplicates.containsKey(proj.getName())){
+				Map<String, Boolean> duplicates = new HashMap<String, Boolean>();
+
+				for (Project proj : projects) {
+
+					if (!duplicates.containsKey(proj.getName())) {
 						duplicates.put(proj.getName(), false);
-					}
-					else{
-						
+					} else {
+
 						duplicates.put(proj.getName(), true);
 					}
 				}
-				
+
 				for (Project proj : projects) {
 
-					if(!duplicates.get(proj.getName())){
-						
+					if (!duplicates.get(proj.getName())) {
+
 						listBox.add(proj.getName(), Integer.toString(proj.getId()));
+					} else {
+
+						listBox.add(proj.getName() + " (id:" + proj.getId() + ")", Integer.toString(proj.getId()));
 					}
-					else{
-						
-						listBox.add(proj.getName() + " (id:" + proj.getId() +")", Integer.toString(proj.getId()));
-					}
-					
+
 				}
+			} catch (Exception e) {
+
+				listBox.add("", "-1");
 			}
-			catch(Exception e){
-				
-				listBox.add("","-1");
-			}
 
-            return listBox;
-        }
-    	
-    	public ListBoxModel doFillFailureSeverityItems() {
+			return listBox;
+		}
 
-    		return getSeverityItems();
-        }
+		public ListBoxModel doFillFailureSeverityItems() {
 
-    	public ListBoxModel doFillUnstableSeverityItems() {
+			return getSeverityItems();
+		}
 
-    		return getSeverityItems();
-        }
-    	
-    	private ListBoxModel getSeverityItems(){
-    		
+		public ListBoxModel doFillUnstableSeverityItems() {
+
+			return getSeverityItems();
+		}
+
+		private ListBoxModel getSeverityItems() {
+
 			final ListBoxModel listBox = new ListBoxModel();
-			
+
 			listBox.add("None", "None");
 			listBox.add("Info or Higher", "Info");
 			listBox.add("Low or Higher", "Low");
 			listBox.add("Medium or Higher", "Medium");
-			listBox.add("High","High");
-			
-            return listBox;
-    	}
-    	
-        @Override
-        public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
-            // To persist global configuration information,
-            // set that to properties and call save().
-            // ^Can also use req.bindJSON(this, formData);
-            //  (easier when there are many fields; need set* methods for this, like setUseFrench)
-            
-        	save();
-            return super.configure(req,formData);
-        } 	
-    }
+			listBox.add("High", "High");
+
+			return listBox;
+		}
+
+		@Override
+		public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
+			// To persist global configuration information,
+			// set that to properties and call save().
+			// ^Can also use req.bindJSON(this, formData);
+			//  (easier when there are many fields; need set* methods for this, like setUseFrench)
+
+			save();
+			return super.configure(req, formData);
+		}
+	}
 }
 
