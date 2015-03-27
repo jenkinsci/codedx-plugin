@@ -19,6 +19,8 @@ mvn hpi:run
 ```
 Mac users should ensure that their JAVA_HOME environment variable points to a Java 7 version of the JDK. If this isn't done explicitly, the mvn script will use the directory pointed to by the `/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK` symlink, which is the latest Apple JDK installed and isn't overwritten by Oracle's JDK installer.
 
+As Code Dx also runs on port 8080 by default, you can adjust the port by appending the argument `-Djetty.port=PORT` to have Jenkins start on a port of your choosing.
+
 To package the plugin run:
 
 ```sh
