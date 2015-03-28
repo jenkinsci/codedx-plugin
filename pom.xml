@@ -14,8 +14,8 @@
 
   <licenses>
     <license>
-      <name>MIT License</name>
-      <url>http://opensource.org/licenses/MIT</url>
+      <name>Apache License</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.html</url>
     </license>
   </licenses>
 
@@ -58,30 +58,25 @@
 
 
 	<scm>
-    	    <connection>scm:git:ssh://github.com/jenkinsci/codedx-plugin.git</connection>
-            <developerConnection>scm:git:ssh://git@github.com/jenkinsci/codedx-plugin.git</developerConnection>
-	    <url>https://github.com/jenkinsci/codedx-plugin</url>
-  	  <tag>HEAD</tag>
+    <connection>scm:git:ssh://github.com/jenkinsci/codedx-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/codedx-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/codedx-plugin</url>
+	  <tag>HEAD</tag>
   </scm>
   
   	<url>https://wiki.jenkins-ci.org/display/JENKINS/Code+Dx+Plugin</url>
   	
   	<developers>
-	    <developer>
-	      <id>ademartini</id>
-	      <name>Anthony DeMartini</name>
-	      <email>anthony.demartini@securedecisions.com</email>
-	    </developer>
       <developer>
         <id>leRadwan</id>
         <name>Hassan Radwan</name>
-        <email>hassan.radwan@securedecisions.com</email>
+        <email>hassan.radwan@codedx.com</email>
       </developer>
-        <developer>
-            <id>samuelbjohnson</id>
-            <name>Samuel B. Johnson</name>
-            <email>samuel.johnson@avi.com</email>
-        </developer>
+      <developer>
+          <id>samuelbjohnson</id>
+          <name>Samuel B. Johnson</name>
+          <email>samuel.johnson@codedx.com</email>
+      </developer>
   	</developers>
   
 </project>
