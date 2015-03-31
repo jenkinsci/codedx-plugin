@@ -263,7 +263,7 @@ public class CodeDxClient {
 	 * @throws IOException
 	 * @throws CodeDxClientException
 	 */
-	private <T> T doGet(String path, Type typeOfT, boolean experimental) throws ClientProtocolException, IOException, CodeDxClientException {
+	protected <T> T doGet(String path, Type typeOfT, boolean experimental) throws ClientProtocolException, IOException, CodeDxClientException {
 		
 		HttpGet getRequest;
 		

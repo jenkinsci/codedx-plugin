@@ -17,6 +17,7 @@
 
 package org.jenkinsci.plugins.codedx;
 
+import com.secdec.codedx.api.client.*;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Extension;
@@ -38,15 +39,6 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
-
-import com.secdec.codedx.api.client.CodeDxClient;
-import com.secdec.codedx.api.client.CodeDxClientException;
-import com.secdec.codedx.api.client.CountGroup;
-import com.secdec.codedx.api.client.Filter;
-import com.secdec.codedx.api.client.Job;
-import com.secdec.codedx.api.client.Project;
-import com.secdec.codedx.api.client.StartAnalysisResponse;
-import com.secdec.codedx.api.client.TriageStatus;
 
 import javax.servlet.ServletException;
 
@@ -219,7 +211,7 @@ public class CodeDxPublisher extends Recorder {
 
 		if (toSend.size() > 0) {
 
-			final CodeDxClient client = new CodeDxClient(url, key);
+			final CodeDxClient client = new CodeDxRepeatingClient(url, key, listener.getLogger());
 
 			try {
 				listener.getLogger().println("Sending analysis request");
