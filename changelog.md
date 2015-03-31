@@ -9,6 +9,8 @@
 ###Fixes
 - Fixed an issue causing a null pointer exception for projects with false positive weaknesses
 - Fixed an issue that would sometimes cause gaps to appear in the trend charts
+- Fixed incorrect example paths in the built-in help
+- Fixed some incorrrect validation for tool output entries
 
 ###RC History
 ####RC1 `3/25/15`
