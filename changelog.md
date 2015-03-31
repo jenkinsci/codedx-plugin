@@ -1,4 +1,4 @@
-##Code Dx Jenkins Plugin 1.3.0-RC1 `Released 3/25/2015`
+##Code Dx Jenkins Plugin 1.3.0 `Released 3/28/2015`
 
 ###Changes
 - Previously, if a build failed due to an error in Code Dx, only a generic error message (and a stack trace) was displayed in the console. More specific messages based on the http response code were added to make it easier for users to determine the cause of failure.
@@ -12,6 +12,10 @@
 
 ###RC History
 ####RC1 `3/25/15`
+####Final `3/28/15`
+- Updated the order of the chart legends to match the order of the new ordering of the chart
+- Fixed incorrect example paths in the built-in help
+- Fixed some incorrrect validation for tool output entries
 
 ##Code Dx Jenkins Plugin 1.2.0 `Released 1/15/2015`
 
