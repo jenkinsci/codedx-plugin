@@ -1,14 +1,24 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" escapeText="false">
   <!--
     This jelly script is used for per-project configuration.
 
     See global.jelly for a general discussion about jelly script.
   -->
 
+	<f:invisibleEntry >
+		<f:textbox clazz="codedx-instance-guid" name="instanceGuid" value="${descriptor.generateGuid()}"/>
+	</f:invisibleEntry>
+
 	<f:entry title="Server URL" field="url" help="/plugin/codedx/help-url.html">
-    	<f:textbox />
+    	<f:textbox clazz="codedx-url" />
     </f:entry>
-    
+	<f:advanced>
+		<f:entry field="selfSignedCertificateFingerprint" title="Self-Signed Certificate Fingerprint" >
+			<f:textbox/>
+		</f:entry>
+
+	</f:advanced>
+
     <f:entry title="Server API Key" field="key" help="/plugin/codedx/help-key.html">
     	<f:textbox />
     </f:entry>

@@ -37,7 +37,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.tools.ant.taskdefs.condition.Http;
 
 
 /**
@@ -54,7 +55,7 @@ public class CodeDxClient {
 	private String url;
 	private String serverUrl;
 	
-	private DefaultHttpClient httpClient;
+	private HttpClientBuilder httpClientBuilder;
 	
 	private Gson gson;
 	
@@ -64,7 +65,16 @@ public class CodeDxClient {
 	 * @param key The API key.  Note that permissions must be set for this key on CodeDx admin page.
 	 */
 	public CodeDxClient(String url,String key){
-		
+		this(url, key,HttpClientBuilder.create());
+	}
+
+	/**
+	 * Creates a new client, ready to be used for communications with CodeDx.
+	 * @param url URL of the CodeDx web application.  The '/api' part of the URL is optional.
+	 * @param key The API key.  Note that permissions must be set for this key on CodeDx admin page.
+	 */
+	public CodeDxClient(String url,String key, HttpClientBuilder clientBuilder){
+
 		this.key = key;
 
 		if(url == null)
@@ -74,20 +84,20 @@ public class CodeDxClient {
 			throw new NullPointerException("Argument key is null");
 
 		if(!url.endsWith("/")){
-			
+
 			url = url + "/";
 		}
-		
+
 		if(!url.endsWith("api/")){
-			
+
 			url = url + "api/";
 		}
-		
+
 		this.url = url;
 		this.serverUrl = url.replace("/api/", "/");
-		
-		httpClient = new DefaultHttpClient();
-		
+
+		httpClientBuilder = clientBuilder;
+
 		gson = new Gson();
 	}
 	
@@ -276,9 +286,9 @@ public class CodeDxClient {
 			getRequest = new HttpGet(url + path);
 		}
 
-		getRequest.addHeader(KEY_HEADER,key);
+		getRequest.addHeader(KEY_HEADER, key);
 
-		HttpResponse response = httpClient.execute(getRequest);
+		HttpResponse response = httpClientBuilder.build().execute(getRequest);
 		
 		int responseCode = response.getStatusLine().getStatusCode();
 		
@@ -318,11 +328,11 @@ public class CodeDxClient {
 			postRequest = new HttpPost(url + path);
 		}
 
-		postRequest.addHeader(KEY_HEADER,key);
+		postRequest.addHeader(KEY_HEADER, key);
 		
 		postRequest.setEntity(new StringEntity(gson.toJson(payload)));
 		
-		HttpResponse response = httpClient.execute(postRequest);
+		HttpResponse response = httpClientBuilder.build().execute(postRequest);
 		
 		int responseCode = response.getStatusLine().getStatusCode();
 		
@@ -350,7 +360,7 @@ public class CodeDxClient {
 	public StartAnalysisResponse startAnalysis(int projectId, InputStream[] artifacts) throws ClientProtocolException, IOException, CodeDxClientException {
 		
 		HttpPost postRequest = new HttpPost(url + "projects/" + projectId + "/analysis");
-		postRequest.addHeader(KEY_HEADER,key);
+		postRequest.addHeader(KEY_HEADER, key);
 
 		MultipartEntityBuilder builder = MultipartEntityBuilder.create();
 		
@@ -366,7 +376,7 @@ public class CodeDxClient {
 		
 		postRequest.setEntity(entity);
 		
-		HttpResponse response = httpClient.execute(postRequest);
+		HttpResponse response = httpClientBuilder.build().execute(postRequest);
 		
 		int responseCode = response.getStatusLine().getStatusCode();
 		

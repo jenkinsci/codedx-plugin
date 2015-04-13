@@ -18,21 +18,23 @@
 package org.jenkinsci.plugins.codedx;
 
 import com.secdec.codedx.api.client.*;
+import com.secdec.codedx.api.client.Job;
+import com.secdec.codedx.api.client.Project;
+import com.secdec.codedx.security.JenkinsSSLConnectionSocketFactoryFactory;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Extension;
+import hudson.model.*;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import hudson.model.AbstractBuild;
-import hudson.model.Action;
-import hudson.model.BuildListener;
-import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import net.sf.json.JSONObject;
 
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
 import org.kohsuke.stapler.AncestorInPath;
@@ -40,16 +42,16 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
 
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLSocketFactory;
 import javax.servlet.ServletException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.security.GeneralSecurityException;
+import java.util.*;
 
 /**
  * Jenkins publisher that publishes project source, binaries, and
@@ -69,6 +71,10 @@ public class CodeDxPublisher extends Recorder {
 
 	private final AnalysisResultConfiguration analysisResultConfiguration;
 
+	private final CodeDxClient client;
+
+	private final String selfSignedCertificateFingerprint;
+
 	/**
 	 * @param url                          URL of the Code Dx server
 	 * @param key                          API key of the Code Dx server
@@ -86,7 +92,8 @@ public class CodeDxPublisher extends Recorder {
 						   final String sourceAndBinaryFiles,
 						   final String toolOutputFiles,
 						   final String excludedSourceAndBinaryFiles,
-						   final AnalysisResultConfiguration analysisResultConfiguration) {
+						   final AnalysisResultConfiguration analysisResultConfiguration,
+						   final String selfSignedCertificateFingerprint) {
 		this.projectId = projectId;
 		this.url = url;
 		this.key = key;
@@ -94,6 +101,21 @@ public class CodeDxPublisher extends Recorder {
 		this.excludedSourceAndBinaryFiles = excludedSourceAndBinaryFiles;
 		this.toolOutputFiles = toolOutputFiles;
 		this.analysisResultConfiguration = analysisResultConfiguration;
+		this.selfSignedCertificateFingerprint = selfSignedCertificateFingerprint;
+
+		CodeDxClient newClient = new CodeDxClient(url, key);
+		try {
+			URL parsedUrl = new URL(url);
+			SSLConnectionSocketFactory socketFactory = JenkinsSSLConnectionSocketFactoryFactory.getFactory(selfSignedCertificateFingerprint, parsedUrl.getHost());
+			HttpClientBuilder builder = HttpClientBuilder.create();
+			builder.setSSLSocketFactory(socketFactory);
+			newClient = new CodeDxClient(url, key, builder);
+		} catch (MalformedURLException e) {
+
+		} catch (GeneralSecurityException e) {
+
+		}
+		this.client = newClient;
 	}
 
 	public AnalysisResultConfiguration getAnalysisResultConfiguration() {
@@ -125,6 +147,10 @@ public class CodeDxPublisher extends Recorder {
 
 	public String getExcludedSourceAndBinaryFiles() {
 		return excludedSourceAndBinaryFiles;
+	}
+
+	public String getSelfSignedCertificateFingerprint() {
+		return selfSignedCertificateFingerprint;
 	}
 
 
@@ -387,6 +413,17 @@ public class CodeDxPublisher extends Recorder {
 		 * If you don't want fields to be persisted, use <tt>transient</tt>.
 		 */
 
+		private Map<UUID, JenkinsSSLConnectionSocketFactoryFactory> activeClients = new HashMap<UUID, JenkinsSSLConnectionSocketFactoryFactory>();
+
+
+		private synchronized JenkinsSSLConnectionSocketFactoryFactory getSocketFactoryManager(UUID uuid) {
+			return activeClients.get(uuid);
+		}
+
+		private synchronized void addSocketFactory(UUID uuid, JenkinsSSLConnectionSocketFactoryFactory factory) {
+			activeClients.put(uuid, factory);
+		}
+
 		/**
 		 * In order to load the persisted global configuration, you have to
 		 * call load() in the constructor.
@@ -407,6 +444,10 @@ public class CodeDxPublisher extends Recorder {
 			return "Publish to Code Dx";
 		}
 
+		public String generateGuid() {
+			UUID uuid = UUID.randomUUID();
+			return uuid.toString();
+		}
 
 		public FormValidation doCheckProjectId(@QueryParameter final String value)
 				throws IOException, ServletException {
@@ -430,6 +471,8 @@ public class CodeDxPublisher extends Recorder {
 		public FormValidation doCheckUrl(@QueryParameter final String value)
 				throws IOException, ServletException {
 
+			CodeDxClient client = new CodeDxClient(value, "");
+
 			if (value.length() == 0)
 				return FormValidation.error("Please set a URL.");
 
@@ -444,7 +487,13 @@ public class CodeDxPublisher extends Recorder {
 
 				return FormValidation.warning("HTTP is considered insecure, it is recommended that you use HTTPS.");
 			} else if (value.toLowerCase().startsWith("https:")) {
-
+				try {
+					client.getProjects();
+				} catch (Exception e) {
+					if (e instanceof SSLHandshakeException) {
+						return FormValidation.warning("There was a problem validating the SSL Certifcate presented by the server");
+					}
+				}
 				return FormValidation.ok();
 			} else {
 
@@ -480,10 +529,23 @@ public class CodeDxPublisher extends Recorder {
 			return Util.checkCSVFileMatches(value, project.getSomeWorkspace());
 		}
 
-		public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String key) {
-			final ListBoxModel listBox = new ListBoxModel();
+		public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String selfSignedCertificateFingerprint, @QueryParameter final String key, @AncestorInPath AbstractProject project) {
+			ListBoxModel listBox = null;
 
-			final CodeDxClient client = new CodeDxClient(url, key);
+			CodeDxClient client = new CodeDxClient(url, key);
+			try {
+				URL parsedUrl = new URL(url);
+				SSLConnectionSocketFactory socketFactory = JenkinsSSLConnectionSocketFactoryFactory.getFactory(selfSignedCertificateFingerprint, parsedUrl.getHost());
+				HttpClientBuilder builder = HttpClientBuilder.create();
+				builder.setSSLSocketFactory(socketFactory);
+				client = new CodeDxClient(url, key, builder);
+			} catch (MalformedURLException e) {
+
+			} catch (GeneralSecurityException e) {
+
+			}
+
+
 
 			try {
 				final List<Project> projects = client.getProjects();
@@ -499,7 +561,7 @@ public class CodeDxPublisher extends Recorder {
 						duplicates.put(proj.getName(), true);
 					}
 				}
-
+				listBox = new ListBoxModel();
 				for (Project proj : projects) {
 
 					if (!duplicates.get(proj.getName())) {
@@ -513,7 +575,7 @@ public class CodeDxPublisher extends Recorder {
 				}
 			} catch (Exception e) {
 
-				listBox.add("", "-1");
+				//listBox.add("", "-1");
 			}
 
 			return listBox;
@@ -550,7 +612,13 @@ public class CodeDxPublisher extends Recorder {
 			//  (easier when there are many fields; need set* methods for this, like setUseFrench)
 
 			save();
+			System.out.println("Code Dx descriptor configure method");
 			return super.configure(req, formData);
+		}
+
+		@Override
+		public Publisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+			return super.newInstance(req, formData);
 		}
 	}
 }
