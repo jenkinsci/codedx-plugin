@@ -476,7 +476,7 @@ public class CodeDxPublisher extends Recorder {
 					client.getProjects();
 				} catch (Exception e) {
 					if (e instanceof SSLHandshakeException) {
-						return FormValidation.warning("The SSL Certifcate presented by the server is invalid. If this is expected, please input an SHA1 Fingerprint in the \"Avanced\" option");
+						return FormValidation.warning("The SSL Certificate presented by the server is invalid. If this is expected, please input an SHA1 Fingerprint in the \"Advanced\" option");
 					}
 				}
 				return FormValidation.ok();
