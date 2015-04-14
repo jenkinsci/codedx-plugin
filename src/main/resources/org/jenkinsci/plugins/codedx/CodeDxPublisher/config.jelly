@@ -5,15 +5,11 @@
     See global.jelly for a general discussion about jelly script.
   -->
 
-	<f:invisibleEntry >
-		<f:textbox clazz="codedx-instance-guid" name="instanceGuid" value="${descriptor.generateGuid()}"/>
-	</f:invisibleEntry>
-
 	<f:entry title="Server URL" field="url" help="/plugin/codedx/help-url.html">
     	<f:textbox clazz="codedx-url" />
     </f:entry>
 	<f:advanced>
-		<f:entry field="selfSignedCertificateFingerprint" title="Self-Signed Certificate Fingerprint" >
+		<f:entry field="selfSignedCertificateFingerprint" title="Self-Signed Certificate Fingerprint" help="/plugin/codedx/help-fingerprint.html">
 			<f:textbox/>
 		</f:entry>
 

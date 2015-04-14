@@ -102,20 +102,7 @@ public class CodeDxPublisher extends Recorder {
 		this.toolOutputFiles = toolOutputFiles;
 		this.analysisResultConfiguration = analysisResultConfiguration;
 		this.selfSignedCertificateFingerprint = selfSignedCertificateFingerprint;
-
-		CodeDxClient newClient = new CodeDxClient(url, key);
-		try {
-			URL parsedUrl = new URL(url);
-			SSLConnectionSocketFactory socketFactory = JenkinsSSLConnectionSocketFactoryFactory.getFactory(selfSignedCertificateFingerprint, parsedUrl.getHost());
-			HttpClientBuilder builder = HttpClientBuilder.create();
-			builder.setSSLSocketFactory(socketFactory);
-			newClient = new CodeDxClient(url, key, builder);
-		} catch (MalformedURLException e) {
-
-		} catch (GeneralSecurityException e) {
-
-		}
-		this.client = newClient;
+		this.client = buildClient(url, key, selfSignedCertificateFingerprint);
 	}
 
 	public AnalysisResultConfiguration getAnalysisResultConfiguration() {
@@ -156,8 +143,6 @@ public class CodeDxPublisher extends Recorder {
 
 	@Override
 	public Action getProjectAction(AbstractProject<?, ?> project) {
-
-		CodeDxClient client = new CodeDxClient(url, key);
 
 		String latestUrl = null;
 
@@ -237,12 +222,12 @@ public class CodeDxPublisher extends Recorder {
 
 		if (toSend.size() > 0) {
 
-			final CodeDxClient client = new CodeDxRepeatingClient(url, key, listener.getLogger());
+			final CodeDxClient repeatingClient = new CodeDxRepeatingClient(this.client, listener.getLogger());
 
 			try {
 				listener.getLogger().println("Sending analysis request");
 
-				StartAnalysisResponse response = client.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
+				StartAnalysisResponse response = repeatingClient.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
 
 				listener.getLogger().println("Analysis request succeeded");
 
@@ -259,7 +244,7 @@ public class CodeDxPublisher extends Recorder {
 				do {
 
 					Thread.sleep(3000);
-					status = client.getJobStatus(response.getJobId());
+					status = repeatingClient.getJobStatus(response.getJobId());
 
 					listener.getLogger().println("The STATUS IS: " + status);
 
@@ -271,7 +256,7 @@ public class CodeDxPublisher extends Recorder {
 
 					listener.getLogger().println("Fetching severity counts");
 
-					List<CountGroup> severityCounts = client.getFindingsGroupedCounts(response.getRunId(), null, "severity");
+					List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(response.getRunId(), null, "severity");
 
 					listener.getLogger().println("Got severity counts");
 
@@ -287,7 +272,7 @@ public class CodeDxPublisher extends Recorder {
 							Filter.STATUS_NEW,
 							Filter.STATUS_UNRESOLVED});
 
-					List<CountGroup> statusCounts = client.getFindingsGroupedCounts(response.getRunId(), notAssignedFilter, "status");
+					List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(response.getRunId(), notAssignedFilter, "status");
 
 					listener.getLogger().println("Got status counts");
 
@@ -298,7 +283,7 @@ public class CodeDxPublisher extends Recorder {
 
 					//Since CodeDx splits assigned status into different statuses (one per user),
 					//we need to get the total assigned count and add our own CountGroup.
-					int assignedCount = client.getFindingsCount(response.getRunId(), assignedFilter);
+					int assignedCount = repeatingClient.getFindingsCount(response.getRunId(), assignedFilter);
 
 					if (assignedCount > 0) {
 
@@ -321,7 +306,7 @@ public class CodeDxPublisher extends Recorder {
 					listener.getLogger().println("Adding CodeDx build action");
 					build.addAction(new CodeDxBuildAction(build, result));
 
-					AnalysisResultChecker checker = new AnalysisResultChecker(client,
+					AnalysisResultChecker checker = new AnalysisResultChecker(repeatingClient,
 							analysisResultConfiguration.getFailureSeverity(),
 							analysisResultConfiguration.getUnstableSeverity(),
 							analysisResultConfiguration.isFailureOnlyNew(),
@@ -355,6 +340,22 @@ public class CodeDxPublisher extends Recorder {
 		}
 
 		return false;
+	}
+
+	public static CodeDxClient buildClient(String url, String key, String fingerprint) {
+		CodeDxClient client = new CodeDxClient(url, key);
+		try {
+			URL parsedUrl = new URL(url);
+			SSLConnectionSocketFactory socketFactory = JenkinsSSLConnectionSocketFactoryFactory.getFactory(fingerprint, parsedUrl.getHost());
+			HttpClientBuilder builder = HttpClientBuilder.create();
+			builder.setSSLSocketFactory(socketFactory);
+			client = new CodeDxClient(url, key, builder);
+		} catch (MalformedURLException e) {
+
+		} catch (GeneralSecurityException e) {
+
+		}
+		return client;
 	}
 
 	private String[] getUsers(Map<String, TriageStatus> assignedStatuses) {
@@ -413,17 +414,6 @@ public class CodeDxPublisher extends Recorder {
 		 * If you don't want fields to be persisted, use <tt>transient</tt>.
 		 */
 
-		private Map<UUID, JenkinsSSLConnectionSocketFactoryFactory> activeClients = new HashMap<UUID, JenkinsSSLConnectionSocketFactoryFactory>();
-
-
-		private synchronized JenkinsSSLConnectionSocketFactoryFactory getSocketFactoryManager(UUID uuid) {
-			return activeClients.get(uuid);
-		}
-
-		private synchronized void addSocketFactory(UUID uuid, JenkinsSSLConnectionSocketFactoryFactory factory) {
-			activeClients.put(uuid, factory);
-		}
-
 		/**
 		 * In order to load the persisted global configuration, you have to
 		 * call load() in the constructor.
@@ -442,11 +432,6 @@ public class CodeDxPublisher extends Recorder {
 		 */
 		public String getDisplayName() {
 			return "Publish to Code Dx";
-		}
-
-		public String generateGuid() {
-			UUID uuid = UUID.randomUUID();
-			return uuid.toString();
 		}
 
 		public FormValidation doCheckProjectId(@QueryParameter final String value)
@@ -468,10 +453,10 @@ public class CodeDxPublisher extends Recorder {
 			return FormValidation.ok();
 		}
 
-		public FormValidation doCheckUrl(@QueryParameter final String value)
+		public FormValidation doCheckUrl(@QueryParameter final String value, @QueryParameter final String selfSignedCertificateFingerprint)
 				throws IOException, ServletException {
 
-			CodeDxClient client = new CodeDxClient(value, "");
+			CodeDxClient client = buildClient(value, "", selfSignedCertificateFingerprint);
 
 			if (value.length() == 0)
 				return FormValidation.error("Please set a URL.");
@@ -491,7 +476,7 @@ public class CodeDxPublisher extends Recorder {
 					client.getProjects();
 				} catch (Exception e) {
 					if (e instanceof SSLHandshakeException) {
-						return FormValidation.warning("There was a problem validating the SSL Certifcate presented by the server");
+						return FormValidation.warning("The SSL Certifcate presented by the server is invalid. If this is expected, please input an SHA1 Fingerprint in the \"Avanced\" option");
 					}
 				}
 				return FormValidation.ok();
@@ -499,6 +484,21 @@ public class CodeDxPublisher extends Recorder {
 
 				return FormValidation.error("Invalid protocol, please use HTTPS or HTTP.");
 			}
+		}
+
+		public FormValidation doCheckSelfSignedCertificateFingerprint(@QueryParameter final String value, @QueryParameter final String url) {
+			if (url != null && ! url.isEmpty() && value != null && ! value.isEmpty()) {
+				CodeDxClient client = buildClient(url, "", value);
+
+				try {
+					client.getProjects();
+				} catch (Exception e) {
+					if (e instanceof SSLHandshakeException) {
+						return FormValidation.warning("The fingerprint doesn't match the fingerprint of the certifcate presented by the server");
+					}
+				}
+			}
+			return FormValidation.ok();
 		}
 
 		public FormValidation doCheckSourceAndBinaryFiles(@QueryParameter final String value, @QueryParameter final String toolOutputFiles, @AncestorInPath AbstractProject project) {
@@ -530,20 +530,9 @@ public class CodeDxPublisher extends Recorder {
 		}
 
 		public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String selfSignedCertificateFingerprint, @QueryParameter final String key, @AncestorInPath AbstractProject project) {
-			ListBoxModel listBox = null;
+			ListBoxModel listBox = new ListBoxModel();
 
-			CodeDxClient client = new CodeDxClient(url, key);
-			try {
-				URL parsedUrl = new URL(url);
-				SSLConnectionSocketFactory socketFactory = JenkinsSSLConnectionSocketFactoryFactory.getFactory(selfSignedCertificateFingerprint, parsedUrl.getHost());
-				HttpClientBuilder builder = HttpClientBuilder.create();
-				builder.setSSLSocketFactory(socketFactory);
-				client = new CodeDxClient(url, key, builder);
-			} catch (MalformedURLException e) {
-
-			} catch (GeneralSecurityException e) {
-
-			}
+			CodeDxClient client = buildClient(url, key, selfSignedCertificateFingerprint);
 
 
 
@@ -561,7 +550,6 @@ public class CodeDxPublisher extends Recorder {
 						duplicates.put(proj.getName(), true);
 					}
 				}
-				listBox = new ListBoxModel();
 				for (Project proj : projects) {
 
 					if (!duplicates.get(proj.getName())) {
@@ -575,7 +563,7 @@ public class CodeDxPublisher extends Recorder {
 				}
 			} catch (Exception e) {
 
-				//listBox.add("", "-1");
+				listBox.add("", "-1");
 			}
 
 			return listBox;

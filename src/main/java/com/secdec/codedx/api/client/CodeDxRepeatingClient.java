@@ -17,8 +17,8 @@ import java.net.SocketException;
 public class CodeDxRepeatingClient extends CodeDxClient {
     private PrintStream logger;
 
-    public CodeDxRepeatingClient(String url, String key, PrintStream logger) {
-        super(url, key);
+    public CodeDxRepeatingClient(CodeDxClient oldClient, PrintStream logger) {
+        super(oldClient.url, oldClient.key, oldClient.httpClientBuilder);
         this.logger = logger;
     }
 

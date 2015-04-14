@@ -51,17 +51,17 @@ public class CodeDxClient {
 
 	private final String KEY_HEADER  = "API-Key";
 	
-	private String key;
-	private String url;
+	protected String key;
+	protected String url;
 	private String serverUrl;
-	
-	private HttpClientBuilder httpClientBuilder;
+
+	protected HttpClientBuilder httpClientBuilder;
 	
 	private Gson gson;
-	
+
 	/**
 	 * Creates a new client, ready to be used for communications with CodeDx.
-	 * @param url URL of the CodeDx web application.  The '/api' part of the URL is optional. 
+	 * @param url URL of the CodeDx web application.  The '/api' part of the URL is optional.
 	 * @param key The API key.  Note that permissions must be set for this key on CodeDx admin page.
 	 */
 	public CodeDxClient(String url,String key){
@@ -72,6 +72,7 @@ public class CodeDxClient {
 	 * Creates a new client, ready to be used for communications with CodeDx.
 	 * @param url URL of the CodeDx web application.  The '/api' part of the URL is optional.
 	 * @param key The API key.  Note that permissions must be set for this key on CodeDx admin page.
+	 * @param clientBuilder an HttpClientBuilder that can handle the certificate used by the server
 	 */
 	public CodeDxClient(String url,String key, HttpClientBuilder clientBuilder){
 
