@@ -345,6 +345,9 @@ public class CodeDxPublisher extends Recorder {
 	public static CodeDxClient buildClient(String url, String key, String fingerprint) {
 		CodeDxClient client = new CodeDxClient(url, key);
 		try {
+			if (fingerprint != null) {
+				fingerprint = fingerprint.replaceAll("\\s", ":");
+			}
 			URL parsedUrl = new URL(url);
 			SSLConnectionSocketFactory socketFactory = JenkinsSSLConnectionSocketFactoryFactory.getFactory(fingerprint, parsedUrl.getHost());
 			HttpClientBuilder builder = HttpClientBuilder.create();
