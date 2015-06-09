@@ -1,3 +1,8 @@
+##Code Dx Jenkins Plugin 1.4.0-RC1 `Released 6/9/2015`
+
+###Additions
+- Added support for unverified certificate overrides for Code Dx server connections. You need to configure the Code Dx connection settings for your Jenkins job with the expected SSL certificate fingerprint if you expect that there will be a certificate validation issue (this for instance would happen if you self-sign your SSL certificates).
+
 ##Code Dx Jenkins Plugin 1.3.0 `Released 3/28/2015`
 
 ###Changes
