@@ -23,7 +23,7 @@ public class FingerprintStrategy implements InvalidCertificateStrategy {
 		if (genericCert instanceof X509Certificate) {
             X509Certificate cert = (X509Certificate) genericCert;
             try {
-                String certFingerprint = HashUtil.toHexString(HashUtil.getSHA1(cert.getEncoded()), ":");
+                String certFingerprint = HashUtil.toHexString(HashUtil.getSHA1(cert.getEncoded()));
                 if (certFingerprint.toUpperCase().equals(fingerprint.toUpperCase())) {
                     return CertificateAcceptance.ACCEPT_PERMANENTLY;
                 }

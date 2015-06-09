@@ -346,7 +346,7 @@ public class CodeDxPublisher extends Recorder {
 		CodeDxClient client = new CodeDxClient(url, key);
 		try {
 			if (fingerprint != null) {
-				fingerprint = fingerprint.replaceAll("\\s", ":");
+				fingerprint = fingerprint.replaceAll("[^a-fA-F0-9]", "");
 			}
 			URL parsedUrl = new URL(url);
 			SSLConnectionSocketFactory socketFactory = JenkinsSSLConnectionSocketFactoryFactory.getFactory(fingerprint, parsedUrl.getHost());
