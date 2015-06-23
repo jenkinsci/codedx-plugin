@@ -9,6 +9,7 @@
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>codedx</artifactId>
+  <name>Code Dx Plugin</name>
   <version>1.4-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
@@ -33,15 +34,15 @@
       <url>http://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
-  
+
 	<dependencies>
-	
+
 	<dependency>
 	    <groupId>com.google.code.gson</groupId>
 	    <artifactId>gson</artifactId>
 	    <version>2.3</version>
 	</dependency>
-	  
+
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
@@ -63,9 +64,9 @@
     <url>https://github.com/jenkinsci/codedx-plugin</url>
 	  <tag>HEAD</tag>
   </scm>
-  
+
   	<url>https://wiki.jenkins-ci.org/display/JENKINS/Code+Dx+Plugin</url>
-  	
+
   	<developers>
       <developer>
         <id>leRadwan</id>
@@ -78,5 +79,5 @@
           <email>samuel.johnson@codedx.com</email>
       </developer>
   	</developers>
-  
+
 </project>

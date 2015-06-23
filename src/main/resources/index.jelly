@@ -2,5 +2,5 @@
   This view is used to render the installed plugins page.
 -->
 <div>
-  This plugin integrates Jenkins with your Code Dx server.
+  Allows Jenkins to push source and build artifacts to <a href="https://codedx.com/" target="_blank">Code Dx</a> and display the aggregated results of its <a href="http://codedx.com/supported-tools/" target="_blank">full suite</a> of Static Analysis tools.
 </div>
