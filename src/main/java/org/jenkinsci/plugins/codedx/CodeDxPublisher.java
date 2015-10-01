@@ -43,7 +43,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLSocketFactory;
 import javax.servlet.ServletException;
 
 import java.io.IOException;
@@ -227,6 +226,8 @@ public class CodeDxPublisher extends Recorder {
 			try {
 				listener.getLogger().println("Sending analysis request");
 
+				int projectIdInt = Integer.parseInt(projectId);
+
 				StartAnalysisResponse response = repeatingClient.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
 
 				listener.getLogger().println("Analysis request succeeded");
@@ -256,7 +257,7 @@ public class CodeDxPublisher extends Recorder {
 
 					listener.getLogger().println("Fetching severity counts");
 
-					List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(response.getRunId(), null, "severity");
+					List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, null, "severity");
 
 					listener.getLogger().println("Got severity counts");
 
@@ -272,7 +273,7 @@ public class CodeDxPublisher extends Recorder {
 							Filter.STATUS_NEW,
 							Filter.STATUS_UNRESOLVED});
 
-					List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(response.getRunId(), notAssignedFilter, "status");
+					List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notAssignedFilter, "status");
 
 					listener.getLogger().println("Got status counts");
 
@@ -283,7 +284,7 @@ public class CodeDxPublisher extends Recorder {
 
 					//Since CodeDx splits assigned status into different statuses (one per user),
 					//we need to get the total assigned count and add our own CountGroup.
-					int assignedCount = repeatingClient.getFindingsCount(response.getRunId(), assignedFilter);
+					int assignedCount = repeatingClient.getFindingsCount(projectIdInt, assignedFilter);
 
 					if (assignedCount > 0) {
 
@@ -311,7 +312,7 @@ public class CodeDxPublisher extends Recorder {
 							analysisResultConfiguration.getUnstableSeverity(),
 							analysisResultConfiguration.isFailureOnlyNew(),
 							analysisResultConfiguration.isUnstableOnlyNew(),
-							response.getRunId(),
+							projectIdInt,
 							listener.getLogger());
 					build.setResult(checker.checkResult());
 

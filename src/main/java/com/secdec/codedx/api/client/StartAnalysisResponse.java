@@ -25,15 +25,15 @@ package com.secdec.codedx.api.client;
  */
 public class StartAnalysisResponse {
 
-	private int runId;
+//	private int projectId;
 	private String jobId;
 
-	public int getRunId() {
-		return runId;
-	}
-	public void setRunId(int runId) {
-		this.runId = runId;
-	}
+//	public int getProjectId() {
+//		return projectId;
+//	}
+//	public void setProjectId(int projectId) {
+//		this.projectId = projectId;
+//	}
 	public String getJobId() {
 		return jobId;
 	}

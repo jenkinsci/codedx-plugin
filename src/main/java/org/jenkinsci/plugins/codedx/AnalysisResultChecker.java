@@ -43,20 +43,20 @@ public class AnalysisResultChecker {
 	private String unstableSeverity;
 	private boolean failureOnlyNew;
 	private boolean unstableOnlyNew;
-	private int runId;
+	private int projectId;
 	private PrintStream logger;
 
 	
 	public AnalysisResultChecker(CodeDxClient client, String failureSeverity,
 			String unstableSeverity, boolean failureOnlyNew,
-			boolean unstableOnlyNew, int runId, PrintStream logger) {
+			boolean unstableOnlyNew, int projectId, PrintStream logger) {
 
 		this.client = client;
 		this.failureSeverity = failureSeverity;
 		this.unstableSeverity = unstableSeverity;
 		this.failureOnlyNew = failureOnlyNew;
 		this.unstableOnlyNew = unstableOnlyNew;
-		this.runId = runId;
+		this.projectId = projectId;
 		this.logger = logger;
 	}
 
@@ -64,14 +64,14 @@ public class AnalysisResultChecker {
 		
 		
 		logger.println("Checking for findings that indicate build failure...");
-		if(!"None".equalsIgnoreCase(failureSeverity) && client.getFindingsCount(runId, createFilter(failureSeverity,failureOnlyNew)) > 0){
+		if(!"None".equalsIgnoreCase(failureSeverity) && client.getFindingsCount(projectId, createFilter(failureSeverity,failureOnlyNew)) > 0){
 			
 			logger.println(String.format("Failure: Code Dx reported %s or higher severity issues.", failureSeverity));
 			return Result.FAILURE;
 		}
 
 		logger.println("Checking for findings that indicate unstable build.");
-		if(!"None".equalsIgnoreCase(unstableSeverity) && client.getFindingsCount(runId, createFilter(unstableSeverity,unstableOnlyNew)) > 0){
+		if(!"None".equalsIgnoreCase(unstableSeverity) && client.getFindingsCount(projectId, createFilter(unstableSeverity,unstableOnlyNew)) > 0){
 			
 			logger.println("Unstable!");
 			return Result.UNSTABLE;

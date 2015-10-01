@@ -101,15 +101,16 @@ public class CodeDxClient {
 
 		gson = new Gson();
 	}
-	
-	public String buildBrowsableAnalysisRunUrl(int analysisRunId){
-		
-		return serverUrl + "run/" + analysisRunId + "/";
+
+	@Deprecated
+	public String buildBrowsableAnalysisRunUrl(int projectId){
+
+		return serverUrl + "projects/" + projectId;
 	}
 	
 	public String buildLatestAnalysisRunUrl(int projectId){
 		
-		return serverUrl + "projects/" + projectId + "/latest";
+		return serverUrl + "projects/" + projectId;
 	}
 	
 	/**
@@ -155,36 +156,8 @@ public class CodeDxClient {
 	public Map<String,TriageStatus> getTriageStatuses(int id) throws CodeDxClientException, ClientProtocolException, IOException{
 
 		return doGet("projects/" + id + "/statuses",new TypeToken<Map<String,TriageStatus>>(){}.getType(),true);
-	}	
-	
-	
-	/**
-	 * Retrieves a specific analysis run from CodeDx
-	 * 
-	 * @param id The run ID
-	 * @return An AnalysisRun
-	 * @throws CodeDxClientException
-	 * @throws ClientProtocolException
-	 * @throws IOException
-	 */
-	public AnalysisRun getAnalysisRun(int id) throws CodeDxClientException, ClientProtocolException, IOException{
-
-		return doGet("runs/" + id,new TypeToken<AnalysisRun>(){}.getType(),true);
 	}
-	
-	/**
-	 * Retrieves a list of analysis runs, for a given project, from CodeDx
-	 * 
-	 * @param id The project ID
-	 * @return A list of AnalysisRuns
-	 * @throws CodeDxClientException
-	 * @throws ClientProtocolException
-	 * @throws IOException
-	 */
-	public List<AnalysisRun> getAnalysisRuns(int id) throws CodeDxClientException, ClientProtocolException, IOException{
 
-		return doGet("projects/" + id + "/runs" + id,new TypeToken<List<AnalysisRun>>(){}.getType(),true);
-	}
 	
 	/**
 	 * Retrieves a specific job from CodeDx
@@ -232,18 +205,18 @@ public class CodeDxClient {
 	}
 	
 	/**
-	 * Retrieves the total findings count for a given run using the provided Filter
+	 * Retrieves the total findings count for a given project using the provided Filter
 	 * 
-	 * @param id The run ID
+	 * @param projectId The project ID
 	 * @param filter A Filter object (set to null to not filter)
 	 * @return The count
 	 * @throws CodeDxClientException
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	public int getFindingsCount(int id, Filter filter) throws CodeDxClientException, ClientProtocolException, IOException{
+	public int getFindingsCount(int projectId, Filter filter) throws CodeDxClientException, ClientProtocolException, IOException{
 
-		CountResponse resp = doPost("runs/" + id + "/findings/count",new TypeToken<CountResponse>(){}.getType(),new CountRequest(filter),true);
+		CountResponse resp = doPost("projects/" + projectId + "/findings/count",new TypeToken<CountResponse>(){}.getType(),new CountRequest(filter),true);
 		
 		return resp.getCount();
 	}
@@ -251,7 +224,7 @@ public class CodeDxClient {
 	/**
 	 * Retrieves an array of CountGroups using the provided Filter and countBy field name.
 	 * 
-	 * @param id The run ID
+	 * @param projectId The project ID
 	 * @param filter A Filter object
 	 * @param countBy The field to group the counts by
 	 * @return A list of CountGroups
@@ -259,9 +232,9 @@ public class CodeDxClient {
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	public List<CountGroup> getFindingsGroupedCounts(int id, Filter filter, String countBy) throws CodeDxClientException, ClientProtocolException, IOException{
+	public List<CountGroup> getFindingsGroupedCounts(int projectId, Filter filter, String countBy) throws CodeDxClientException, ClientProtocolException, IOException{
 
-		return doPost("runs/" + id + "/findings/grouped-counts",new TypeToken<List<CountGroup>>(){}.getType(),new GroupedCountRequest(filter,countBy),true);
+		return doPost("projects/" + projectId + "/findings/grouped-counts",new TypeToken<List<CountGroup>>(){}.getType(),new GroupedCountRequest(filter,countBy),true);
 	}
 	
 	/**
