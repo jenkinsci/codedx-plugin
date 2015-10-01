@@ -108,7 +108,7 @@ public class CodeDxClient {
 		return serverUrl + "projects/" + projectId;
 	}
 	
-	public String buildLatestAnalysisRunUrl(int projectId){
+	public String buildLatestFindingsUrl(int projectId){
 		
 		return serverUrl + "projects/" + projectId;
 	}

@@ -147,7 +147,7 @@ public class CodeDxPublisher extends Recorder {
 
 		if (projectId.length() != 0 && !projectId.equals("-1")) {
 
-			latestUrl = client.buildLatestAnalysisRunUrl(Integer.parseInt(projectId));
+			latestUrl = client.buildLatestFindingsUrl(Integer.parseInt(projectId));
 		}
 
 		return new CodeDxProjectAction(project, analysisResultConfiguration, latestUrl);
