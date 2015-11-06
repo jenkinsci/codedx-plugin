@@ -32,6 +32,10 @@ public class CodeDxChartBuilder implements Serializable {
     /** Serial version UID. */
     private static final long serialVersionUID = 0L;
 
+    private static Set<StatisticGroup> hiddenGroups = new HashSet<StatisticGroup>() {{
+        add(StatisticGroup.Gone);
+    }};
+
     private CodeDxChartBuilder(){
     }
 
@@ -127,12 +131,17 @@ public class CodeDxChartBuilder implements Serializable {
                 NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel(action.getBuild());
 
                 for (String group : result.getStatistics(statisticsName).getAllGroups()) {
-                    allGroups.add(StatisticGroup.forValue(group));
+                    StatisticGroup statisticGroup = StatisticGroup.forValue(group);
+                    if (! hiddenGroups.contains(statisticGroup)) {
+                        allGroups.add(StatisticGroup.forValue(group));
+                    }
                 }
                 Set<StatisticGroup> remainingGroups = StatisticGroup.valuesForStatistic(statisticsName);
 
                 for(CodeDxGroupStatistics groupStats : result.getStatistics(statisticsName).getStatistics()){
-                    builder.add(groupStats.getFindings(), StatisticGroup.forValue(groupStats.getGroup()), buildLabel);
+                    StatisticGroup statisticGroup = StatisticGroup.forValue(groupStats.getGroup());
+                    if (! hiddenGroups.contains(statisticGroup))
+                    builder.add(groupStats.getFindings(), statisticGroup, buildLabel);
                     remainingGroups.remove(StatisticGroup.forValue(groupStats.getGroup()));
                 }
                 

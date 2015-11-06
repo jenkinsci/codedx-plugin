@@ -16,7 +16,8 @@ public enum StatisticGroup {
     Assigned("Assigned"),
     Fixed("Fixed"),
     Unresolved("Unresolved"),
-    New("New");
+    New("New"),
+    Gone("Gone");
 
     private String value;
 
