@@ -141,7 +141,7 @@ public class CodeDxChartBuilder implements Serializable {
                 for(CodeDxGroupStatistics groupStats : result.getStatistics(statisticsName).getStatistics()){
                     StatisticGroup statisticGroup = StatisticGroup.forValue(groupStats.getGroup());
                     if (! hiddenGroups.contains(statisticGroup))
-                    builder.add(groupStats.getFindings(), statisticGroup, buildLabel);
+                        builder.add(groupStats.getFindings(), statisticGroup, buildLabel);
                     remainingGroups.remove(StatisticGroup.forValue(groupStats.getGroup()));
                 }
                 

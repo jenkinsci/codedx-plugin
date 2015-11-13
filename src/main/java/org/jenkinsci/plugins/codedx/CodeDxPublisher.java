@@ -257,7 +257,10 @@ public class CodeDxPublisher extends Recorder {
 
 					listener.getLogger().println("Fetching severity counts");
 
-					List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, null, "severity");
+
+					Filter notGoneFilter = new Filter();
+					notGoneFilter.setNotStatus(new String[] {Filter.STATUS_GONE});
+					List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notGoneFilter, "severity");
 
 					listener.getLogger().println("Got severity counts");
 
@@ -268,7 +271,6 @@ public class CodeDxPublisher extends Recorder {
 							Filter.STATUS_ESCALATED,
 							Filter.STATUS_FALSE_POSITIVE,
 							Filter.STATUS_FIXED,
-							Filter.STATUS_GONE,
 							Filter.STATUS_IGNORED,
 							Filter.STATUS_NEW,
 							Filter.STATUS_UNRESOLVED});

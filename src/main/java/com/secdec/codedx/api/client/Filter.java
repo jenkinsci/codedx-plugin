@@ -17,6 +17,8 @@
 
 package com.secdec.codedx.api.client;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Arrays;
 
 /**
@@ -34,6 +36,76 @@ public class Filter {
 	private String[] severity;
 	private String[] status;
 	private String[] toolOverlap;
+	@SerializedName("~cwe")
+	private String[] notCwe;
+	@SerializedName("~finding")
+	private String[] notFinding;
+	@SerializedName("~path")
+	private String[] notPath;
+	@SerializedName("~rule")
+	private String[] notRule;
+	@SerializedName("~severity")
+	private String[] notSeverity;
+	@SerializedName("~status")
+	private String[] notStatus;
+	@SerializedName("~toolOverlap")
+	private String[] notToolOverlap;
+
+	public String[] getNotCwe() {
+		return notCwe;
+	}
+
+	public void setNotCwe(String[] notCwe) {
+		this.notCwe = notCwe;
+	}
+
+	public String[] getNotFinding() {
+		return notFinding;
+	}
+
+	public void setNotFinding(String[] notFinding) {
+		this.notFinding = notFinding;
+	}
+
+	public String[] getNotPath() {
+		return notPath;
+	}
+
+	public void setNotPath(String[] notPath) {
+		this.notPath = notPath;
+	}
+
+	public String[] getNotRule() {
+		return notRule;
+	}
+
+	public void setNotRule(String[] notRule) {
+		this.notRule = notRule;
+	}
+
+	public String[] getNotSeverity() {
+		return notSeverity;
+	}
+
+	public void setNotSeverity(String[] notSeverity) {
+		this.notSeverity = notSeverity;
+	}
+
+	public String[] getNotStatus() {
+		return notStatus;
+	}
+
+	public void setNotStatus(String[] notStatus) {
+		this.notStatus = notStatus;
+	}
+
+	public String[] getNotToolOverlap() {
+		return notToolOverlap;
+	}
+
+	public void setNotToolOverlap(String[] notToolOverlap) {
+		this.notToolOverlap = notToolOverlap;
+	}
 
 	public static final String STATUS_NEW = "new";
 	public static final String STATUS_ESCALATED = "escalated";
@@ -100,7 +172,14 @@ public class Filter {
 				+ ", rule=" + Arrays.toString(rule) + ", severity="
 				+ Arrays.toString(severity) + ", status="
 				+ Arrays.toString(status) + ", toolOverlap="
-				+ Arrays.toString(toolOverlap) + "]";
+				+ Arrays.toString(toolOverlap)
+				+ ", ~cwe=" + Arrays.toString(notCwe) + ", ~finding="
+				+ Arrays.toString(notFinding) + ", ~path=" + Arrays.toString(notPath)
+				+ ", ~rule=" + Arrays.toString(notRule) + ", ~severity="
+				+ Arrays.toString(notSeverity) + ", ~status="
+				+ Arrays.toString(notStatus) + ", ~toolOverlap="
+				+ Arrays.toString(notToolOverlap)
+				+ "]";
 	}
 	
 }
