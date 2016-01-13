@@ -155,7 +155,8 @@ public class CodeDxProjectAction implements Action, Serializable {
         CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
 
         Map<String,Color> colorMap = new HashMap<String,Color>();
-        
+
+        colorMap.put(Filter.SEVERITY_CRITICAL, new Color(0x610a14));
         colorMap.put(Filter.SEVERITY_HIGH, new Color(0xbd0026));
         colorMap.put(Filter.SEVERITY_MEDIUM, new Color(0xfd8d3c));
         colorMap.put(Filter.SEVERITY_LOW, new Color(0xfed976));

@@ -69,6 +69,7 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     public CodeDxDiffSummary getSeverityDiffSummary() {
     
     	List<String> order = new ArrayList<String>();
+        order.add("Critical");
     	order.add("High");
     	order.add("Medium");
     	order.add("Low");
@@ -76,7 +77,8 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     	order.add("Unspecified");
     	
     	Map<String,String> iconMap = new HashMap<String,String>();
-    	
+
+        iconMap.put("Critical", "/plugin/codedx/icons/critical.png");
     	iconMap.put("High", "/plugin/codedx/icons/high.png");
     	iconMap.put("Medium", "/plugin/codedx/icons/medium.png");
     	iconMap.put("Low", "/plugin/codedx/icons/low.png");

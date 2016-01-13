@@ -9,6 +9,7 @@ public enum StatisticGroup {
     Low("Low"),
     Medium("Medium"),
     High("High"),
+    Critical("Critical"),
 
     FalsePositive("False Positive"),
     Ignored("Ignored"),
@@ -46,6 +47,7 @@ public enum StatisticGroup {
             values.add(Low);
             values.add(Medium);
             values.add(High);
+            values.add(Critical);
         } else if ("status".equals(statisticName)) {
             values.add(FalsePositive);
             values.add(Ignored);

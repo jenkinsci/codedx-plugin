@@ -593,7 +593,8 @@ public class CodeDxPublisher extends Recorder {
 			listBox.add("Info or Higher", "Info");
 			listBox.add("Low or Higher", "Low");
 			listBox.add("Medium or Higher", "Medium");
-			listBox.add("High", "High");
+			listBox.add("High or Higher", "High");
+			listBox.add("Critical", "Critical");
 
 			return listBox;
 		}

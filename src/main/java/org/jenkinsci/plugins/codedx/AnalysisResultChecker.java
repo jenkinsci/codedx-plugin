@@ -97,7 +97,7 @@ public class AnalysisResultChecker {
 	
 	private String[] getSeverities(String minSeverity){
 		
-		String[] possibleSeverities = {Filter.SEVERITY_INFO, Filter.SEVERITY_LOW, Filter.SEVERITY_MEDIUM, Filter.SEVERITY_HIGH, Filter.SEVERITY_UNSPECIFIED};
+		String[] possibleSeverities = {Filter.SEVERITY_INFO, Filter.SEVERITY_LOW, Filter.SEVERITY_MEDIUM, Filter.SEVERITY_HIGH, Filter.SEVERITY_CRITICAL, Filter.SEVERITY_UNSPECIFIED};
 		
 		for(int i = 0; i < possibleSeverities.length; i++){
 			
