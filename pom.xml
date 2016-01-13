@@ -10,7 +10,7 @@
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>codedx</artifactId>
   <name>Code Dx Plugin</name>
-  <version>2.0-SNAPSHOT</version>
+  <version>2.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <licenses>
