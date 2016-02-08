@@ -51,6 +51,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * Jenkins publisher that publishes project source, binaries, and
@@ -73,6 +74,8 @@ public class CodeDxPublisher extends Recorder {
 	private final CodeDxClient client;
 
 	private final String selfSignedCertificateFingerprint;
+
+	private final static Logger logger = Logger.getLogger(CodeDxPublisher.class.getName());
 
 	/**
 	 * @param url                          URL of the Code Dx server
@@ -357,9 +360,9 @@ public class CodeDxPublisher extends Recorder {
 			builder.setSSLSocketFactory(socketFactory);
 			client = new CodeDxClient(url, key, builder);
 		} catch (MalformedURLException e) {
-
+			logger.warning("A valid CodeDxClient could not be built. Malformed URL: " + url);
 		} catch (GeneralSecurityException e) {
-
+			logger.warning("A valid CodeDxClient could not be built. GeneralSecurityException: url: " + url + ", fingerprint: " + fingerprint);
 		}
 		return client;
 	}
@@ -500,6 +503,8 @@ public class CodeDxPublisher extends Recorder {
 					client.getProjects();
 				} catch (Exception e) {
 					if (e instanceof SSLHandshakeException) {
+						logger.warning("When retrieving projects: " + e);
+						e.printStackTrace();
 						return FormValidation.warning("The fingerprint doesn't match the fingerprint of the certifcate presented by the server");
 					}
 				}
@@ -568,7 +573,7 @@ public class CodeDxPublisher extends Recorder {
 
 				}
 			} catch (Exception e) {
-
+				logger.warning("Exception when populating projects dropdown " + e);
 				listBox.add("", "-1");
 			}
 

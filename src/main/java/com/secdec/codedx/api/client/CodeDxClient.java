@@ -84,6 +84,8 @@ public class CodeDxClient {
 		if(key == null)
 			throw new NullPointerException("Argument key is null");
 
+		url = url.trim();
+
 		if(!url.endsWith("/")){
 
 			url = url + "/";

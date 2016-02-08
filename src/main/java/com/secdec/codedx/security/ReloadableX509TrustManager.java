@@ -82,7 +82,7 @@ public class ReloadableX509TrustManager implements X509TrustManager {
 					// wrap errors from the cert manipulation
 					throw new CertificateException("Error handling permanent acceptance of the certificate", e);
 				} catch (GeneralSecurityException e) {
-					throw new CertificateException("Error handling temporary acceptance of the certificate", e);
+					throw new CertificateException("Error handling permanent acceptance of the certificate", e);
 				}
 				// now retry the trust check
 				tmDelegate.checkServerTrusted(chain, authType);
