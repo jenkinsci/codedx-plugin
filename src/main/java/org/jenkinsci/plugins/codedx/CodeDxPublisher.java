@@ -505,7 +505,11 @@ public class CodeDxPublisher extends Recorder {
 					if (e instanceof SSLHandshakeException) {
 						logger.warning("When retrieving projects: " + e);
 						e.printStackTrace();
-						return FormValidation.warning("The fingerprint doesn't match the fingerprint of the certifcate presented by the server");
+						if (e.getMessage().contains("handshake_failure")) {
+							return FormValidation.warning("A secure connection to the server could not be established");
+						} else {
+							return FormValidation.warning("The fingerprint doesn't match the fingerprint of the certifcate presented by the server");
+						}
 					}
 				}
 			}
