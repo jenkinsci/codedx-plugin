@@ -505,10 +505,10 @@ public class CodeDxPublisher extends Recorder {
 					if (e instanceof SSLHandshakeException) {
 						logger.warning("When retrieving projects: " + e);
 						e.printStackTrace();
-						if (e.getMessage().contains("handshake_failure")) {
-							return FormValidation.warning("A secure connection to the server could not be established");
+						if (isFingerprintMismatch((SSLHandshakeException)e)) {
+							return FormValidation.warning("The fingerprint doesn't match the fingerprint of the certificate presented by the server");
 						} else {
-							return FormValidation.warning("The fingerprint doesn't match the fingerprint of the certifcate presented by the server");
+							return FormValidation.warning("A secure connection to the server could not be established");
 						}
 					}
 				}
@@ -624,6 +624,10 @@ public class CodeDxPublisher extends Recorder {
 		public Publisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
 			return super.newInstance(req, formData);
 		}
+	}
+
+	private static boolean isFingerprintMismatch(SSLHandshakeException exception) {
+		return exception.getMessage().contains("None of the TrustManagers trust this certificate chain");
 	}
 }
 
