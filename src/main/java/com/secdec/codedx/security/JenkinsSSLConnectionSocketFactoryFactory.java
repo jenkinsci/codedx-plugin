@@ -42,7 +42,7 @@ public class JenkinsSSLConnectionSocketFactoryFactory {
         X509TrustManager trustManager = new CompositeX509TrustManager(trustManagersForComposite);
 
         // setup the SSLContext using the custom trust manager
-        SSLContext sslContext = SSLContext.getInstance("TLS");
+        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
         sslContext.init(null, new TrustManager[] { trustManager }, null);
 
         // the actual hostname verifier that will be used with the socket
