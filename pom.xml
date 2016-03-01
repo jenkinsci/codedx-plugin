@@ -67,17 +67,16 @@
 
   	<url>https://wiki.jenkins-ci.org/display/JENKINS/Code+Dx+Plugin</url>
 
-  	<developers>
-      <developer>
-        <id>leRadwan</id>
-        <name>Hassan Radwan</name>
-        <email>hassan.radwan@codedx.com</email>
-      </developer>
+  <developers>
       <developer>
           <id>samuelbjohnson</id>
           <name>Samuel B. Johnson</name>
           <email>samuel.johnson@codedx.com</email>
       </developer>
-  	</developers>
-
+      <developer>
+          <id>baf</id>
+          <name>Robert Ferris</name>
+          <email>robert.ferris@codedx.com</email>
+      </developer>
+  </developers>
 </project>
