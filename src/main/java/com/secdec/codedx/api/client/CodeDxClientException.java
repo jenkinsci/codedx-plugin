@@ -26,14 +26,37 @@ package com.secdec.codedx.api.client;
 public class CodeDxClientException extends Exception{
 
 	private int httpCode;
-	
-	public CodeDxClientException(String responseMessage, int httpCode) {
-        super(responseMessage);
+	private String requestPath;
+	private String requestMethod;
+	private String responseContent;
+	private String responseMessage;
+
+	public CodeDxClientException(String requestMethod, String requestPath, String responseMessage, int httpCode, String responseContent) {
+        super(String.format("Received non-success response from the server [%d: %s] while executing %s %s", httpCode, responseMessage, requestMethod, requestPath));
         this.httpCode = httpCode;
+		this.requestPath = requestPath;
+		this.requestMethod = requestMethod;
+		this.responseContent = responseContent;
     }
 	
 
     public int getHttpCode() {
 		return httpCode;
+	}
+
+	public String getRequestPath() {
+		return requestPath;
+	}
+
+	public String getRequestMethod() {
+		return requestMethod;
+	}
+
+	public String getResponseContent() {
+		return responseContent;
+	}
+
+	public String getResponseMessage() {
+		return responseMessage;
 	}
 }

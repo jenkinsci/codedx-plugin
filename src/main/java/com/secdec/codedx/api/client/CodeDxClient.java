@@ -270,7 +270,7 @@ public class CodeDxClient {
 		
 		if(responseCode != 200){
 			
-			throw new CodeDxClientException("failed to get from: " + path,responseCode);
+			throw new CodeDxClientException("GET", path, response.getStatusLine().getReasonPhrase(), responseCode, IOUtils.toString(response.getEntity().getContent()));
 		}
 		
 		String data = IOUtils.toString(response.getEntity().getContent());
@@ -314,7 +314,7 @@ public class CodeDxClient {
 		
 		if(responseCode != 200){
 			
-			throw new CodeDxClientException("failed to get from: " + path,responseCode);
+			throw new CodeDxClientException("POST", path, response.getStatusLine().getReasonPhrase(), responseCode, IOUtils.toString(response.getEntity().getContent()));
 		}
 		
 		String data = IOUtils.toString(response.getEntity().getContent());
@@ -334,14 +334,13 @@ public class CodeDxClient {
 	 *
 	 */
 	public StartAnalysisResponse startAnalysis(int projectId, InputStream[] artifacts) throws ClientProtocolException, IOException, CodeDxClientException {
-		
-		HttpPost postRequest = new HttpPost(url + "projects/" + projectId + "/analysis");
+		String path = "projects/" + projectId + "/analysis";
+		HttpPost postRequest = new HttpPost(url + path);
 		postRequest.addHeader(KEY_HEADER, key);
 
 		MultipartEntityBuilder builder = MultipartEntityBuilder.create();
 		
 		builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-
 
 		for(InputStream artifact : artifacts){
 			
@@ -357,19 +356,7 @@ public class CodeDxClient {
 		int responseCode = response.getStatusLine().getStatusCode();
 		
 		if(responseCode != 202){
-			switch(responseCode) {
-                case 400:
-                    throw new CodeDxClientException("Failed to start analysis (Bad Request).  " + IOUtils.toString(response.getEntity().getContent()), responseCode);
-                case 403:
-                    throw new CodeDxClientException("Failed to start analysis (Forbidden: have you configured your key and permissions correctly?).  "
-                            + IOUtils.toString(response.getEntity().getContent()), responseCode);
-                case 404:
-                    throw new CodeDxClientException("Failed to start analysis (Project Not Found).  " + IOUtils.toString(response.getEntity().getContent()), responseCode);
-                case 415:
-                    throw new CodeDxClientException("Failed to start analysis (Unsupported Media Type).  " + IOUtils.toString(response.getEntity().getContent()), responseCode);
-                default:
-                    throw new CodeDxClientException("Failed to start analysis (Internal Server Error).  " + IOUtils.toString(response.getEntity().getContent()), responseCode);
-            }
+			throw new CodeDxClientException("POST", path, response.getStatusLine().getReasonPhrase(), responseCode, IOUtils.toString(response.getEntity().getContent()));
 		}
 		
 		String data = IOUtils.toString(response.getEntity().getContent());

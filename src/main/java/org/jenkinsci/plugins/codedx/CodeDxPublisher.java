@@ -33,6 +33,7 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import net.sf.json.JSONObject;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
@@ -231,7 +232,16 @@ public class CodeDxPublisher extends Recorder {
 
 				int projectIdInt = Integer.parseInt(projectId);
 
-				StartAnalysisResponse response = repeatingClient.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
+				StartAnalysisResponse response;
+
+				try {
+					response = repeatingClient.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
+				} catch (CodeDxClientException e) {
+					listener.getLogger().println(String.format("Response Status: %d: %s", e.getHttpCode(), e.getResponseMessage()));
+					listener.getLogger().println(String.format("Response Content: %s", e.getResponseContent()));
+					e.printStackTrace(listener.getLogger());
+					return false;
+				}
 
 				listener.getLogger().println("Analysis request succeeded");
 
@@ -245,82 +255,95 @@ public class CodeDxPublisher extends Recorder {
 
 				String status = null;
 
-				do {
+				try {
+					do {
 
-					Thread.sleep(3000);
-					status = repeatingClient.getJobStatus(response.getJobId());
+						Thread.sleep(3000);
+						status = repeatingClient.getJobStatus(response.getJobId());
 
-					listener.getLogger().println("The STATUS IS: " + status);
+						listener.getLogger().println("The STATUS IS: " + status);
 
-				} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
+					} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
+				} catch (CodeDxClientException e) {
+					listener.getLogger().println("Fatal Error! There was a problem querying for the analysis run status.");
+					e.printStackTrace(listener.getLogger());
+					return false;
+				}
 
 				if (Job.COMPLETED.equals(status)) {
 
-					listener.getLogger().println("Analysis succeeded");
+					try {
+						listener.getLogger().println("Analysis succeeded");
 
-					listener.getLogger().println("Fetching severity counts");
+						listener.getLogger().println("Fetching severity counts");
 
 
-					Filter notGoneFilter = new Filter();
-					notGoneFilter.setNotStatus(new String[] {Filter.STATUS_GONE});
-					List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notGoneFilter, "severity");
+						Filter notGoneFilter = new Filter();
+						notGoneFilter.setNotStatus(new String[]{Filter.STATUS_GONE});
+						List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notGoneFilter, "severity");
 
-					listener.getLogger().println("Got severity counts");
+						listener.getLogger().println("Got severity counts");
 
-					listener.getLogger().println("Fetching status counts");
+						listener.getLogger().println("Fetching status counts");
 
-					Filter notAssignedFilter = new Filter();
-					notAssignedFilter.setStatus(new String[]{
-							Filter.STATUS_ESCALATED,
-							Filter.STATUS_FALSE_POSITIVE,
-							Filter.STATUS_FIXED,
-							Filter.STATUS_IGNORED,
-							Filter.STATUS_NEW,
-							Filter.STATUS_UNRESOLVED});
+						Filter notAssignedFilter = new Filter();
+						notAssignedFilter.setStatus(new String[]{
+								Filter.STATUS_ESCALATED,
+								Filter.STATUS_FALSE_POSITIVE,
+								Filter.STATUS_FIXED,
+								Filter.STATUS_IGNORED,
+								Filter.STATUS_NEW,
+								Filter.STATUS_UNRESOLVED});
 
-					List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notAssignedFilter, "status");
+						List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notAssignedFilter, "status");
 
-					listener.getLogger().println("Got status counts");
+						listener.getLogger().println("Got status counts");
 
-					Filter assignedFilter = new Filter();
-					assignedFilter.setStatus(new String[]{Filter.STATUS_ASSIGNED});
+						Filter assignedFilter = new Filter();
+						assignedFilter.setStatus(new String[]{Filter.STATUS_ASSIGNED});
 
-					listener.getLogger().println("Fetching assigned count");
+						listener.getLogger().println("Fetching assigned count");
 
-					//Since CodeDx splits assigned status into different statuses (one per user),
-					//we need to get the total assigned count and add our own CountGroup.
-					int assignedCount = repeatingClient.getFindingsCount(projectIdInt, assignedFilter);
+						//Since CodeDx splits assigned status into different statuses (one per user),
+						//we need to get the total assigned count and add our own CountGroup.
+						int assignedCount = repeatingClient.getFindingsCount(projectIdInt, assignedFilter);
 
-					if (assignedCount > 0) {
+						if (assignedCount > 0) {
 
-						CountGroup assignedGroup = new CountGroup();
-						assignedGroup.setName("Assigned");
-						assignedGroup.setCount(assignedCount);
-						statusCounts.add(assignedGroup);
+							CountGroup assignedGroup = new CountGroup();
+							assignedGroup.setName("Assigned");
+							assignedGroup.setCount(assignedCount);
+							statusCounts.add(assignedGroup);
+						}
+
+						listener.getLogger().println("Got assigned count");
+
+
+						Map<String, CodeDxReportStatistics> statMap = new HashMap<String, CodeDxReportStatistics>();
+
+						statMap.put("severity", createStatistics(severityCounts));
+						statMap.put("status", createStatistics(statusCounts));
+
+						CodeDxResult result = new CodeDxResult(statMap, build);
+
+						listener.getLogger().println("Adding CodeDx build action");
+						build.addAction(new CodeDxBuildAction(build, result));
+
+						AnalysisResultChecker checker = new AnalysisResultChecker(repeatingClient,
+								analysisResultConfiguration.getFailureSeverity(),
+								analysisResultConfiguration.getUnstableSeverity(),
+								analysisResultConfiguration.isFailureOnlyNew(),
+								analysisResultConfiguration.isUnstableOnlyNew(),
+								projectIdInt,
+								listener.getLogger());
+						build.setResult(checker.checkResult());
+					} catch (CodeDxClientException e) {
+						listener.getLogger().println("Fatal Error! There was a problem retrieving analysis results.");
+						listener.getLogger().println(String.format(""));
+						e.printStackTrace(listener.getLogger());
+
+						return false;
 					}
-
-					listener.getLogger().println("Got assigned count");
-
-
-					Map<String, CodeDxReportStatistics> statMap = new HashMap<String, CodeDxReportStatistics>();
-
-					statMap.put("severity", createStatistics(severityCounts));
-					statMap.put("status", createStatistics(statusCounts));
-
-					CodeDxResult result = new CodeDxResult(statMap, build);
-
-					listener.getLogger().println("Adding CodeDx build action");
-					build.addAction(new CodeDxBuildAction(build, result));
-
-					AnalysisResultChecker checker = new AnalysisResultChecker(repeatingClient,
-							analysisResultConfiguration.getFailureSeverity(),
-							analysisResultConfiguration.getUnstableSeverity(),
-							analysisResultConfiguration.isFailureOnlyNew(),
-							analysisResultConfiguration.isUnstableOnlyNew(),
-							projectIdInt,
-							listener.getLogger());
-					build.setResult(checker.checkResult());
-
 					return true;
 				} else {
 					listener.getLogger().println("Analysis status: " + status);
@@ -328,20 +351,11 @@ public class CodeDxPublisher extends Recorder {
 				}
 
 			} catch (NumberFormatException e) {
-
 				listener.getLogger().println("Invalid project Id");
-
-			} catch (CodeDxClientException e) {
-
-				listener.getLogger().println("Fatal Error!");
-				e.printStackTrace(listener.getLogger());
-
 			} finally {
-
 				sourceAndBinaryZip.delete();
 			}
 		} else {
-
 			listener.getLogger().println("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
 		}
 
