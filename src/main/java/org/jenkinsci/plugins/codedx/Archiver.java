@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import hudson.FilePath;
 
@@ -33,6 +35,8 @@ import hudson.FilePath;
  *
  */
 public class Archiver {
+
+	private static final Logger log = Logger.getLogger(Archiver.class.getName());
 
 	/**
 	 * 
@@ -87,17 +91,15 @@ public class Archiver {
 		
 		//Zip up the workspace filtering on files to include.
 		workspace.zip(result.write(), new FileFilter(){
-
 			public boolean accept(File file) {
 
 				boolean include = includeFiles.contains(file.getAbsolutePath()) && !excludeFiles.contains(file.getAbsolutePath());
 				
 				if(include){
-				
-					logger.println("Adding " + file + " to zip.");
+					log.log(Level.FINE, "Adding" + file + " to zip");
 				}
 				
-				return include; 		
+				return include;
 			}
 			
 		});
