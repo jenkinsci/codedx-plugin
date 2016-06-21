@@ -237,6 +237,26 @@ public class CodeDxPublisher extends Recorder {
 				try {
 					response = repeatingClient.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
 				} catch (CodeDxClientException e) {
+					String errorSpecificMessage;
+						switch(e.getHttpCode()) {
+							case 400:
+								errorSpecificMessage =
+										" (Bad Request: have you included files from unsupported Tools? " +
+												"Code Dx Standard Edition does not support uploading tool results)";
+								break;
+							case 403:
+								errorSpecificMessage = " (Forbidden: have you configured your key and permissions correctly?)";
+								break;
+							case 404:
+								errorSpecificMessage = " (Project Not Found: is it possible it was deleted?)";
+								break;
+							case 500:
+								errorSpecificMessage = " (Internal Server Error: Please check your Code Dx server logs for more details)";
+								break;
+							default:
+								errorSpecificMessage = "";
+						}
+					listener.getLogger().println(String.format("Failed to start analysis%s.", errorSpecificMessage));
 					listener.getLogger().println(String.format("Response Status: %d: %s", e.getHttpCode(), e.getResponseMessage()));
 					listener.getLogger().println(String.format("Response Content: %s", e.getResponseContent()));
 					e.printStackTrace(listener.getLogger());
