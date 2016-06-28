@@ -81,9 +81,9 @@ public class CodeDxRepeatingClient extends CodeDxClient {
             }
         } catch (InterruptedException i) {
             logger.println("Thread was interrupted while waiting to re-attempt GET");
-            throw new CodeDxClientException("Thread was interrupted. Unabled to finish GET", -1);
+            throw new CodeDxClientException("GET", path, "Thread was interrupted. Unabled to finish GET", -1, "");
         }
         //This shouldn't happen, but we all know how that assumption turns out.
-        throw new CodeDxClientException("GET was unsuccessful for " + path, -1);
+        throw new CodeDxClientException("GET", path, "GET was unsuccessful for " + path, -1, "");
     }
 }
