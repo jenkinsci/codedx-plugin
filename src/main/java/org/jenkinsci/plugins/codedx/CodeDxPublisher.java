@@ -72,7 +72,7 @@ public class CodeDxPublisher extends Recorder {
 
 	private final AnalysisResultConfiguration analysisResultConfiguration;
 
-	private final CodeDxClient client;
+	private transient CodeDxClient client;
 
 	private final String selfSignedCertificateFingerprint;
 
@@ -105,7 +105,13 @@ public class CodeDxPublisher extends Recorder {
 		this.toolOutputFiles = toolOutputFiles;
 		this.analysisResultConfiguration = analysisResultConfiguration;
 		this.selfSignedCertificateFingerprint = selfSignedCertificateFingerprint;
-		this.client = buildClient(url, key, selfSignedCertificateFingerprint);
+		setupClient();
+	}
+
+	private void setupClient() {
+		if (this.client == null) {
+			this.client = buildClient(url, key, selfSignedCertificateFingerprint);
+		}
 	}
 
 	public AnalysisResultConfiguration getAnalysisResultConfiguration() {
@@ -150,7 +156,7 @@ public class CodeDxPublisher extends Recorder {
 		String latestUrl = null;
 
 		if (projectId.length() != 0 && !projectId.equals("-1")) {
-
+			setupClient();
 			latestUrl = client.buildLatestFindingsUrl(Integer.parseInt(projectId));
 		}
 
@@ -162,7 +168,7 @@ public class CodeDxPublisher extends Recorder {
 			final AbstractBuild<?, ?> build,
 			final Launcher launcher,
 			final BuildListener listener) throws InterruptedException, IOException {
-
+		setupClient();
 		final List<InputStream> toSend = new ArrayList<InputStream>();
 
 		listener.getLogger().println("Starting Code Dx Publish");
@@ -397,6 +403,9 @@ public class CodeDxPublisher extends Recorder {
 			logger.warning("A valid CodeDxClient could not be built. Malformed URL: " + url);
 		} catch (GeneralSecurityException e) {
 			logger.warning("A valid CodeDxClient could not be built. GeneralSecurityException: url: " + url + ", fingerprint: " + fingerprint);
+		} catch (Exception e) {
+			logger.warning("An exception was thrown while building the client " + e);
+			e.printStackTrace();
 		}
 		return client;
 	}
