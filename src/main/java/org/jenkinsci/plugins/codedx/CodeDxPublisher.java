@@ -280,15 +280,10 @@ public class CodeDxPublisher extends Recorder {
 				listener.getLogger().println("Waiting for analysis to complete");
 
 				String status = null;
-
 				try {
 					do {
-
 						Thread.sleep(3000);
 						status = repeatingClient.getJobStatus(response.getJobId());
-
-						listener.getLogger().println("The STATUS IS: " + status);
-
 					} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
 				} catch (CodeDxClientException e) {
 					listener.getLogger().println("Fatal Error! There was a problem querying for the analysis run status.");
@@ -297,12 +292,10 @@ public class CodeDxPublisher extends Recorder {
 				}
 
 				if (Job.COMPLETED.equals(status)) {
-
 					try {
 						listener.getLogger().println("Analysis succeeded");
-
+						
 						listener.getLogger().println("Fetching severity counts");
-
 
 						Filter notGoneFilter = new Filter();
 						notGoneFilter.setNotStatus(new String[]{Filter.STATUS_GONE});
