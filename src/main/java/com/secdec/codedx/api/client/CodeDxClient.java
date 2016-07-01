@@ -333,7 +333,7 @@ public class CodeDxClient {
 	 * @throws CodeDxClientException
 	 *
 	 */
-	public StartAnalysisResponse startAnalysis(int projectId, InputStream[] artifacts) throws ClientProtocolException, IOException, CodeDxClientException {
+	public StartAnalysisResponse startAnalysis(int projectId, Map<String, InputStream> artifacts) throws ClientProtocolException, IOException, CodeDxClientException {
 		String path = "projects/" + projectId + "/analysis";
 		HttpPost postRequest = new HttpPost(url + path);
 		postRequest.addHeader(KEY_HEADER, key);
@@ -342,9 +342,8 @@ public class CodeDxClient {
 		
 		builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
 
-		for(InputStream artifact : artifacts){
-			
-			builder.addPart("file[]", new InputStreamBody(artifact,"file[]"));
+		for(String artifactName : artifacts.keySet()){
+			builder.addPart("file[]", new InputStreamBody(artifacts.get(artifactName), artifactName));
 		}
 		
 		HttpEntity entity = builder.build();

@@ -169,7 +169,7 @@ public class CodeDxPublisher extends Recorder {
 			final Launcher launcher,
 			final BuildListener listener) throws InterruptedException, IOException {
 		setupClient();
-		final List<InputStream> toSend = new ArrayList<InputStream>();
+		final Map<String, InputStream> toSend = new HashMap<String, InputStream>();
 
 		listener.getLogger().println("Starting Code Dx Publish");
 
@@ -193,36 +193,27 @@ public class CodeDxPublisher extends Recorder {
 		if (sourceAndBinaryZip != null) {
 
 			try {
-
 				listener.getLogger().println("Adding source/binary zip...");
-
-				toSend.add(sourceAndBinaryZip.read());
+				toSend.put("Jenkins-SourceAndBinary", sourceAndBinaryZip.read());
 			} catch (IOException e) {
-
 				listener.getLogger().println("Failed to add source/binary zip.");
 			}
 
 		} else {
-
 			listener.getLogger().println("No matching source/binary files.");
 		}
 
 		String[] files = Util.commaSeparatedToArray(toolOutputFiles);
 
 		for (String file : files) {
-
 			if (file.length() != 0) {
-
 				FilePath path = build.getWorkspace().child(file);
 
 				if (path.exists()) {
-
 					try {
-
 						listener.getLogger().println("Add tool output file " + path.getRemote() + " to request.");
-						toSend.add(path.read());
+						toSend.put(path.getName(), path.read());
 					} catch (IOException e) {
-
 						listener.getLogger().println("Failed to add tool output file: " + path);
 					}
 				}
@@ -241,7 +232,7 @@ public class CodeDxPublisher extends Recorder {
 				StartAnalysisResponse response;
 
 				try {
-					response = repeatingClient.startAnalysis(Integer.parseInt(projectId), toSend.toArray(new InputStream[0]));
+					response = repeatingClient.startAnalysis(Integer.parseInt(projectId), toSend);
 				} catch (CodeDxClientException e) {
 					String errorSpecificMessage;
 						switch(e.getHttpCode()) {
