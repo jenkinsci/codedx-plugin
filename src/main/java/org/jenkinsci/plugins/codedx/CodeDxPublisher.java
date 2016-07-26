@@ -48,6 +48,7 @@ import javax.servlet.ServletException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
@@ -170,37 +171,37 @@ public class CodeDxPublisher extends Recorder {
 			final BuildListener listener) throws InterruptedException, IOException {
 		setupClient();
 		final Map<String, InputStream> toSend = new HashMap<String, InputStream>();
+		final PrintStream buildOutput = listener.getLogger();
 
-		listener.getLogger().println("Starting Code Dx Publish");
+		buildOutput.println("Publishing build to Code Dx:");
 
 		if (projectId.length() == 0 || projectId.equals("-1")) {
 
-			listener.getLogger().println("No project has been selected");
+			buildOutput.println("No project has been selected");
 			return true;
 		}
 
-		listener.getLogger().println("Code Dx Project ID: " + projectId);
-		listener.getLogger().println("Code Dx URL: " + url);
+		buildOutput.println(String.format("Publishing to Code Dx server at %s to Code Dx project %s: ", url, projectId));
 
-		listener.getLogger().println("Creating source/binary zip...");
+		buildOutput.println("Creating source/binary zip...");
 
 		FilePath sourceAndBinaryZip = Archiver.Archive(build.getWorkspace(),
 				Util.commaSeparatedToArray(sourceAndBinaryFiles),
 				Util.commaSeparatedToArray(excludedSourceAndBinaryFiles),
-				"source", listener.getLogger());
+				"source", buildOutput);
 
 
 		if (sourceAndBinaryZip != null) {
 
 			try {
-				listener.getLogger().println("Adding source/binary zip...");
+				buildOutput.println("Adding source/binary zip...");
 				toSend.put("Jenkins-SourceAndBinary", sourceAndBinaryZip.read());
 			} catch (IOException e) {
-				listener.getLogger().println("Failed to add source/binary zip.");
+				buildOutput.println("Failed to add source/binary zip.");
 			}
 
 		} else {
-			listener.getLogger().println("No matching source/binary files.");
+			buildOutput.println("No matching source/binary files.");
 		}
 
 		String[] files = Util.commaSeparatedToArray(toolOutputFiles);
@@ -211,10 +212,10 @@ public class CodeDxPublisher extends Recorder {
 
 				if (path.exists()) {
 					try {
-						listener.getLogger().println("Add tool output file " + path.getRemote() + " to request.");
+						buildOutput.println("Add tool output file " + path.getRemote() + " to request.");
 						toSend.put(path.getName(), path.read());
 					} catch (IOException e) {
-						listener.getLogger().println("Failed to add tool output file: " + path);
+						buildOutput.println("Failed to add tool output file: " + path);
 					}
 				}
 			}
@@ -222,10 +223,10 @@ public class CodeDxPublisher extends Recorder {
 
 		if (toSend.size() > 0) {
 
-			final CodeDxClient repeatingClient = new CodeDxRepeatingClient(this.client, listener.getLogger());
+			final CodeDxClient repeatingClient = new CodeDxRepeatingClient(this.client, buildOutput);
 
 			try {
-				listener.getLogger().println("Sending analysis request");
+				buildOutput.println("Submitting files to Code Dx for analysis");
 
 				int projectIdInt = Integer.parseInt(projectId);
 
@@ -253,48 +254,52 @@ public class CodeDxPublisher extends Recorder {
 							default:
 								errorSpecificMessage = "";
 						}
-					listener.getLogger().println(String.format("Failed to start analysis%s.", errorSpecificMessage));
-					listener.getLogger().println(String.format("Response Status: %d: %s", e.getHttpCode(), e.getResponseMessage()));
-					listener.getLogger().println(String.format("Response Content: %s", e.getResponseContent()));
-					e.printStackTrace(listener.getLogger());
+					buildOutput.println(String.format("Failed to start analysis%s.", errorSpecificMessage));
+					buildOutput.println(String.format("Response Status: %d: %s", e.getHttpCode(), e.getResponseMessage()));
+					buildOutput.println(String.format("Response Content: %s", e.getResponseContent()));
+					e.printStackTrace(buildOutput);
 					return false;
 				}
 
-				listener.getLogger().println("Analysis request succeeded");
+				buildOutput.println("Code Dx accepted files for analysis");
 
 				if (analysisResultConfiguration == null) {
-
-					listener.getLogger().println("No need to wait for analysis to complete.  We are done here.");
+					logger.info("Project not configured to wait on analysis results");
 					return true;
 				}
 
-				listener.getLogger().println("Waiting for analysis to complete");
-
 				String status = null;
+				String oldStatus = null;
 				try {
 					do {
 						Thread.sleep(3000);
+						oldStatus = status;
 						status = repeatingClient.getJobStatus(response.getJobId());
+						if (status != null && !status.equals(oldStatus)) {
+							if (Job.QUEUED.equals(status)) {
+								buildOutput.println("Code Dx analysis is queued");
+							} else if (Job.RUNNING.equals(status)) {
+								buildOutput.println("Code Dx analysis is running");
+							}
+						}
 					} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
 				} catch (CodeDxClientException e) {
-					listener.getLogger().println("Fatal Error! There was a problem querying for the analysis run status.");
-					e.printStackTrace(listener.getLogger());
+					buildOutput.println("Fatal Error! There was a problem querying for the analysis status.");
+					e.printStackTrace(buildOutput);
 					return false;
 				}
 
 				if (Job.COMPLETED.equals(status)) {
 					try {
-						listener.getLogger().println("Analysis succeeded");
+						buildOutput.println("Analysis succeeded");
 						
-						listener.getLogger().println("Fetching severity counts");
+						buildOutput.println("Fetching severity counts");
 
 						Filter notGoneFilter = new Filter();
 						notGoneFilter.setNotStatus(new String[]{Filter.STATUS_GONE});
 						List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notGoneFilter, "severity");
 
-						listener.getLogger().println("Got severity counts");
-
-						listener.getLogger().println("Fetching status counts");
+						buildOutput.println("Fetching status counts");
 
 						Filter notAssignedFilter = new Filter();
 						notAssignedFilter.setStatus(new String[]{
@@ -307,12 +312,10 @@ public class CodeDxPublisher extends Recorder {
 
 						List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notAssignedFilter, "status");
 
-						listener.getLogger().println("Got status counts");
-
 						Filter assignedFilter = new Filter();
 						assignedFilter.setStatus(new String[]{Filter.STATUS_ASSIGNED});
 
-						listener.getLogger().println("Fetching assigned count");
+						buildOutput.println("Fetching assigned count");
 
 						//Since CodeDx splits assigned status into different statuses (one per user),
 						//we need to get the total assigned count and add our own CountGroup.
@@ -326,8 +329,7 @@ public class CodeDxPublisher extends Recorder {
 							statusCounts.add(assignedGroup);
 						}
 
-						listener.getLogger().println("Got assigned count");
-
+						buildOutput.println("Building table and charts");
 
 						Map<String, CodeDxReportStatistics> statMap = new HashMap<String, CodeDxReportStatistics>();
 
@@ -336,7 +338,7 @@ public class CodeDxPublisher extends Recorder {
 
 						CodeDxResult result = new CodeDxResult(statMap, build);
 
-						listener.getLogger().println("Adding CodeDx build action");
+						buildOutput.println("Adding CodeDx build action");
 						build.addAction(new CodeDxBuildAction(build, result));
 
 						AnalysisResultChecker checker = new AnalysisResultChecker(repeatingClient,
@@ -345,28 +347,27 @@ public class CodeDxPublisher extends Recorder {
 								analysisResultConfiguration.isFailureOnlyNew(),
 								analysisResultConfiguration.isUnstableOnlyNew(),
 								projectIdInt,
-								listener.getLogger());
+								buildOutput);
 						build.setResult(checker.checkResult());
 					} catch (CodeDxClientException e) {
-						listener.getLogger().println("Fatal Error! There was a problem retrieving analysis results.");
-						listener.getLogger().println(String.format(""));
-						e.printStackTrace(listener.getLogger());
+						buildOutput.println("Fatal Error! There was a problem retrieving analysis results.");
+						e.printStackTrace(buildOutput);
 
 						return false;
 					}
 					return true;
 				} else {
-					listener.getLogger().println("Analysis status: " + status);
+					buildOutput.println("Analysis status: " + status);
 					return false;
 				}
 
 			} catch (NumberFormatException e) {
-				listener.getLogger().println("Invalid project Id");
+				buildOutput.println("Invalid project Id");
 			} finally {
 				sourceAndBinaryZip.delete();
 			}
 		} else {
-			listener.getLogger().println("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
+			buildOutput.println("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
 		}
 
 		return false;
