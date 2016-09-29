@@ -306,6 +306,7 @@ public class CodeDxPublisher extends Recorder {
 								Filter.STATUS_ESCALATED,
 								Filter.STATUS_FALSE_POSITIVE,
 								Filter.STATUS_FIXED,
+								Filter.STATUS_MITIGATED,
 								Filter.STATUS_IGNORED,
 								Filter.STATUS_NEW,
 								Filter.STATUS_UNRESOLVED});

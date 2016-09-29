@@ -112,6 +112,7 @@ public class Filter {
 	public static final String STATUS_IGNORED = "ignored";
 	public static final String STATUS_FALSE_POSITIVE = "false-positive";
 	public static final String STATUS_FIXED = "fixed";
+	public static final String STATUS_MITIGATED = "mitigated";
 	public static final String STATUS_UNRESOLVED = "unresolved";
 	public static final String STATUS_GONE = "gone";
 	public static final String STATUS_ASSIGNED = "assigned";

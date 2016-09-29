@@ -11,14 +11,15 @@ public enum StatisticGroup {
     High("High"),
     Critical("Critical"),
 
-    FalsePositive("False Positive"),
-    Ignored("Ignored"),
-    Escalated("Escalated"),
-    Assigned("Assigned"),
-    Fixed("Fixed"),
-    Unresolved("Unresolved"),
-    New("New"),
-    Gone("Gone");
+	Gone("Gone"),
+	New("New"),
+	Assigned("Assigned"),
+	Escalated("Escalated"),
+	Unresolved("Unresolved"),
+	FalsePositive("False Positive"),
+	Ignored("Ignored"),
+	Mitigated("Mitigated"),
+	Fixed("Fixed");
 
     private String value;
 
@@ -49,12 +50,13 @@ public enum StatisticGroup {
             values.add(High);
             values.add(Critical);
         } else if ("status".equals(statisticName)) {
-            values.add(FalsePositive);
-            values.add(Ignored);
-            values.add(Escalated);
+	        values.add(Fixed);
+	        values.add(Mitigated);
+	        values.add(Ignored);
+	        values.add(FalsePositive);
+	        values.add(Unresolved);
+	        values.add(Escalated);
             values.add(Assigned);
-            values.add(Fixed);
-            values.add(Unresolved);
             values.add(New);
         }
 

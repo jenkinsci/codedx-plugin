@@ -3,11 +3,7 @@ package org.jenkinsci.plugins.codedx;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 import org.kohsuke.stapler.StaplerProxy;
@@ -61,6 +57,8 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     	
     	
     }
+
+
     /**
      * Get differences between two severity statistics.
      * 
@@ -98,13 +96,15 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     	
     	List<String> order = new ArrayList<String>();
     	order.add("Fixed");
-    	order.add("Assigned");
-    	order.add("Escalated");
+	    order.add("Mitigated");
+	    order.add("Ignored");
+	    order.add("False Positive");
+	    order.add("Unresolved");
+	    order.add("Escalated");
+	    order.add("Assigned");
     	order.add("New");
-    	order.add("Unresolved");
-    	order.add("False Positive");
     	order.add("Gone");
-    	
+
         return CodeDxDiffSummary.getDiffSummary(getPreviousStatusStats(),
                 result.getStatistics("status"), "Status",new DiffGroupComparator(order), new HashMap<String,String>());
     }
