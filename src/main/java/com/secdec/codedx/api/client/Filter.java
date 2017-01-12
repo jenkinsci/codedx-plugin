@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright 2014 Applied Visions
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,18 +12,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License
- *  
+ *
  */
 
 package com.secdec.codedx.api.client;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.Locale;
 
 /**
  * Represents the JSON data for a Filter
- * 
+ *
  * @author anthonyd
  *
  */
@@ -50,6 +53,27 @@ public class Filter {
 	private String[] notStatus;
 	@SerializedName("~toolOverlap")
 	private String[] notToolOverlap;
+
+	public static class DateRange {
+		// ISO time strings
+		private String min;
+		private String max;
+
+		public DateRange(Date minDate, Date maxDate){
+			SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZ", Locale.ENGLISH);
+			this.min = isoFormat.format(minDate);
+			this.max = isoFormat.format(maxDate);
+		}
+
+		@Override
+		public String toString() {
+			return "DateRange[" + min + " to " + max + "]";
+		}
+	}
+	private DateRange firstSeen;
+	public DateRange getFirstSeen(){ return firstSeen; }
+	public void setFirstSeen(DateRange firstSeen){ this.firstSeen = firstSeen; }
+
 
 	public String[] getNotCwe() {
 		return notCwe;
@@ -107,7 +131,6 @@ public class Filter {
 		this.notToolOverlap = notToolOverlap;
 	}
 
-	public static final String STATUS_NEW = "new";
 	public static final String STATUS_ESCALATED = "escalated";
 	public static final String STATUS_IGNORED = "ignored";
 	public static final String STATUS_FALSE_POSITIVE = "false-positive";
@@ -116,14 +139,14 @@ public class Filter {
 	public static final String STATUS_UNRESOLVED = "unresolved";
 	public static final String STATUS_GONE = "gone";
 	public static final String STATUS_ASSIGNED = "assigned";
-	
+
 	public static final String SEVERITY_INFO = "Info";
 	public static final String SEVERITY_LOW = "Low";
 	public static final String SEVERITY_MEDIUM = "Medium";
 	public static final String SEVERITY_HIGH = "High";
 	public static final String SEVERITY_CRITICAL = "Critical";
 	public static final String SEVERITY_UNSPECIFIED = "Unspecified";
-	
+
 	public String[] getCwe() {
 		return cwe;
 	}
@@ -173,8 +196,8 @@ public class Filter {
 				+ Arrays.toString(finding) + ", path=" + Arrays.toString(path)
 				+ ", rule=" + Arrays.toString(rule) + ", severity="
 				+ Arrays.toString(severity) + ", status="
-				+ Arrays.toString(status) + ", toolOverlap="
-				+ Arrays.toString(toolOverlap)
+				+ Arrays.toString(status) + ", firstSeen=" + firstSeen
+				+ ", toolOverlap=" + Arrays.toString(toolOverlap)
 				+ ", ~cwe=" + Arrays.toString(notCwe) + ", ~finding="
 				+ Arrays.toString(notFinding) + ", ~path=" + Arrays.toString(notPath)
 				+ ", ~rule=" + Arrays.toString(notRule) + ", ~severity="
@@ -183,5 +206,5 @@ public class Filter {
 				+ Arrays.toString(notToolOverlap)
 				+ "]";
 	}
-	
+
 }

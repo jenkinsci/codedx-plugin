@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright 2014 Applied Visions
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License
- *  
+ *
  */
 
 package org.jenkinsci.plugins.codedx;
@@ -169,6 +169,9 @@ public class CodeDxPublisher extends Recorder {
 			final AbstractBuild<?, ?> build,
 			final Launcher launcher,
 			final BuildListener listener) throws InterruptedException, IOException {
+
+		Date startingDate = new Date();
+
 		setupClient();
 		final Map<String, InputStream> toSend = new HashMap<String, InputStream>();
 		final PrintStream buildOutput = listener.getLogger();
@@ -292,7 +295,7 @@ public class CodeDxPublisher extends Recorder {
 				if (Job.COMPLETED.equals(status)) {
 					try {
 						buildOutput.println("Analysis succeeded");
-						
+
 						buildOutput.println("Fetching severity counts");
 
 						Filter notGoneFilter = new Filter();
@@ -308,7 +311,6 @@ public class CodeDxPublisher extends Recorder {
 								Filter.STATUS_FIXED,
 								Filter.STATUS_MITIGATED,
 								Filter.STATUS_IGNORED,
-								Filter.STATUS_NEW,
 								Filter.STATUS_UNRESOLVED});
 
 						List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notAssignedFilter, "status");
@@ -345,6 +347,7 @@ public class CodeDxPublisher extends Recorder {
 						AnalysisResultChecker checker = new AnalysisResultChecker(repeatingClient,
 								analysisResultConfiguration.getFailureSeverity(),
 								analysisResultConfiguration.getUnstableSeverity(),
+								startingDate, // the time this process started is the "new" threshold for filtering
 								analysisResultConfiguration.isFailureOnlyNew(),
 								analysisResultConfiguration.isUnstableOnlyNew(),
 								projectIdInt,

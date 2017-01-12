@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright 2014 Applied Visions
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +12,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License
- *  
+ *
  */
 
 package com.secdec.codedx.api.client;
 
 /**
  * An exception thrown by various CodeDxClient calls.
- * 
+ *
  * @author anthonyd
  *
  */
@@ -32,13 +32,13 @@ public class CodeDxClientException extends Exception{
 	private String responseMessage;
 
 	public CodeDxClientException(String requestMethod, String requestPath, String responseMessage, int httpCode, String responseContent) {
-        super(String.format("Received non-success response from the server [%d: %s] while executing %s %s", httpCode, responseMessage, requestMethod, requestPath));
+        super(String.format("Received non-success response from the server [%d: %s] while executing %s %s\n{{%s}}", httpCode, responseMessage, requestMethod, requestPath, responseContent));
         this.httpCode = httpCode;
 		this.requestPath = requestPath;
 		this.requestMethod = requestMethod;
 		this.responseContent = responseContent;
     }
-	
+
 
     public int getHttpCode() {
 		return httpCode;
