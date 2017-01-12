@@ -12,7 +12,6 @@ public enum StatisticGroup {
     Critical("Critical"),
 
 	Gone("Gone"),
-	New("New"),
 	Assigned("Assigned"),
 	Escalated("Escalated"),
 	Unresolved("Unresolved"),
@@ -57,7 +56,6 @@ public enum StatisticGroup {
 	        values.add(Unresolved);
 	        values.add(Escalated);
             values.add(Assigned);
-            values.add(New);
         }
 
         return values;

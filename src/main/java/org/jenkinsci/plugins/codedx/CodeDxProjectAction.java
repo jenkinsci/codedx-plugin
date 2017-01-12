@@ -33,7 +33,7 @@ public class CodeDxProjectAction implements Action, Serializable {
     public AbstractProject<?,?> project;
 
     private final String latestAnalysisUrl;
-  
+
     private AnalysisResultConfiguration analysisResultConfiguration;
 
     public CodeDxProjectAction(final AbstractProject<?, ?> project,
@@ -56,17 +56,17 @@ public class CodeDxProjectAction implements Action, Serializable {
     }
 
     public String getLatestAnalysisUrl(){
-    	
+
     	return latestAnalysisUrl;
     }
-    
+
     public AnalysisResultConfiguration getAnalysisResultConfiguration(){
-    	
+
     	return analysisResultConfiguration;
     }
-    
+
     public boolean showTablesAndCharts(){
-    	
+
     	return analysisResultConfiguration != null;
     }
     /**
@@ -162,7 +162,7 @@ public class CodeDxProjectAction implements Action, Serializable {
         colorMap.put(Filter.SEVERITY_LOW, new Color(0xfed976));
         colorMap.put(Filter.SEVERITY_INFO, new Color(0x888888));
         colorMap.put(Filter.SEVERITY_UNSPECIFIED, new Color(0xadadad));
-        
+
         ChartUtil.generateGraph(
                 request,
                 response,
@@ -170,7 +170,7 @@ public class CodeDxProjectAction implements Action, Serializable {
                 CHART_WIDTH,
                 CHART_HEIGHT);
     }
-    
+
 
     /**
      * Display the status trend graph.
@@ -188,7 +188,6 @@ public class CodeDxProjectAction implements Action, Serializable {
 
         Map<String,Color> colorMap = new HashMap<String,Color>();
 
-        colorMap.put(StatisticGroup.New.toString(), new Color(0x542788));
         colorMap.put(StatisticGroup.Unresolved.toString(), new Color(0x998ec3));
         colorMap.put(StatisticGroup.Fixed.toString(), new Color(0x3288bd));
 	    colorMap.put(StatisticGroup.Mitigated.toString(), new Color(0x295ec6));

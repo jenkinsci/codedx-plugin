@@ -41,31 +41,31 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     private class DiffGroupComparator implements Comparator<CodeDxDiffGroup>{
 
 		List<String> groupOrdering = new ArrayList<String>();
-		
+
     	public DiffGroupComparator(List<String> groupOrdering){
-    		
+
     		this.groupOrdering = groupOrdering;
     	}
-    	
+
 		public int compare(CodeDxDiffGroup o1, CodeDxDiffGroup o2) {
 
 			int index1 = groupOrdering.indexOf(o1.getName());
 			int index2 = groupOrdering.indexOf(o2.getName());
-			
+
 			return Integer.compare(index1, index2);
 		}
-    	
-    	
+
+
     }
 
 
     /**
      * Get differences between two severity statistics.
-     * 
+     *
      * @return the differences
      */
     public CodeDxDiffSummary getSeverityDiffSummary() {
-    
+
     	List<String> order = new ArrayList<String>();
         order.add("Critical");
     	order.add("High");
@@ -73,7 +73,7 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     	order.add("Low");
     	order.add("Info");
     	order.add("Unspecified");
-    	
+
     	Map<String,String> iconMap = new HashMap<String,String>();
 
         iconMap.put("Critical", "/plugin/codedx/icons/critical.png");
@@ -82,18 +82,18 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
     	iconMap.put("Low", "/plugin/codedx/icons/low.png");
     	iconMap.put("Info", "/plugin/codedx/icons/info.png");
     	iconMap.put("Unspecified", "/plugin/codedx/icons/unspecified.png");
-    	
+
         return CodeDxDiffSummary.getDiffSummary(getPreviousSeverityStats(),
                 result.getStatistics("severity"), "Severity",new DiffGroupComparator(order),iconMap);
     }
 
     /**
      * Get differences between two status statistics.
-     * 
+     *
      * @return the differences
      */
     public CodeDxDiffSummary getStatusDiffSummary() {
-    	
+
     	List<String> order = new ArrayList<String>();
     	order.add("Fixed");
 	    order.add("Mitigated");
@@ -102,7 +102,6 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 	    order.add("Unresolved");
 	    order.add("Escalated");
 	    order.add("Assigned");
-    	order.add("New");
     	order.add("Gone");
 
         return CodeDxDiffSummary.getDiffSummary(getPreviousStatusStats(),
@@ -121,7 +120,7 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
            return previous.getStatistics("severity");
         }
     }
-    
+
     private CodeDxReportStatistics getPreviousStatusStats(){
         CodeDxResult previous = this.getPreviousResult();
         if(previous == null){
@@ -137,13 +136,13 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
         if(previousAction != null){
             previousResult = previousAction.getResult();
         }
-        
+
         return previousResult;
     }
 
     /**
      * Get the previous valid and non-empty action.
-     * 
+     *
      * @return the action or null
      */
     CodeDxBuildAction getPreviousAction(){
@@ -159,7 +158,7 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 
             if (action != null) {
                 CodeDxResult result = action.getResult();
-                
+
                 if(result != null && !result.isEmpty()) {
                     return action;
                 }
