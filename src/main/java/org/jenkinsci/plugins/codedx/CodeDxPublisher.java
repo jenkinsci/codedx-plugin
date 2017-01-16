@@ -262,6 +262,11 @@ public class CodeDxPublisher extends Recorder {
 					buildOutput.println(String.format("Response Content: %s", e.getResponseContent()));
 					e.printStackTrace(buildOutput);
 					return false;
+				} finally {
+					// close streams after we're done sending them
+					for(Map.Entry<String, InputStream> entry : toSend.entrySet()){
+						IOUtils.closeQuietly(entry.getValue());
+					}
 				}
 
 				buildOutput.println("Code Dx accepted files for analysis");
