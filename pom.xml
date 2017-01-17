@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<parent>
 		<groupId>org.jenkins-ci.plugins</groupId>
 		<artifactId>plugin</artifactId>
@@ -15,6 +15,20 @@
 	<packaging>hpi</packaging>
 	<url>https://wiki.jenkins-ci.org/display/JENKINS/Code+Dx+Plugin</url>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.6.1</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
 	<scm>
 		<connection>scm:git:ssh://github.com/jenkinsci/codedx-plugin.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/jenkinsci/codedx-plugin.git</developerConnection>
@@ -23,16 +37,21 @@
 	</scm>
 
 	<developers>
-			<developer>
-					<id>samuelbjohnson</id>
-					<name>Samuel B. Johnson</name>
-					<email>samuel.johnson@codedx.com</email>
-			</developer>
-			<developer>
-					<id>baf</id>
-					<name>Robert Ferris</name>
-					<email>robert.ferris@codedx.com</email>
-			</developer>
+		<developer>
+			<id>samuelbjohnson</id>
+			<name>Samuel B. Johnson</name>
+			<email>samuel.johnson@codedx.com</email>
+		</developer>
+		<developer>
+			<id>baf</id>
+			<name>Robert Ferris</name>
+			<email>robert.ferris@codedx.com</email>
+		</developer>
+		<developer>
+			<id>dylemma</id>
+			<name>Dylan Halperin</name>
+			<email>dylan.halperin@codedx.com</email>
+		</developer>
 	</developers>
 
 	<licenses>
@@ -66,9 +85,9 @@
 
 	<dependencies>
 		<dependency>
-				<groupId>com.google.code.gson</groupId>
-				<artifactId>gson</artifactId>
-				<version>2.3</version>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>

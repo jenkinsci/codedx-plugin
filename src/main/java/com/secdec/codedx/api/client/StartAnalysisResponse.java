@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright 2014 Applied Visions
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,28 +12,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License
- *  
+ *
  */
 
 package com.secdec.codedx.api.client;
 
 /**
  * Represents the JSON response data when starting an analysis run.
- * 
+ *
  * @author anthonyd
  *
  */
 public class StartAnalysisResponse {
 
-//	private int projectId;
+	private int analysisId;
 	private String jobId;
 
-//	public int getProjectId() {
-//		return projectId;
-//	}
-//	public void setProjectId(int projectId) {
-//		this.projectId = projectId;
-//	}
+	public int getAnalysisId(){ return analysisId; }
+	public void setAnalysisId(int analysisId) { this.analysisId = analysisId; }
+
 	public String getJobId() {
 		return jobId;
 	}

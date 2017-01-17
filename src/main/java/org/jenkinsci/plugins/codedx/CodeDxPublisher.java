@@ -70,6 +70,7 @@ public class CodeDxPublisher extends Recorder {
 	private final String sourceAndBinaryFiles;
 	private final String toolOutputFiles;
 	private final String excludedSourceAndBinaryFiles;
+	private final String analysisName;
 
 	private final AnalysisResultConfiguration analysisResultConfiguration;
 
@@ -96,6 +97,7 @@ public class CodeDxPublisher extends Recorder {
 						   final String sourceAndBinaryFiles,
 						   final String toolOutputFiles,
 						   final String excludedSourceAndBinaryFiles,
+						   final String analysisName,
 						   final AnalysisResultConfiguration analysisResultConfiguration,
 						   final String selfSignedCertificateFingerprint) {
 		this.projectId = projectId;
@@ -104,6 +106,7 @@ public class CodeDxPublisher extends Recorder {
 		this.sourceAndBinaryFiles = sourceAndBinaryFiles;
 		this.excludedSourceAndBinaryFiles = excludedSourceAndBinaryFiles;
 		this.toolOutputFiles = toolOutputFiles;
+		this.analysisName = analysisName.trim();
 		this.analysisResultConfiguration = analysisResultConfiguration;
 		this.selfSignedCertificateFingerprint = selfSignedCertificateFingerprint;
 		setupClient();
@@ -270,6 +273,27 @@ public class CodeDxPublisher extends Recorder {
 				}
 
 				buildOutput.println("Code Dx accepted files for analysis");
+
+				// Set the analysis name on the server
+				if(response != null){
+					if(analysisName == null || analysisName.length() == 0){
+						buildOutput.println("No 'Analysis Name' was chosen.");
+					} else {
+						buildOutput.println("Analysis Name (raw): " + analysisName);
+						String expandedAnalysisName = build.getEnvironment(listener).expand(analysisName);
+						buildOutput.println("Analysis Name: " + expandedAnalysisName);
+						buildOutput.println("Analysis Id: " + response.getAnalysisId());
+
+						try {
+							repeatingClient.setAnalysisName(projectIdInt, response.getAnalysisId(), expandedAnalysisName);
+							buildOutput.println("Successfully updated analysis name.");
+						} catch(CodeDxClientException e){
+							buildOutput.println("Got error from Code Dx API Client while trying to set the analysis name");
+							e.printStackTrace(buildOutput);
+							return false;
+						}
+					}
+				}
 
 				if (analysisResultConfiguration == null) {
 					logger.info("Project not configured to wait on analysis results");

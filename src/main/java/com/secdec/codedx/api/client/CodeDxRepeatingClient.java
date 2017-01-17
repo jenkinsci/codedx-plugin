@@ -1,14 +1,10 @@
 package com.secdec.codedx.api.client;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Type;
-import java.net.Socket;
 import java.net.SocketException;
 
 /**
@@ -22,22 +18,19 @@ public class CodeDxRepeatingClient extends CodeDxClient {
         this.logger = logger;
     }
 
-    /**
-     * A generic get that will marshal JSON data into some type.
-     * @param path Append this to the URL
-     * @param typeOfT
-     * @param experimental If this request is part of the experimental API
-     * @return Something of type T
-     * @throws ClientProtocolException
-     * @throws IOException
-     * @throws CodeDxClientException
-     */
-    protected <T> T doGet(String path, Type typeOfT, boolean experimental) throws IOException, CodeDxClientException {
+    @Override
+    protected <T> T doHttpRequest(HttpRequestBase request, String path, boolean isXApi, Type responseType, Object requestBody) throws IOException, CodeDxClientException {
         try {
             int fails = 0;
             while (fails < 3) {
                 try {
-                    return super.doGet(path, typeOfT, experimental);
+                    try {
+                        // use a clone to avoid reusing the request object
+                        HttpRequestBase clonedRequest = (HttpRequestBase) request.clone();
+                        return super.doHttpRequest(clonedRequest, path, isXApi, responseType, requestBody);
+                    } catch (CloneNotSupportedException e){
+                        throw new IOException("Could not clone request body entity: " + requestBody);
+                    }
                 } catch (CodeDxClientException clientException) {
                     fails++;
                     logger.println("Attempt " + fails + " " + clientException.getMessage() + " response code: " + clientException.getHttpCode());
