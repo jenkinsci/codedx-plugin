@@ -1,0 +1,23 @@
+<div>
+    <p>
+        This field lets you set a "name" for each Code Dx analysis published from Jenkins.
+        Analysis names are mainly used to identify the bars in the "First Seen" and "Last Modified" filters on Code Dx's Findings page.
+    </p>
+    <p>
+        You can use build/environment variables to construct a different name for each analysis. For example:
+        <pre><code>Build #${BUILD_NUMBER}</code></pre>
+        would create the name `Build #26` for the 26th build of the project.
+    </p>
+    <p>
+        You can construct links using a syntax similar to markdown, i.e. <code>[link text](link url)</code>. This also works with build variables:
+        <pre><code>Build [#${BUILD_NUMBER}]($BUILD_URL)</code></pre>
+    </p>
+    <p>
+        Some Jenkins plugins, like the Git plugin, provide "macros" which allow for some additional customization.
+        In this example, the analysis name will be set to the first 8 characters of the git commit hash:
+        <pre><code>${GIT_REVISION, length=8}</code></pre>
+        For more information on "macros", see the
+        <a href="https://wiki.jenkins-ci.org/display/JENKINS/Token+Macro+Plugin" target="_blank">Token Macro Plugin Wiki</a>.
+    </p>
+
+</div>

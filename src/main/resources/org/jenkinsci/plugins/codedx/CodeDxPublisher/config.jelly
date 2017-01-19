@@ -31,7 +31,7 @@
     	<f:textbox />
     </f:entry>
 
-    <f:entry title="Analysis Name" field="analysisName">
+    <f:entry title="Analysis Name" field="analysisName" help="/plugin/codedx/help-analysisName.html">
     	<f:textbox default="Build #$${BUILD_NUMBER}" />
 	</f:entry>
 
