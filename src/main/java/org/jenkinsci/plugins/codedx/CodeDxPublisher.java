@@ -153,6 +153,7 @@ public class CodeDxPublisher extends Recorder {
 		return selfSignedCertificateFingerprint;
 	}
 
+	public String getAnalysisName(){ return analysisName; }
 
 	@Override
 	public Action getProjectAction(AbstractProject<?, ?> project) {
