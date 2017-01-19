@@ -38,6 +38,8 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
+import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
+import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -281,7 +283,16 @@ public class CodeDxPublisher extends Recorder {
 						buildOutput.println("No 'Analysis Name' was chosen.");
 					} else {
 						buildOutput.println("Analysis Name (raw): " + analysisName);
-						String expandedAnalysisName = build.getEnvironment(listener).expand(analysisName);
+						String expandedAnalysisName = "";
+						try {
+							expandedAnalysisName = TokenMacro.expand(build, listener, analysisName);
+							buildOutput.println("Analysis Name expression expanded to: " + expandedAnalysisName);
+						} catch (MacroEvaluationException e) {
+							buildOutput.println("Failed to expand Analysis Name expression using TokenMacro. " +
+									"Falling back to built-in Jenkins functionality");
+							e.printStackTrace(buildOutput);
+							expandedAnalysisName = build.getEnvironment(listener).expand(analysisName);
+						}
 						buildOutput.println("Analysis Name: " + expandedAnalysisName);
 						buildOutput.println("Analysis Id: " + response.getAnalysisId());
 
