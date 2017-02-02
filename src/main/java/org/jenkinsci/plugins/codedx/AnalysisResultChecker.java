@@ -22,6 +22,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Date;
 
+import com.secdec.codedx.util.CodeDxVersion;
 import org.apache.http.client.ClientProtocolException;
 
 import hudson.model.Result;
@@ -40,6 +41,7 @@ import com.secdec.codedx.api.client.Filter;
 public class AnalysisResultChecker {
 
 	private CodeDxClient client;
+	private CodeDxVersion cdxVersion;
 	private String failureSeverity;
 	private String unstableSeverity;
 	private Date newThreshold;
@@ -49,11 +51,12 @@ public class AnalysisResultChecker {
 	private PrintStream logger;
 
 
-	public AnalysisResultChecker(CodeDxClient client, String failureSeverity,
+	public AnalysisResultChecker(CodeDxClient client, CodeDxVersion cdxVersion, String failureSeverity,
 			String unstableSeverity, Date newThreshold, boolean failureOnlyNew,
 			boolean unstableOnlyNew, int projectId, PrintStream logger) {
 
 		this.client = client;
+		this.cdxVersion = cdxVersion;
 		this.failureSeverity = failureSeverity;
 		this.unstableSeverity = unstableSeverity;
 		this.newThreshold = newThreshold;
@@ -65,16 +68,15 @@ public class AnalysisResultChecker {
 
 	public Result checkResult() throws ClientProtocolException, CodeDxClientException, IOException{
 
-
 		logger.println("Checking for findings that indicate build failure...");
-		if(!"None".equalsIgnoreCase(failureSeverity) && client.getFindingsCount(projectId, createFilter(failureSeverity,failureOnlyNew)) > 0){
+		if(!"None".equalsIgnoreCase(failureSeverity) && client.getFindingsCount(projectId, createFilter(failureSeverity, failureOnlyNew)) > 0){
 
 			logger.println(String.format("Failure: Code Dx reported %s or higher severity issues.", failureSeverity));
 			return Result.FAILURE;
 		}
 
 		logger.println("Checking for findings that indicate unstable build.");
-		if(!"None".equalsIgnoreCase(unstableSeverity) && client.getFindingsCount(projectId, createFilter(unstableSeverity,unstableOnlyNew)) > 0){
+		if(!"None".equalsIgnoreCase(unstableSeverity) && client.getFindingsCount(projectId, createFilter(unstableSeverity, unstableOnlyNew)) > 0){
 
 			logger.println("Unstable!");
 			return Result.UNSTABLE;
@@ -100,7 +102,14 @@ public class AnalysisResultChecker {
 
 		// if "onlyNew", we filter down to findings which were first seen *after* the `newThreshold` date.
 		if(onlyNew){
-			filter.setFirstSeen(new Filter.DateRange(this.newThreshold, new Date()));
+			logger.println("Using the 'only consider new findings' option to decide build failure/instability.");
+			if(cdxVersion.compareTo(CodeDxVersion.MAX_FOR_NEW_STATUS) < 0){
+				logger.println("Code Dx version is " + cdxVersion + ": the 'New' status is available for filtering.");
+				filter.setStatus(new String[]{ Filter.STATUS_LEGACY_NEW });
+			} else {
+				logger.println("Code Dx version is " + cdxVersion + ": using 'firstSeen' filter to decide 'new' findings");
+				filter.setFirstSeen(new Filter.DateRange(this.newThreshold, new Date()));
+			}
 		}
 
 		logger.println("Using filter: " + filter.toString());

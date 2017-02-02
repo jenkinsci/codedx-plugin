@@ -20,6 +20,7 @@ package com.secdec.codedx.api.client;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.secdec.codedx.util.CodeDxVersion;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -280,6 +281,21 @@ public class CodeDxClient {
 			null,
 			reqBody
 		);
+	}
+
+	public CodeDxVersion getCodeDxVersion() throws IOException, CodeDxClientException {
+		CodeDxVersionResponse resp = doHttpRequest(
+			new HttpGet(),
+			"system-info",
+			true,
+			new TypeToken<CodeDxVersionResponse>(){}.getType(),
+			null
+		);
+		return CodeDxVersion.fromString(resp.version);
+	}
+	private class CodeDxVersionResponse {
+		public String version;
+		public String date;
 	}
 
 	/**

@@ -131,6 +131,14 @@ public class Filter {
 		this.notToolOverlap = notToolOverlap;
 	}
 
+	/**
+	 * Constant indicating the "New" status in Code Dx.
+	 * As of Code Dx version 2.4.0, the "New" status was merged with "Unresolved",
+	 * and the semantics of filtering on "New" are instead achieved by using the
+	 * "lastModified" filter.
+	 * @see {@link com.secdec.codedx.util.CodeDxVersion#MAX_FOR_NEW_STATUS}
+	 */
+	public static final String STATUS_LEGACY_NEW = "new";
 	public static final String STATUS_ESCALATED = "escalated";
 	public static final String STATUS_IGNORED = "ignored";
 	public static final String STATUS_FALSE_POSITIVE = "false-positive";

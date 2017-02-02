@@ -21,6 +21,7 @@ import com.secdec.codedx.api.client.*;
 import com.secdec.codedx.api.client.Job;
 import com.secdec.codedx.api.client.Project;
 import com.secdec.codedx.security.JenkinsSSLConnectionSocketFactoryFactory;
+import com.secdec.codedx.util.CodeDxVersion;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Extension;
@@ -234,6 +235,16 @@ public class CodeDxPublisher extends Recorder {
 
 			final CodeDxClient repeatingClient = new CodeDxRepeatingClient(this.client, buildOutput);
 
+			CodeDxVersion cdxVersion = null;
+			try {
+				cdxVersion = repeatingClient.getCodeDxVersion();
+				buildOutput.println("Got Code Dx version: " + cdxVersion);
+			} catch (CodeDxClientException e) {
+				e.printStackTrace(buildOutput);
+				buildOutput.println("Failed to get Code Dx version; aborting build.");
+				return false;
+			}
+
 			try {
 				buildOutput.println("Submitting files to Code Dx for analysis");
 
@@ -296,13 +307,19 @@ public class CodeDxPublisher extends Recorder {
 						buildOutput.println("Analysis Name: " + expandedAnalysisName);
 						buildOutput.println("Analysis Id: " + response.getAnalysisId());
 
-						try {
-							repeatingClient.setAnalysisName(projectIdInt, response.getAnalysisId(), expandedAnalysisName);
-							buildOutput.println("Successfully updated analysis name.");
-						} catch(CodeDxClientException e){
-							buildOutput.println("Got error from Code Dx API Client while trying to set the analysis name");
-							e.printStackTrace(buildOutput);
-							return false;
+						if(cdxVersion.compareTo(CodeDxVersion.MIN_FOR_ANALYSIS_NAMES) < 0){
+							buildOutput.println("The connected Code Dx server is only version " + cdxVersion +
+									", which doesn't support naming analyses (minimum supported version is " +
+									CodeDxVersion.MIN_FOR_ANALYSIS_NAMES + "). The analysis name will not be set.");
+						} else {
+							try {
+								repeatingClient.setAnalysisName(projectIdInt, response.getAnalysisId(), expandedAnalysisName);
+								buildOutput.println("Successfully updated analysis name.");
+							} catch (CodeDxClientException e) {
+								buildOutput.println("Got error from Code Dx API Client while trying to set the analysis name");
+								e.printStackTrace(buildOutput);
+								return false;
+							}
 						}
 					}
 				}
@@ -386,6 +403,7 @@ public class CodeDxPublisher extends Recorder {
 						build.addAction(new CodeDxBuildAction(build, result));
 
 						AnalysisResultChecker checker = new AnalysisResultChecker(repeatingClient,
+								cdxVersion,
 								analysisResultConfiguration.getFailureSeverity(),
 								analysisResultConfiguration.getUnstableSeverity(),
 								startingDate, // the time this process started is the "new" threshold for filtering
