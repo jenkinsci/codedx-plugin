@@ -76,12 +76,9 @@ public class CodeDxProjectAction implements Action, Serializable {
 	 *
 	 * Redirects the index page to the last result.
 	 *
-	 * @param request
-	 *			Stapler request
-	 * @param response
-	 *			Stapler response
-	 * @throws IOException
-	 *			 in case of an error
+	 * @param request Stapler request
+	 * @param response Stapler response
+	 * @throws IOException in case of an error
 	 */
 	public void doIndex(final StaplerRequest request, final StaplerResponse response) throws IOException {
 		AbstractBuild<?, ?> build = getLastFinishedBuild();
@@ -97,7 +94,7 @@ public class CodeDxProjectAction implements Action, Serializable {
 	 * Returns the last finished build.
 	 *
 	 * @return the last finished build or <code>null</code> if there is no
-	 *		 such build
+	 *         such build
 	 */
 	public AbstractBuild<?, ?> getLastFinishedBuild() {
 		AbstractBuild<?, ?> lastBuild = project.getLastBuild();
@@ -146,12 +143,9 @@ public class CodeDxProjectAction implements Action, Serializable {
 	/**
 	 * Display the severity trend graph.
 	 *
-	 * @param request
-	 *			Stapler request
-	 * @param response
-	 *			Stapler response
-	 * @throws IOException
-	 *			 in case of an error
+	 * @param request Stapler request
+	 * @param response Stapler response
+	 * @throws IOException in case of an error
 	 */
 	public void doSeverityTrend(final StaplerRequest request, final StaplerResponse response) throws IOException {
 		AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
@@ -178,12 +172,9 @@ public class CodeDxProjectAction implements Action, Serializable {
 	/**
 	 * Display the status trend graph.
 	 *
-	 * @param request
-	 *			Stapler request
-	 * @param response
-	 *			Stapler response
-	 * @throws IOException
-	 *			 in case of an error
+	 * @param request Stapler request
+	 * @param response Stapler response
+	 * @throws IOException in case of an error
 	 */
 	public void doStatusTrend(final StaplerRequest request, final StaplerResponse response) throws IOException {
 		AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
