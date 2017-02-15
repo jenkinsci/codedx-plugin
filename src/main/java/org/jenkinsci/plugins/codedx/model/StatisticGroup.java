@@ -36,6 +36,11 @@ public enum StatisticGroup {
 				return group;
 			}
 		}
+		// older versions of Code Dx used the "New" status, which has now been merged with Unresolved.
+		// Any old statistics using the "New" status will be interpreted as "Unresolved".
+		if("New".equalsIgnoreCase(value)){
+			return Unresolved;
+		}
 		return null;
 	}
 
