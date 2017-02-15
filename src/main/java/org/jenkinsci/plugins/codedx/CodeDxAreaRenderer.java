@@ -30,7 +30,7 @@ public class CodeDxAreaRenderer extends StackedAreaRenderer2 {
     /** {@inheritDoc} */
     @Override
     public final String generateURL(final CategoryDataset dataset, final int row, final int column) {
-        return getLabel(dataset, column).build.getNumber() + "";
+        return getLabel(dataset, column).getRun().getNumber() + "";
     }
 
     /**

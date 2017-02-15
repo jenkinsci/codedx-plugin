@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.codedx;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
+import hudson.util.Area;
 import hudson.util.ChartUtil;
 
 import java.awt.Color;
@@ -11,7 +12,9 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import hudson.util.Graph;
 import org.jenkinsci.plugins.codedx.model.StatisticGroup;
+import org.jfree.chart.JFreeChart;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -152,9 +155,9 @@ public class CodeDxProjectAction implements Action, Serializable {
      */
     public void doSeverityTrend(final StaplerRequest request, final StaplerResponse response) throws IOException {
         AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
-        CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
+        final CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
 
-        Map<String,Color> colorMap = new HashMap<String,Color>();
+        final Map<String,Color> colorMap = new HashMap<String,Color>();
 
         colorMap.put(Filter.SEVERITY_CRITICAL, new Color(0x610a14));
         colorMap.put(Filter.SEVERITY_HIGH, new Color(0xbd0026));
@@ -163,12 +166,12 @@ public class CodeDxProjectAction implements Action, Serializable {
         colorMap.put(Filter.SEVERITY_INFO, new Color(0x888888));
         colorMap.put(Filter.SEVERITY_UNSPECIFIED, new Color(0xadadad));
 
-        ChartUtil.generateGraph(
-                request,
-                response,
-                CodeDxChartBuilder.buildChart(lastAction, analysisResultConfiguration.getNumBuildsInGraph(),"severity",colorMap),
-                CHART_WIDTH,
-                CHART_HEIGHT);
+        (new Graph(-1L, CHART_WIDTH, CHART_HEIGHT){
+            @Override
+            protected JFreeChart createGraph() {
+                return CodeDxChartBuilder.buildChart(lastAction, analysisResultConfiguration.getNumBuildsInGraph(),"severity",colorMap);
+            }
+        }).doPng(request, response);
     }
 
 
@@ -184,9 +187,9 @@ public class CodeDxProjectAction implements Action, Serializable {
      */
     public void doStatusTrend(final StaplerRequest request, final StaplerResponse response) throws IOException {
         AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
-        CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
+        final CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
 
-        Map<String,Color> colorMap = new HashMap<String,Color>();
+        final Map<String,Color> colorMap = new HashMap<String,Color>();
 
         colorMap.put(StatisticGroup.Unresolved.toString(), new Color(0x998ec3));
         colorMap.put(StatisticGroup.Fixed.toString(), new Color(0x3288bd));
@@ -196,11 +199,11 @@ public class CodeDxProjectAction implements Action, Serializable {
         colorMap.put(StatisticGroup.Ignored.toString(), new Color(0xd8b365));
         colorMap.put(StatisticGroup.FalsePositive.toString(), new Color(0xd9d9d9));
 
-        ChartUtil.generateGraph(
-                request,
-                response,
-                CodeDxChartBuilder.buildChart(lastAction, analysisResultConfiguration.getNumBuildsInGraph(),"status",colorMap),
-                CHART_WIDTH,
-                CHART_HEIGHT);
+        (new Graph(-1, CHART_WIDTH, CHART_HEIGHT){
+            @Override
+            protected JFreeChart createGraph() {
+                return CodeDxChartBuilder.buildChart(lastAction, analysisResultConfiguration.getNumBuildsInGraph(),"status",colorMap);
+            }
+        }).doPng(request, response);
     }
 }

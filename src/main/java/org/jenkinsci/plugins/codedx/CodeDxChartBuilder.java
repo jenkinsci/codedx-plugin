@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.codedx;
 
+import hudson.model.Run;
 import hudson.util.ChartUtil.NumberOnlyBuildLabel;
 import hudson.util.DataSetBuilder;
 import hudson.util.ShiftedCategoryAxis;
@@ -128,7 +129,7 @@ public class CodeDxChartBuilder implements Serializable {
         while(action != null && (numBuildsInGraph <= 1 || numBuilds < numBuildsInGraph)){
             CodeDxResult result = action.getResult();
             if(result != null){
-                NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel(action.getBuild());
+                NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel((Run<?, ?>)action.getBuild());
 
                 for (String group : result.getStatistics(statisticsName).getAllGroups()) {
                     StatisticGroup statisticGroup = StatisticGroup.forValue(group);
