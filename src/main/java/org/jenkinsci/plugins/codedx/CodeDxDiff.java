@@ -1,7 +1,7 @@
 package org.jenkinsci.plugins.codedx;
 
 /**
- * 
+ *
  * @author ademartini This file is heavily derived from the sloccount-plugin (author: Michal Turek)
  *
  */
@@ -9,7 +9,7 @@ public class CodeDxDiff implements Comparable<CodeDxDiff>{
 
 	private final int findings;
 	private final int findingsDelta;
-	
+
 	public CodeDxDiff(int findings, int findingsDelta) {
 
 		this.findings = findings;
@@ -44,24 +44,24 @@ public class CodeDxDiff implements Comparable<CodeDxDiff>{
 			return false;
 		return true;
 	}
-	
+
 	public int compareTo(CodeDxDiff o){
-		
+
 		return o.findings - findings;
 	}
-	
-	
-    public String getFindingsString() {
-        return String.format("%,d", findings);
-    }
 
-    public String getFindingsDeltaString() {
-        if(findingsDelta == 0) {
-            return "";
-        }
 
-        // Negative prefix '-' is added automatically
-        String result = String.format("%,d", findingsDelta);
-        return (findingsDelta > 0) ? "+" + result : result;
-    }
+	public String getFindingsString() {
+		return String.format("%,d", findings);
+	}
+
+	public String getFindingsDeltaString() {
+		if(findingsDelta == 0) {
+			return "";
+		}
+
+		// Negative prefix '-' is added automatically
+		String result = String.format("%,d", findingsDelta);
+		return (findingsDelta > 0) ? "+" + result : result;
+	}
 }

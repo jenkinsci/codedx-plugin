@@ -94,15 +94,17 @@ public class CodeDxPublisher extends Recorder {
 	 *                                     analysis runs to complete.
 	 */
 	@DataBoundConstructor
-	public CodeDxPublisher(final String url,
-						   final String key,
-						   final String projectId,
-						   final String sourceAndBinaryFiles,
-						   final String toolOutputFiles,
-						   final String excludedSourceAndBinaryFiles,
-						   final String analysisName,
-						   final AnalysisResultConfiguration analysisResultConfiguration,
-						   final String selfSignedCertificateFingerprint) {
+	public CodeDxPublisher(
+			final String url,
+			final String key,
+			final String projectId,
+			final String sourceAndBinaryFiles,
+			final String toolOutputFiles,
+			final String excludedSourceAndBinaryFiles,
+			final String analysisName,
+			final AnalysisResultConfiguration analysisResultConfiguration,
+			final String selfSignedCertificateFingerprint
+	) {
 		this.projectId = projectId;
 		this.url = url;
 		this.key = key;

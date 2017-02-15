@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright 2014 Applied Visions
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License
- *  
+ *
  */
 
 package com.secdec.codedx.api.client;
@@ -22,7 +22,7 @@ import java.util.List;
 
 /**
  * Represents the JSON data for a CountGroup
- * 
+ *
  * @author anthonyd
  *
  */
@@ -31,7 +31,7 @@ public class CountGroup {
 	String id;
 	String name;
 	int count;
-	
+
 	List<CountGroup> children;
 
 	public String getId() {
@@ -65,6 +65,6 @@ public class CountGroup {
 	public void setChildren(List<CountGroup> children) {
 		this.children = children;
 	}
-	
-	
+
+
 }

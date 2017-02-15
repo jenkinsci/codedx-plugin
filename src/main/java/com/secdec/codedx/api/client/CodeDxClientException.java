@@ -32,15 +32,15 @@ public class CodeDxClientException extends Exception{
 	private String responseMessage;
 
 	public CodeDxClientException(String requestMethod, String requestPath, String responseMessage, int httpCode, String responseContent) {
-        super(String.format("Received non-success response from the server [%d: %s] while executing %s %s\n{{%s}}", httpCode, responseMessage, requestMethod, requestPath, responseContent));
-        this.httpCode = httpCode;
+		super(String.format("Received non-success response from the server [%d: %s] while executing %s %s\n{{%s}}", httpCode, responseMessage, requestMethod, requestPath, responseContent));
+		this.httpCode = httpCode;
 		this.requestPath = requestPath;
 		this.requestMethod = requestMethod;
 		this.responseContent = responseContent;
-    }
+	}
 
 
-    public int getHttpCode() {
+	public int getHttpCode() {
 		return httpCode;
 	}
 

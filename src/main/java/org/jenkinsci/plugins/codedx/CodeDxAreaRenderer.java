@@ -19,42 +19,40 @@ import org.jfree.data.category.CategoryDataset;
 public class CodeDxAreaRenderer extends StackedAreaRenderer2 {
 
 	/** Unique identifier of this class. */
-    private static final long serialVersionUID = 1440842055316682192L;
+	private static final long serialVersionUID = 1440842055316682192L;
 	private List<Color> rowColors;
 
-    public CodeDxAreaRenderer(List<Color> rowColors){
+	public CodeDxAreaRenderer(List<Color> rowColors){
 
-    	this.rowColors = rowColors;
-    }
+		this.rowColors = rowColors;
+	}
 
-    /** {@inheritDoc} */
-    @Override
-    public final String generateURL(final CategoryDataset dataset, final int row, final int column) {
-        return getLabel(dataset, column).getRun().getNumber() + "";
-    }
+	/** {@inheritDoc} */
+	@Override
+	public final String generateURL(final CategoryDataset dataset, final int row, final int column) {
+		return getLabel(dataset, column).getRun().getNumber() + "";
+	}
 
-    /**
-     * Returns the build label at the specified column.
-     *
-     * @param dataset
-     *            data set of values
-     * @param column
-     *            the column
-     * @return the label of the column
-     */
-    private NumberOnlyBuildLabel getLabel(final CategoryDataset dataset, final int column) {
-        return (NumberOnlyBuildLabel)dataset.getColumnKey(column);
-    }
+	/**
+	 * Returns the build label at the specified column.
+	 *
+	 * @param dataset data set of values
+	 * @param column the column
+	 * @return the label of the column
+	 */
+	private NumberOnlyBuildLabel getLabel(final CategoryDataset dataset, final int column) {
+		return (NumberOnlyBuildLabel)dataset.getColumnKey(column);
+	}
 
-    @Override
+	@Override
 	public Paint getItemPaint(int row, int column) {
 
-    	if(rowColors == null){
+		if(rowColors == null){
 
-        	return super.getItemPaint(row, column);
-    	}
+			return super.getItemPaint(row, column);
+		}
 
-    	return rowColors.get(row);
+		return rowColors.get(row);
 	}
 
 	@Override
