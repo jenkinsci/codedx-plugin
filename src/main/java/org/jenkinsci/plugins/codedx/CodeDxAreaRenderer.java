@@ -13,7 +13,7 @@ import org.jfree.data.category.CategoryDataset;
  * Renderer that provides direct access to the individual results of a build via
  * links. This renderer does not render tooltips, these need to be defined in
  * sub-classes.
- * 
+ *
  * @author ademartini This file is heavily derived from the sloccount-plugin
  */
 public class CodeDxAreaRenderer extends StackedAreaRenderer2 {
@@ -23,10 +23,10 @@ public class CodeDxAreaRenderer extends StackedAreaRenderer2 {
 	private List<Color> rowColors;
 
     public CodeDxAreaRenderer(List<Color> rowColors){
-    	
+
     	this.rowColors = rowColors;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public final String generateURL(final CategoryDataset dataset, final int row, final int column) {
@@ -45,23 +45,23 @@ public class CodeDxAreaRenderer extends StackedAreaRenderer2 {
     private NumberOnlyBuildLabel getLabel(final CategoryDataset dataset, final int column) {
         return (NumberOnlyBuildLabel)dataset.getColumnKey(column);
     }
-    
+
     @Override
 	public Paint getItemPaint(int row, int column) {
 
     	if(rowColors == null){
-    		
+
         	return super.getItemPaint(row, column);
     	}
-    	
+
     	return rowColors.get(row);
 	}
-    
+
 	@Override
 	public Paint getSeriesPaint(int series) {
-		
+
 		if(rowColors == null){
-			
+
 			return super.getSeriesPaint(series);
 		}
 

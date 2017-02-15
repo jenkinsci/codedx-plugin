@@ -44,7 +44,7 @@ public class CodeDxChartBuilder implements Serializable {
             int numBuildsInGraph, String statisticsName, Map<String,Color> colors){
 
     	CategoryDataset dataset = buildDataset(action, numBuildsInGraph, statisticsName);
-    	
+
         JFreeChart chart = ChartFactory.createStackedAreaChart(null, null,
                 "Findings", dataset,
                 PlotOrientation.VERTICAL, true, false, true);
@@ -57,7 +57,7 @@ public class CodeDxChartBuilder implements Serializable {
         plot.setForegroundAlpha(0.8f);
         plot.setRangeGridlinesVisible(true);
         plot.setRangeGridlinePaint(Color.black);
-       
+
         CategoryAxis domainAxis = new ShiftedCategoryAxis(null);
         plot.setDomainAxis(domainAxis);
         domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_90);
@@ -71,28 +71,28 @@ public class CodeDxChartBuilder implements Serializable {
         // crop extra space around the graph
         plot.setInsets(new RectangleInsets(0, 0, 0, 5.0));
 
-        
+
         List rows = dataset.getRowKeys();
-        
+
         List<Color> colorList = new ArrayList<Color>();
-         	
+
         if(colors != null){
-        	
+
             for(Object row : rows){
-            	
+
             	if(colors.containsKey(row.toString())){
-            		
+
             		colorList.add(colors.get(row.toString()));
             	}
             }
         }
 
         if(colorList.size() == rows.size()){
-        
+
             plot.setRenderer(new CodeDxAreaRenderer(colorList));
         }
         else{
-        	
+
             plot.setRenderer(new CodeDxAreaRenderer(null));
         }
 
@@ -113,7 +113,7 @@ public class CodeDxChartBuilder implements Serializable {
             newItems.add(item);
         }
         plot.setFixedLegendItems(newItems);
-       
+
         return chart;
     }
 
@@ -145,7 +145,7 @@ public class CodeDxChartBuilder implements Serializable {
                         builder.add(groupStats.getFindings(), statisticGroup, buildLabel);
                     remainingGroups.remove(StatisticGroup.forValue(groupStats.getGroup()));
                 }
-                
+
                 for(StatisticGroup group : remainingGroups) {
                     builder.add(0, group, buildLabel);
                 }
