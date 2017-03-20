@@ -17,10 +17,7 @@
 
 package org.jenkinsci.plugins.codedx;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -90,20 +87,27 @@ public class Archiver {
 		final FilePath result = workspace.createTempFile(prefix, ".zip");
 
 		//Zip up the workspace filtering on files to include.
-		workspace.zip(result.write(), new FileFilter(){
-			public boolean accept(File file) {
-
-				boolean include = includeFiles.contains(file.getAbsolutePath()) && !excludeFiles.contains(file.getAbsolutePath());
-
-				if(include){
-					log.log(Level.FINE, "Adding" + file + " to zip");
-				}
-
-				return include;
-			}
-
-		});
+		workspace.zip(result.write(), new SourceAndBinaryFileFilter(includeFiles, excludeFiles));
 
 		return result;
+	}
+
+	private static class SourceAndBinaryFileFilter implements FileFilter, Serializable {
+		private Set<String> includeFiles;
+		private Set<String> excludeFiles;
+		public SourceAndBinaryFileFilter(final Set<String> includeFiles, final Set<String> excludeFiles) {
+			this.includeFiles = includeFiles;
+			this.excludeFiles = excludeFiles;
+		}
+
+		public boolean accept(File file) {
+			boolean include = includeFiles.contains(file.getAbsolutePath()) && !excludeFiles.contains(file.getAbsolutePath());
+
+			if(include) {
+				log.log(Level.FINE, "Adding" + file + " to zip");
+			}
+
+			return include;
+		}
 	}
 }
