@@ -18,6 +18,7 @@
 package com.secdec.codedx.api.client;
 
 import com.google.gson.annotations.SerializedName;
+import com.secdec.codedx.util.CodeDxVersion;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -133,12 +134,14 @@ public class Filter {
 
 	/**
 	 * Constant indicating the "New" status in Code Dx.
-	 * As of Code Dx version 2.4.0, the "New" status was merged with "Unresolved",
-	 * and the semantics of filtering on "New" are instead achieved by using the
-	 * "lastModified" filter.
-	 * @see {@link com.secdec.codedx.util.CodeDxVersion#MAX_FOR_NEW_STATUS}
+	 * Note that for Code Dx versions 2.4.0 and 2.4.1, the "New" status was removed.
+	 * Implementations wishing to construct a filter with "New" as a criteria should
+	 * check the server's version before doing so; if it is one of these versions,
+	 * the implementation should use the "First Seen" filter instead.
+	 *
+	 * @see {@link CodeDxVersion#supportsTriageNew()}
 	 */
-	public static final String STATUS_LEGACY_NEW = "new";
+	public static final String STATUS_NEW = "new";
 	public static final String STATUS_ESCALATED = "escalated";
 	public static final String STATUS_IGNORED = "ignored";
 	public static final String STATUS_FALSE_POSITIVE = "false-positive";

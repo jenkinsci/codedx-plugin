@@ -11,8 +11,22 @@ import java.util.regex.Pattern;
  */
 public final class CodeDxVersion implements Comparable<CodeDxVersion> {
 
-	/** First version which does not support the "New" triage status. */
-	public final static CodeDxVersion MAX_FOR_NEW_STATUS = fromString("2.4.0");
+	/**
+	 * Version when the "New" triage status was removed in Code Dx (2.4.0).
+	 * At this time, filters intending to use the "New" status would instead use
+	 * the "First Seen" filter, using some threshold date to categorize "new" findings.
+	 */
+	public final static CodeDxVersion NEW_STATUS_REMOVED = fromString("2.4.0");
+
+	/**
+	 * Version when the "New" triage status was returned to Code Dx (2.4.2).
+	 * Several clients were adversely affected by the removal, and requested its return.
+	 * Versions <em>before</em> (exclusive) this version, and <em>starting from</em> (inclusive)
+	 * the <code></code>NEW_STATUS_REMOVED</code> version must use the "First Seen" filter
+	 * in order to emulate the behavior of the "triage status = New" filter.
+	 */
+	public final static CodeDxVersion NEW_STATUS_RETURNED = fromString("2.4.2");
+
 	/** First version that supports the "analysis names" feature. */
 	public final static CodeDxVersion MIN_FOR_ANALYSIS_NAMES = fromString("2.4.0");
 
@@ -77,5 +91,13 @@ public final class CodeDxVersion implements Comparable<CodeDxVersion> {
 		return 0;
 	}
 
-
+	/**
+	 * Convenience method that determines if this version of Code Dx supports the "New" triage status.
+	 * Logically, this method checks that <code>this &lt; NEW_STATUS_REMOVED || this &gt;= NEW_STATUS_RETURNED</code>
+	 * @return
+	 */
+	public boolean supportsTriageNew(){
+		// (version < NEW_STATUS_REMOVED) || (version >= NEW_STATUS_RETURNED)
+		return (this.compareTo(NEW_STATUS_REMOVED) < 0) || (this.compareTo(NEW_STATUS_RETURNED) >= 0);
+	}
 }

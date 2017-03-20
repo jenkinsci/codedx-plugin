@@ -43,12 +43,10 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 		List<String> groupOrdering = new ArrayList<String>();
 
 		public DiffGroupComparator(List<String> groupOrdering){
-
 			this.groupOrdering = groupOrdering;
 		}
 
 		public int compare(CodeDxDiffGroup o1, CodeDxDiffGroup o2) {
-
 			int index1 = groupOrdering.indexOf(o1.getName());
 			int index2 = groupOrdering.indexOf(o2.getName());
 
@@ -102,10 +100,11 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 		order.add("Unresolved");
 		order.add("Escalated");
 		order.add("Assigned");
+		order.add("New");
 		order.add("Gone");
 
 		return CodeDxDiffSummary.getDiffSummary(getPreviousStatusStats(),
-				result.getStatistics("status"), "Status",new DiffGroupComparator(order), new HashMap<String,String>());
+				result.getStatistics("status"), "Status", new DiffGroupComparator(order), new HashMap<String,String>());
 	}
 
 	public CodeDxResult getResult(){

@@ -365,13 +365,22 @@ public class CodeDxPublisher extends Recorder {
 						buildOutput.println("Fetching status counts");
 
 						Filter notAssignedFilter = new Filter();
-						notAssignedFilter.setStatus(new String[]{
-								Filter.STATUS_ESCALATED,
-								Filter.STATUS_FALSE_POSITIVE,
-								Filter.STATUS_FIXED,
-								Filter.STATUS_MITIGATED,
-								Filter.STATUS_IGNORED,
-								Filter.STATUS_UNRESOLVED});
+
+						// make sure not to put STATUS_NEW in a filter if the cdxVersion doesn't support it
+						List<String> notAssignedStatuses = new ArrayList<String>(7);
+						notAssignedStatuses.add(Filter.STATUS_ESCALATED);
+						notAssignedStatuses.add(Filter.STATUS_FALSE_POSITIVE);
+						notAssignedStatuses.add(Filter.STATUS_FIXED);
+						notAssignedStatuses.add(Filter.STATUS_MITIGATED);
+						notAssignedStatuses.add(Filter.STATUS_IGNORED);
+						notAssignedStatuses.add(Filter.STATUS_UNRESOLVED);
+						if(cdxVersion.supportsTriageNew()){
+							logger.fine("TriageNew supported by Code Dx version " + cdxVersion + ". Using 'New' in not-assigned status list.");
+							notAssignedStatuses.add(Filter.STATUS_NEW);
+						} else {
+							logger.fine("TriageNew not supported by Code Dx version " + cdxVersion + ". Omitting it from the not-assigned status list");
+						}
+						notAssignedFilter.setStatus(notAssignedStatuses.toArray(new String[notAssignedStatuses.size()]));
 
 						List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notAssignedFilter, "status");
 

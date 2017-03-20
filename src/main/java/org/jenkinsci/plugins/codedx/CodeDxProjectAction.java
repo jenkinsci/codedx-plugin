@@ -182,6 +182,7 @@ public class CodeDxProjectAction implements Action, Serializable {
 
 		final Map<String,Color> colorMap = new HashMap<String,Color>();
 
+		colorMap.put(StatisticGroup.New.toString(), new Color(0x542788));
 		colorMap.put(StatisticGroup.Unresolved.toString(), new Color(0x998ec3));
 		colorMap.put(StatisticGroup.Fixed.toString(), new Color(0x3288bd));
 		colorMap.put(StatisticGroup.Mitigated.toString(), new Color(0x295ec6));

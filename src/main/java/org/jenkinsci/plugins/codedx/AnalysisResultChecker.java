@@ -103,9 +103,9 @@ public class AnalysisResultChecker {
 		// if "onlyNew", we filter down to findings which were first seen *after* the `newThreshold` date.
 		if(onlyNew){
 			logger.println("Using the 'only consider new findings' option to decide build failure/instability.");
-			if(cdxVersion.compareTo(CodeDxVersion.MAX_FOR_NEW_STATUS) < 0){
+			if(cdxVersion.supportsTriageNew()){
 				logger.println("Code Dx version is " + cdxVersion + ": the 'New' status is available for filtering.");
-				filter.setStatus(new String[]{ Filter.STATUS_LEGACY_NEW });
+				filter.setStatus(new String[]{ Filter.STATUS_NEW });
 			} else {
 				logger.println("Code Dx version is " + cdxVersion + ": using 'firstSeen' filter to decide 'new' findings");
 				filter.setFirstSeen(new Filter.DateRange(this.newThreshold, new Date()));
