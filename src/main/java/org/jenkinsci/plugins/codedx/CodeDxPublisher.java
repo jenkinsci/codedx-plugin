@@ -337,7 +337,9 @@ public class CodeDxPublisher extends Recorder {
 					do {
 						Thread.sleep(3000);
 						oldStatus = status;
-						status = repeatingClient.getJobStatus(response.getJobId());
+						if(response != null) {
+							status = repeatingClient.getJobStatus(response.getJobId());
+						}
 						if (status != null && !status.equals(oldStatus)) {
 							if (Job.QUEUED.equals(status)) {
 								buildOutput.println("Code Dx analysis is queued");
@@ -438,7 +440,9 @@ public class CodeDxPublisher extends Recorder {
 			} catch (NumberFormatException e) {
 				buildOutput.println("Invalid project Id");
 			} finally {
-				sourceAndBinaryZip.delete();
+				if(sourceAndBinaryZip != null){
+					sourceAndBinaryZip.delete();
+				}
 			}
 		} else {
 			buildOutput.println("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
