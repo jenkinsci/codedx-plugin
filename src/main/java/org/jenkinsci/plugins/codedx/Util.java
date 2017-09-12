@@ -21,6 +21,8 @@ import hudson.FilePath;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Contains string and GLOB pattern matching utility methods.
@@ -28,6 +30,8 @@ import java.io.IOException;
  *
  */
 public class Util {
+
+	private static final Logger log = Logger.getLogger(Util.class.getName());
 
 	public static String[] commaSeparatedToArray(String str){
 
@@ -43,12 +47,15 @@ public class Util {
 
 				try {
 					if(path.length() == 0 || workspace.list(path).length == 0){
-
 						return FormValidation.warning(path + " doesn't match anything in the workspace.");
 					}
 				} catch (Exception e) {
-
-					return FormValidation.error(path + " is not a valid Ant GLOB pattern. Note that patterns must not begin with a '/'");
+					if(e.getMessage() != null && e.getMessage().startsWith("Expecting Ant GLOB pattern")){
+						return FormValidation.error(path + " is not a valid Ant GLOB pattern. Note that patterns must not begin with a '/'");
+					} else {
+						log.log(Level.SEVERE, "Unexpected error in form validation", e);
+						return FormValidation.error("An unexpected error occurred while validating this field. Check the logs for more detail.");
+					}
 				}
 			}
 		}
