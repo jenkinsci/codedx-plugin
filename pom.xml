@@ -42,19 +42,14 @@
 
 	<developers>
 		<developer>
-			<id>samuelbjohnson</id>
-			<name>Samuel B. Johnson</name>
-			<email>samuel.johnson@codedx.com</email>
+			<id>dylemma</id>
+			<name>Dylan Halperin</name>
+			<email>dylan.halperin@codedx.com</email>
 		</developer>
 		<developer>
 			<id>baf</id>
 			<name>Robert Ferris</name>
 			<email>robert.ferris@codedx.com</email>
-		</developer>
-		<developer>
-			<id>dylemma</id>
-			<name>Dylan Halperin</name>
-			<email>dylan.halperin@codedx.com</email>
 		</developer>
 	</developers>
 
