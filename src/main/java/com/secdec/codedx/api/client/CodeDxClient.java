@@ -293,7 +293,7 @@ public class CodeDxClient {
 		);
 		return CodeDxVersion.fromString(resp.version);
 	}
-	private class CodeDxVersionResponse {
+	public static class CodeDxVersionResponse {
 		public String version;
 		public String date;
 	}
