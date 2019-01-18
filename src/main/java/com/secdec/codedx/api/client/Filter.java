@@ -138,8 +138,7 @@ public class Filter {
 	 * Implementations wishing to construct a filter with "New" as a criteria should
 	 * check the server's version before doing so; if it is one of these versions,
 	 * the implementation should use the "First Seen" filter instead.
-	 *
-	 * @see {@link CodeDxVersion#supportsTriageNew()}
+	 * see CodeDxVersion#supportsTriageNew
 	 */
 	public static final String STATUS_NEW = "new";
 	public static final String STATUS_ESCALATED = "escalated";

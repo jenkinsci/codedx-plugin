@@ -24,7 +24,6 @@ import javax.net.ssl.X509TrustManager;
  * 
  * @author codyaray
  * @since 4/22/2013
- * @see
  */
 public class CompositeX509TrustManager implements X509TrustManager {
 

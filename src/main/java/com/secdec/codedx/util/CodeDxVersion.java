@@ -22,7 +22,7 @@ public final class CodeDxVersion implements Comparable<CodeDxVersion> {
 	 * Version when the "New" triage status was returned to Code Dx (2.4.2).
 	 * Several clients were adversely affected by the removal, and requested its return.
 	 * Versions <em>before</em> (exclusive) this version, and <em>starting from</em> (inclusive)
-	 * the <code></code>NEW_STATUS_REMOVED</code> version must use the "First Seen" filter
+	 * the <code>NEW_STATUS_REMOVED</code> version must use the "First Seen" filter
 	 * in order to emulate the behavior of the "triage status = New" filter.
 	 */
 	public final static CodeDxVersion NEW_STATUS_RETURNED = fromString("2.4.2");
