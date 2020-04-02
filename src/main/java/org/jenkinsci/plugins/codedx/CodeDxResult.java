@@ -5,6 +5,7 @@ import java.util.Map;
 
 import hudson.model.AbstractBuild;
 
+import hudson.model.Run;
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 
 /**
@@ -17,17 +18,17 @@ public class CodeDxResult implements Serializable{
 	/** Serial version UID. */
 	private static final long serialVersionUID = 0L;
 
-	private final AbstractBuild<?,?> owner;
+	private final Run<?,?> owner;
 
 	private Map<String, CodeDxReportStatistics> statisticsMap;
 
-	public CodeDxResult(Map<String,CodeDxReportStatistics> statisticsMap, AbstractBuild<?,?> owner){
+	public CodeDxResult(Map<String,CodeDxReportStatistics> statisticsMap, Run<?,?> owner){
 
 		this.owner = owner;
 		this.statisticsMap = statisticsMap;
 	}
 
-	public AbstractBuild<?,?> getOwner() {
+	public Run<?,?> getOwner() {
 		return owner;
 	}
 

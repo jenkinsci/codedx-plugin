@@ -7,7 +7,6 @@ import hudson.util.ShiftedCategoryAxis;
 
 import java.awt.Color;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.*;
 
 import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
@@ -129,7 +128,7 @@ public class CodeDxChartBuilder implements Serializable {
 		while(action != null && (numBuildsInGraph <= 1 || numBuilds < numBuildsInGraph)){
 			CodeDxResult result = action.getResult();
 			if(result != null){
-				NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel((Run<?, ?>)action.getBuild());
+				NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel((Run<?, ?>)action.getRun());
 
 				for (String group : result.getStatistics(statisticsName).getAllGroups()) {
 					StatisticGroup statisticGroup = StatisticGroup.forValue(group);

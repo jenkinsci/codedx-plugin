@@ -32,6 +32,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.io.IOUtils;
@@ -52,6 +53,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
@@ -64,7 +66,7 @@ import java.util.logging.Logger;
  *
  * @author anthonyd
  */
-public class CodeDxPublisher extends Recorder {
+public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serializable {
 
 	private final String url;
 	private final String key;
@@ -174,10 +176,11 @@ public class CodeDxPublisher extends Recorder {
 	}
 
 	@Override
-	public boolean perform(
-			final AbstractBuild<?, ?> build,
+	public void perform(
+			final Run<?, ?> build,
+			final FilePath workspace,
 			final Launcher launcher,
-			final BuildListener listener) throws InterruptedException, IOException {
+			final TaskListener listener) throws InterruptedException, IOException {
 
 		Date startingDate = new Date();
 
@@ -190,14 +193,15 @@ public class CodeDxPublisher extends Recorder {
 		if (projectId.length() == 0 || projectId.equals("-1")) {
 
 			buildOutput.println("No project has been selected");
-			return true;
+//			return true;
+			return;
 		}
 
 		buildOutput.println(String.format("Publishing to Code Dx server at %s to Code Dx project %s: ", url, projectId));
 
 		buildOutput.println("Creating source/binary zip...");
 
-		FilePath sourceAndBinaryZip = Archiver.Archive(build.getWorkspace(),
+		FilePath sourceAndBinaryZip = Archiver.Archive(workspace,
 				Util.commaSeparatedToArray(sourceAndBinaryFiles),
 				Util.commaSeparatedToArray(excludedSourceAndBinaryFiles),
 				"source", buildOutput);
@@ -220,7 +224,7 @@ public class CodeDxPublisher extends Recorder {
 
 		for (String file : files) {
 			if (file.length() != 0) {
-				FilePath path = build.getWorkspace().child(file);
+				FilePath path = workspace.child(file);
 
 				if (path.exists()) {
 					try {
@@ -244,7 +248,8 @@ public class CodeDxPublisher extends Recorder {
 			} catch (CodeDxClientException e) {
 				e.printStackTrace(buildOutput);
 				buildOutput.println("Failed to get Code Dx version; aborting build.");
-				return false;
+//				return false;
+				return;
 			}
 
 			try {
@@ -280,7 +285,8 @@ public class CodeDxPublisher extends Recorder {
 					buildOutput.println(String.format("Response Status: %d: %s", e.getHttpCode(), e.getResponseMessage()));
 					buildOutput.println(String.format("Response Content: %s", e.getResponseContent()));
 					e.printStackTrace(buildOutput);
-					return false;
+					return;
+//					return false;
 				} finally {
 					// close streams after we're done sending them
 					for(Map.Entry<String, InputStream> entry : toSend.entrySet()){
@@ -298,7 +304,7 @@ public class CodeDxPublisher extends Recorder {
 						buildOutput.println("Analysis Name (raw): " + analysisName);
 						String expandedAnalysisName = "";
 						try {
-							expandedAnalysisName = TokenMacro.expand(build, listener, analysisName);
+							expandedAnalysisName = TokenMacro.expand(build, workspace, listener, analysisName);
 							buildOutput.println("Analysis Name expression expanded to: " + expandedAnalysisName);
 						} catch (MacroEvaluationException e) {
 							buildOutput.println("Failed to expand Analysis Name expression using TokenMacro. " +
@@ -320,7 +326,8 @@ public class CodeDxPublisher extends Recorder {
 							} catch (CodeDxClientException e) {
 								buildOutput.println("Got error from Code Dx API Client while trying to set the analysis name");
 								e.printStackTrace(buildOutput);
-								return false;
+//								return false;
+								return;
 							}
 						}
 					}
@@ -328,7 +335,8 @@ public class CodeDxPublisher extends Recorder {
 
 				if (analysisResultConfiguration == null) {
 					logger.info("Project not configured to wait on analysis results");
-					return true;
+//					return true;
+					return;
 				}
 
 				String status = null;
@@ -351,7 +359,8 @@ public class CodeDxPublisher extends Recorder {
 				} catch (CodeDxClientException e) {
 					buildOutput.println("Fatal Error! There was a problem querying for the analysis status.");
 					e.printStackTrace(buildOutput);
-					return false;
+//					return false;
+					return;
 				}
 
 				if (Job.COMPLETED.equals(status)) {
@@ -429,12 +438,15 @@ public class CodeDxPublisher extends Recorder {
 						buildOutput.println("Fatal Error! There was a problem retrieving analysis results.");
 						e.printStackTrace(buildOutput);
 
-						return false;
+						return;
+//						return false;
 					}
-					return true;
+					return;
+//					return true;
 				} else {
 					buildOutput.println("Analysis status: " + status);
-					return false;
+					return;
+//					return false;
 				}
 
 			} catch (NumberFormatException e) {
@@ -448,7 +460,7 @@ public class CodeDxPublisher extends Recorder {
 			buildOutput.println("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
 		}
 
-		return false;
+//		return false;
 	}
 
 	public static CodeDxClient buildClient(String url, String key, String fingerprint) {

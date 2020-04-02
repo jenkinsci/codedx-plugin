@@ -5,6 +5,7 @@ import hudson.model.Action;
 import java.io.Serializable;
 import java.util.*;
 
+import hudson.model.Run;
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 import org.kohsuke.stapler.StaplerProxy;
 
@@ -18,11 +19,11 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 
 	public static final String URL_NAME = "codedxResult";
 
-	private AbstractBuild<?,?> build;
+	private Run<?,?> run;
 	private CodeDxResult result;
 
-	public CodeDxBuildAction(AbstractBuild<?,?> build, CodeDxResult result){
-		this.build = build;
+	public CodeDxBuildAction(Run<?,?> run, CodeDxResult result){
+		this.run = run;
 		this.result = result;
 	}
 
@@ -145,11 +146,11 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 	 * @return the action or null
 	 */
 	CodeDxBuildAction getPreviousAction(){
-		if(this.build == null){
+		if(this.run == null){
 			return null;
 		}
 
-		AbstractBuild<?,?> previousBuild = this.build.getPreviousBuild();
+		Run<?,?> previousBuild = this.run.getPreviousBuild();
 
 		while(previousBuild != null){
 			CodeDxBuildAction action = previousBuild
@@ -169,8 +170,8 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 		return null;
 	}
 
-	public AbstractBuild<?,?> getBuild(){
-		return this.build;
+	public Run<?,?> getRun(){
+		return this.run;
 	}
 
 	public Object getTarget() {
