@@ -635,6 +635,9 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 		}
 
 		public FormValidation doCheckSourceAndBinaryFiles(@QueryParameter final String value, @QueryParameter final String toolOutputFiles, @AncestorInPath AbstractProject project) {
+			if (project == null) {
+				return FormValidation.ok();
+			}
 
 			if (value.length() == 0) {
 
@@ -648,11 +651,18 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 		}
 
 		public FormValidation doCheckExcludedSourceAndBinaryFiles(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
-
-			return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
+			if (project == null) {
+				return FormValidation.ok();
+			} else {
+				return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
+			}
 		}
 
 		public FormValidation doCheckToolOutputFiles(@QueryParameter final String value, @QueryParameter final String sourceAndBinaryFiles, @AncestorInPath AbstractProject project) {
+
+			if (project == null) {
+				return FormValidation.ok();
+			}
 
 			if (value.length() == 0 && sourceAndBinaryFiles.length() == 0) {
 
@@ -666,8 +676,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 			ListBoxModel listBox = new ListBoxModel();
 
 			CodeDxClient client = buildClient(url, key, selfSignedCertificateFingerprint);
-
-
 
 			try {
 				final List<Project> projects = client.getProjects();
