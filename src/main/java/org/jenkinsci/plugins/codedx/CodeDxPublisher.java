@@ -22,6 +22,7 @@ import com.secdec.codedx.api.client.Job;
 import com.secdec.codedx.api.client.Project;
 import com.secdec.codedx.security.JenkinsSSLConnectionSocketFactoryFactory;
 import com.secdec.codedx.util.CodeDxVersion;
+import hudson.AbortException;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Extension;
@@ -189,7 +190,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 		if (projectId.length() == 0 || projectId.equals("-1")) {
 
 			buildOutput.println("No project has been selected");
-//			return true;
 			return;
 		}
 
@@ -242,10 +242,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 				cdxVersion = repeatingClient.getCodeDxVersion();
 				buildOutput.println("Got Code Dx version: " + cdxVersion);
 			} catch (CodeDxClientException e) {
-				e.printStackTrace(buildOutput);
-				buildOutput.println("Failed to get Code Dx version; aborting build.");
-//				return false;
-				return;
+				throw new IOException("Failed to get Code Dx version; aborting build.", e);
 			}
 
 			try {
@@ -259,30 +256,33 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 					response = repeatingClient.startAnalysis(Integer.parseInt(projectId), toSend);
 				} catch (CodeDxClientException e) {
 					String errorSpecificMessage;
-						switch(e.getHttpCode()) {
-							case 400:
-								errorSpecificMessage =
-										" (Bad Request: have you included files from unsupported Tools? " +
-												"Code Dx Standard Edition does not support uploading tool results)";
-								break;
-							case 403:
-								errorSpecificMessage = " (Forbidden: have you configured your key and permissions correctly?)";
-								break;
-							case 404:
-								errorSpecificMessage = " (Project Not Found: is it possible it was deleted?)";
-								break;
-							case 500:
-								errorSpecificMessage = " (Internal Server Error: Please check your Code Dx server logs for more details)";
-								break;
-							default:
-								errorSpecificMessage = "";
-						}
-					buildOutput.println(String.format("Failed to start analysis%s.", errorSpecificMessage));
-					buildOutput.println(String.format("Response Status: %d: %s", e.getHttpCode(), e.getResponseMessage()));
-					buildOutput.println(String.format("Response Content: %s", e.getResponseContent()));
-					e.printStackTrace(buildOutput);
-					return;
-//					return false;
+
+					switch(e.getHttpCode()) {
+						case 400:
+							errorSpecificMessage =
+									" (Bad Request: have you included files from unsupported Tools? " +
+											"Code Dx Standard Edition does not support uploading tool results)";
+							break;
+						case 403:
+							errorSpecificMessage = " (Forbidden: have you configured your key and permissions correctly?)";
+							break;
+						case 404:
+							errorSpecificMessage = " (Project Not Found: is it possible it was deleted?)";
+							break;
+						case 500:
+							errorSpecificMessage = " (Internal Server Error: Please check your Code Dx server logs for more details)";
+							break;
+						default:
+							errorSpecificMessage = "";
+					}
+
+					String message =
+						String.format("Failed to start analysis%s.", errorSpecificMessage) + '\n' +
+						String.format("Response Status: %d: %s", e.getHttpCode(), e.getResponseMessage()) + '\n' +
+						String.format("Response Content: %s", e.getResponseContent()) + '\n' +
+						Util.getStackTrace(e);
+
+					throw new IOException(message);
 				} finally {
 					// close streams after we're done sending them
 					for(Map.Entry<String, InputStream> entry : toSend.entrySet()){
@@ -320,10 +320,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 								repeatingClient.setAnalysisName(projectIdInt, response.getAnalysisId(), expandedAnalysisName);
 								buildOutput.println("Successfully updated analysis name.");
 							} catch (CodeDxClientException e) {
-								buildOutput.println("Got error from Code Dx API Client while trying to set the analysis name");
-								e.printStackTrace(buildOutput);
-//								return false;
-								return;
+								throw new IOException("Got error from Code Dx API Client while trying to set the analysis name", e);
 							}
 						}
 					}
@@ -331,7 +328,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 
 				if (analysisResultConfiguration == null) {
 					logger.info("Project not configured to wait on analysis results");
-//					return true;
 					return;
 				}
 
@@ -353,10 +349,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 						}
 					} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
 				} catch (CodeDxClientException e) {
-					buildOutput.println("Fatal Error! There was a problem querying for the analysis status.");
-					e.printStackTrace(buildOutput);
-//					return false;
-					return;
+					throw new IOException("Fatal Error! There was a problem querying for the analysis status.", e);
 				}
 
 				if (Job.COMPLETED.equals(status)) {
@@ -431,20 +424,11 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 								buildOutput);
 						build.setResult(checker.checkResult());
 					} catch (CodeDxClientException e) {
-						buildOutput.println("Fatal Error! There was a problem retrieving analysis results.");
-						e.printStackTrace(buildOutput);
-
-						return;
-//						return false;
+						throw new IOException("Fatal Error! There was a problem retrieving analysis results.", e);
 					}
-					return;
-//					return true;
 				} else {
 					buildOutput.println("Analysis status: " + status);
-					return;
-//					return false;
 				}
-
 			} catch (NumberFormatException e) {
 				buildOutput.println("Invalid project Id");
 			} finally {
@@ -455,8 +439,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 		} else {
 			buildOutput.println("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
 		}
-
-//		return false;
 	}
 
 	public static CodeDxClient buildClient(String url, String key, String fingerprint) {
