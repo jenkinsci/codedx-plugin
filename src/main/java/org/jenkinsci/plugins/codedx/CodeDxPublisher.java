@@ -43,10 +43,7 @@ import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.*;
 
 import javax.net.ssl.SSLHandshakeException;
 import javax.servlet.ServletException;
@@ -73,16 +70,22 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 	private final String key;
 	private final String projectId;
 
-	private final String sourceAndBinaryFiles;
-	private final String toolOutputFiles;
-	private final String excludedSourceAndBinaryFiles;
-	private final String analysisName;
+	// Comma separated list of source/binary file Ant GLOB patterns
+	private String sourceAndBinaryFiles;
+	// List of paths to tool output files
+	private String toolOutputFiles;
+	// Comma separated list of source/binary file Ant GLOB patterns to exclude
+	private String excludedSourceAndBinaryFiles;
 
-	private final AnalysisResultConfiguration analysisResultConfiguration;
+	private String analysisName;
+
+	// Contains the fields applicable when the user chooses to have Jenkins wait for
+	// analysis runs to complete.
+	private AnalysisResultConfiguration analysisResultConfiguration;
 
 	private transient CodeDxClient client;
 
-	private final String selfSignedCertificateFingerprint;
+	private String selfSignedCertificateFingerprint;
 
 	private final static Logger logger = Logger.getLogger(CodeDxPublisher.class.getName());
 
@@ -90,33 +93,25 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 	 * @param url                          URL of the Code Dx server
 	 * @param key                          API key of the Code Dx server
 	 * @param projectId                    Code Dx project ID
-	 * @param sourceAndBinaryFiles         Comma separated list of source/binary file Ant GLOB patterns
-	 * @param toolOutputFiles              List of paths to tool output files
-	 * @param excludedSourceAndBinaryFiles Comma separated list of source/binary file Ant GLOB patterns to exclude
-	 * @param analysisResultConfiguration  Contains the fields applicable when the user chooses to have Jenkins wait for
-	 *                                     analysis runs to complete.
 	 */
 	@DataBoundConstructor
 	public CodeDxPublisher(
 			final String url,
 			final String key,
 			final String projectId,
-			final String sourceAndBinaryFiles,
-			final String toolOutputFiles,
-			final String excludedSourceAndBinaryFiles,
-			final String analysisName,
-			final AnalysisResultConfiguration analysisResultConfiguration,
-			final String selfSignedCertificateFingerprint
+			final String analysisName
 	) {
 		this.projectId = projectId;
 		this.url = url;
 		this.key = key;
-		this.sourceAndBinaryFiles = sourceAndBinaryFiles;
-		this.excludedSourceAndBinaryFiles = excludedSourceAndBinaryFiles;
-		this.toolOutputFiles = toolOutputFiles;
 		this.analysisName = analysisName.trim();
-		this.analysisResultConfiguration = analysisResultConfiguration;
-		this.selfSignedCertificateFingerprint = selfSignedCertificateFingerprint;
+
+		this.sourceAndBinaryFiles = "";
+		this.excludedSourceAndBinaryFiles = "";
+		this.toolOutputFiles = "";
+		this.analysisResultConfiguration = null;
+		this.selfSignedCertificateFingerprint = null;
+
 		setupClient();
 	}
 
@@ -130,17 +125,20 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 		return analysisResultConfiguration;
 	}
 
+	@DataBoundSetter
+	public void setAnalysisResultConfiguration(AnalysisResultConfiguration analysisResultConfiguration) {
+		this.analysisResultConfiguration = analysisResultConfiguration;
+	}
+
 	public String getProjectId() {
 		return projectId;
 	}
 
 	public String getUrl() {
-
 		return url;
 	}
 
 	public String getKey() {
-
 		return key;
 	}
 
@@ -148,17 +146,39 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 		return sourceAndBinaryFiles;
 	}
 
+	@DataBoundSetter
+	public void setSourceAndBinaryFiles(String sourceAndBinaryFiles) {
+		this.sourceAndBinaryFiles = sourceAndBinaryFiles;
+	}
 
 	public String getToolOutputFiles() {
 		return toolOutputFiles;
+	}
+
+	@DataBoundSetter
+	public void setToolOutputFiles(String toolOutputFiles) {
+		this.toolOutputFiles = toolOutputFiles;
 	}
 
 	public String getExcludedSourceAndBinaryFiles() {
 		return excludedSourceAndBinaryFiles;
 	}
 
+	@DataBoundSetter
+	public void setExcludedSourceAndBinaryFiles(String excludedSourceAndBinaryFiles) {
+		this.excludedSourceAndBinaryFiles = excludedSourceAndBinaryFiles;
+	}
+
 	public String getSelfSignedCertificateFingerprint() {
 		return selfSignedCertificateFingerprint;
+	}
+
+	@DataBoundSetter
+	public void setSelfSignedCertificateFingerprint(String selfSignedCertificateFingerprint) {
+		this.selfSignedCertificateFingerprint = selfSignedCertificateFingerprint;
+
+		this.client = null;
+		setupClient();
 	}
 
 	public String getAnalysisName(){ return analysisName; }
