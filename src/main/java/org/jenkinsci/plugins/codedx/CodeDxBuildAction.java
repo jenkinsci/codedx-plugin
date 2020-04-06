@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.*;
 
 import hudson.model.Run;
+import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 import org.kohsuke.stapler.StaplerProxy;
 
@@ -13,18 +14,23 @@ import org.kohsuke.stapler.StaplerProxy;
  *
  * @author ademartini This file is heavily derived from the sloccount-plugin (author: lordofthepigs)
  */
-public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
+public class CodeDxBuildAction implements Action, SimpleBuildStep.LastBuildAction, Serializable, StaplerProxy {
 	/** Serial version UID. */
-	private static final long serialVersionUID = 0L;
+	private static final long serialVersionUID = 1L;
 
 	public static final String URL_NAME = "codedxResult";
 
-	private Run<?,?> run;
-	private CodeDxResult result;
+	private final Run<?,?> run;
+	private final CodeDxResult result;
+	private final List<CodeDxProjectAction> projectActions;
 
-	public CodeDxBuildAction(Run<?,?> run, CodeDxResult result){
+	public CodeDxBuildAction(Run<?,?> run, AnalysisResultConfiguration analysisResultConfiguration, String latestAnalysisUrl, CodeDxResult result){
 		this.run = run;
 		this.result = result;
+
+		List<CodeDxProjectAction> projectActions = new ArrayList<>();
+		projectActions.add(new CodeDxProjectAction(run, analysisResultConfiguration, latestAnalysisUrl));
+		this.projectActions = projectActions;
 	}
 
 	public String getIconFileName() {
@@ -37,6 +43,15 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 
 	public String getUrlName() {
 		return URL_NAME;
+	}
+
+	@Override
+	public Collection<? extends Action> getProjectActions() {
+		if (this.projectActions == null) {
+			return new ArrayList<>();
+		} else {
+			return this.projectActions;
+		}
 	}
 
 	private class DiffGroupComparator implements Comparator<CodeDxDiffGroup>{
@@ -53,8 +68,6 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 
 			return Integer.compare(index1, index2);
 		}
-
-
 	}
 
 

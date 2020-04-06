@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.codedx;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
+import hudson.model.Run;
 import hudson.util.Area;
 import hudson.util.ChartUtil;
 
@@ -33,15 +34,14 @@ public class CodeDxProjectAction implements Action, Serializable {
 	public static final int CHART_WIDTH = 500;
 	public static final int CHART_HEIGHT = 200;
 
-	public AbstractProject<?,?> project;
+	private final Run<?, ?> run;
 
 	private final String latestAnalysisUrl;
 
 	private AnalysisResultConfiguration analysisResultConfiguration;
 
-	public CodeDxProjectAction(final AbstractProject<?, ?> project,
-			AnalysisResultConfiguration analysisResultConfiguration, String latestAnalysisUrl) {
-		this.project = project;
+	public CodeDxProjectAction(final Run<?, ?> run, AnalysisResultConfiguration analysisResultConfiguration, String latestAnalysisUrl) {
+		this.run = run;
 		this.analysisResultConfiguration = analysisResultConfiguration;
 		this.latestAnalysisUrl = latestAnalysisUrl;
 	}
@@ -81,7 +81,7 @@ public class CodeDxProjectAction implements Action, Serializable {
 	 * @throws IOException in case of an error
 	 */
 	public void doIndex(final StaplerRequest request, final StaplerResponse response) throws IOException {
-		AbstractBuild<?, ?> build = getLastFinishedBuild();
+		Run<?, ?> build = getLastFinishedBuild();
 		if (build != null) {
 			response.sendRedirect2(String.format("../%d/%s", build.getNumber(), CodeDxBuildAction.URL_NAME));
 		}else{
@@ -96,8 +96,8 @@ public class CodeDxProjectAction implements Action, Serializable {
 	 * @return the last finished build or <code>null</code> if there is no
 	 *         such build
 	 */
-	public AbstractBuild<?, ?> getLastFinishedBuild() {
-		AbstractBuild<?, ?> lastBuild = project.getLastBuild();
+	public Run<?, ?> getLastFinishedBuild() {
+		Run<?, ?> lastBuild = run.getPreviousBuild();
 		while (lastBuild != null && (lastBuild.isBuilding() || lastBuild.getAction(CodeDxBuildAction.class) == null)) {
 			lastBuild = lastBuild.getPreviousBuild();
 		}
@@ -110,12 +110,12 @@ public class CodeDxProjectAction implements Action, Serializable {
 	 * @return the build action or null
 	 */
 	public CodeDxBuildAction getLastFinishedBuildAction() {
-		AbstractBuild<?, ?> lastBuild = getLastFinishedBuild();
+		Run<?, ?> lastBuild = getLastFinishedBuild();
 		return (lastBuild != null) ? lastBuild.getAction(CodeDxBuildAction.class) : null;
 	}
 
 	public final boolean hasValidResults() {
-		AbstractBuild<?, ?> build = getLastFinishedBuild();
+		Run<?, ?> build = getLastFinishedBuild();
 
 		if (build != null) {
 			CodeDxBuildAction resultAction = build.getAction(CodeDxBuildAction.class);
@@ -148,7 +148,7 @@ public class CodeDxProjectAction implements Action, Serializable {
 	 * @throws IOException in case of an error
 	 */
 	public void doSeverityTrend(final StaplerRequest request, final StaplerResponse response) throws IOException {
-		AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
+		Run<?,?> lastBuild = this.getLastFinishedBuild();
 		final CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
 
 		final Map<String,Color> colorMap = new HashMap<String,Color>();
@@ -177,7 +177,7 @@ public class CodeDxProjectAction implements Action, Serializable {
 	 * @throws IOException in case of an error
 	 */
 	public void doStatusTrend(final StaplerRequest request, final StaplerResponse response) throws IOException {
-		AbstractBuild<?,?> lastBuild = this.getLastFinishedBuild();
+		Run<?,?> lastBuild = this.getLastFinishedBuild();
 		final CodeDxBuildAction lastAction = lastBuild.getAction(CodeDxBuildAction.class);
 
 		final Map<String,Color> colorMap = new HashMap<String,Color>();

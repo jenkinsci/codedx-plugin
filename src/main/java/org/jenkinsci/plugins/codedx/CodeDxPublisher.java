@@ -162,17 +162,13 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 
 	public String getAnalysisName(){ return analysisName; }
 
-	@Override
-	public Action getProjectAction(AbstractProject<?, ?> project) {
-
-		String latestUrl = null;
-
+	private String getLatestAnalysisUrl() {
 		if (projectId.length() != 0 && !projectId.equals("-1")) {
 			setupClient();
-			latestUrl = client.buildLatestFindingsUrl(Integer.parseInt(projectId));
+			return client.buildLatestFindingsUrl(Integer.parseInt(projectId));
+		} else {
+			return null;
 		}
-
-		return new CodeDxProjectAction(project, analysisResultConfiguration, latestUrl);
 	}
 
 	@Override
@@ -422,7 +418,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 						CodeDxResult result = new CodeDxResult(statMap, build);
 
 						buildOutput.println("Adding CodeDx build action");
-						build.addAction(new CodeDxBuildAction(build, result));
+						build.addAction(new CodeDxBuildAction(build, analysisResultConfiguration, getLatestAnalysisUrl(), result));
 
 						AnalysisResultChecker checker = new AnalysisResultChecker(repeatingClient,
 								cdxVersion,
