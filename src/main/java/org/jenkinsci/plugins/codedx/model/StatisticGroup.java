@@ -19,7 +19,8 @@ public enum StatisticGroup {
 	FalsePositive("False Positive"),
 	Ignored("Ignored"),
 	Mitigated("Mitigated"),
-	Fixed("Fixed");
+	Fixed("Fixed"),
+	Reopened("Reopened");
 
 	private String value;
 
@@ -58,6 +59,7 @@ public enum StatisticGroup {
 			values.add(Escalated);
 			values.add(Assigned);
 			values.add(New);
+			values.add(Reopened);
 		}
 
 		return values;

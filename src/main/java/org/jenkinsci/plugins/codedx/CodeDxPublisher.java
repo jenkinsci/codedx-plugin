@@ -394,6 +394,12 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 						notAssignedStatuses.add(Filter.STATUS_MITIGATED);
 						notAssignedStatuses.add(Filter.STATUS_IGNORED);
 						notAssignedStatuses.add(Filter.STATUS_UNRESOLVED);
+						if (cdxVersion.supportsTriageReopened()) {
+							logger.fine("TriageReopened supported by Code Dx version " + cdxVersion + ". Using 'Reopened' in not-assigned status list.");
+							notAssignedStatuses.add(Filter.STATUS_REOPENED);
+						} else {
+							logger.fine("TriageReopened not supported by Code Dx version " + cdxVersion + ". Omitting it from the not-assigned status list");
+						}
 						if(cdxVersion.supportsTriageNew()){
 							logger.fine("TriageNew supported by Code Dx version " + cdxVersion + ". Using 'New' in not-assigned status list.");
 							notAssignedStatuses.add(Filter.STATUS_NEW);
@@ -451,6 +457,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 				}
 			} catch (NumberFormatException e) {
 				buildOutput.println("Invalid project Id");
+				throw new IOException("Invalid project Id");
 			} finally {
 				if(sourceAndBinaryZip != null){
 					sourceAndBinaryZip.delete();

@@ -27,6 +27,11 @@ public final class CodeDxVersion implements Comparable<CodeDxVersion> {
 	 */
 	public final static CodeDxVersion NEW_STATUS_RETURNED = fromString("2.4.2");
 
+	/**
+	 * Version when the "Reopened" status was introduced.
+	 */
+	public final static CodeDxVersion REOPENED_STATUS_ADDED = fromString("4.1.0");
+
 	/** First version that supports the "analysis names" feature. */
 	public final static CodeDxVersion MIN_FOR_ANALYSIS_NAMES = fromString("2.4.0");
 
@@ -99,5 +104,9 @@ public final class CodeDxVersion implements Comparable<CodeDxVersion> {
 	public boolean supportsTriageNew(){
 		// (version < NEW_STATUS_REMOVED) || (version >= NEW_STATUS_RETURNED)
 		return (this.compareTo(NEW_STATUS_REMOVED) < 0) || (this.compareTo(NEW_STATUS_RETURNED) >= 0);
+	}
+
+	public boolean supportsTriageReopened() {
+		return this.compareTo(REOPENED_STATUS_ADDED) >= 0;
 	}
 }
