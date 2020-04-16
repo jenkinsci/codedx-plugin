@@ -3,46 +3,27 @@ package org.jenkinsci.plugins.codedx.model;
 import java.util.HashSet;
 import java.util.Set;
 
-public enum StatisticGroup {
-	Unspecified("Unspecified"),
-	Info("Info"),
-	Low("Low"),
-	Medium("Medium"),
-	High("High"),
-	Critical("Critical"),
+public class StatisticGroup {
+	public static final String Unspecified = "Unspecified";
+	public static final String Info = "Info";
+	public static final String Low = "Low";
+	public static final String Medium = "Medium";
+	public static final String High = "High";
+	public static final String Critical = "Critical";
 
-	Gone("Gone"),
-	New("New"),
-	Assigned("Assigned"),
-	Escalated("Escalated"),
-	Unresolved("Unresolved"),
-	FalsePositive("False Positive"),
-	Ignored("Ignored"),
-	Mitigated("Mitigated"),
-	Fixed("Fixed"),
-	Reopened("Reopened");
+	public static final String Gone = "Gone";
+	public static final String New = "New";
+	public static final String Assigned = "Assigned";
+	public static final String Escalated = "Escalated";
+	public static final String Unresolved = "Unresolved";
+	public static final String FalsePositive = "False Positive";
+	public static final String Ignored = "Ignored";
+	public static final String Mitigated = "Mitigated";
+	public static final String Fixed = "Fixed";
+	public static final String Reopened = "Reopened";
 
-	private String value;
-
-	private StatisticGroup(String value) {
-		this.value = value;
-	}
-
-	public String toString() {
-		return value;
-	}
-
-	public static StatisticGroup forValue(String value) {
-		for (StatisticGroup group : StatisticGroup.values()) {
-			if (group.value.equals(value)) {
-				return group;
-			}
-		}
-		return null;
-	}
-
-	public static Set<StatisticGroup> valuesForStatistic(String statisticName) {
-		Set<StatisticGroup> values = new HashSet<StatisticGroup>();
+	public static Set<String> valuesForStatistic(String statisticName) {
+		Set<String> values = new HashSet<String>();
 		if ("severity".equals(statisticName)) {
 			values.add(Unspecified);
 			values.add(Info);

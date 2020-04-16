@@ -32,7 +32,7 @@ public class CodeDxChartBuilder implements Serializable {
 	/** Serial version UID. */
 	private static final long serialVersionUID = 0L;
 
-	private static Set<StatisticGroup> hiddenGroups = new HashSet<StatisticGroup>() {{
+	private static Set<String> hiddenGroups = new HashSet<String>() {{
 		add(StatisticGroup.Gone);
 	}};
 
@@ -118,8 +118,8 @@ public class CodeDxChartBuilder implements Serializable {
 
 	private static CategoryDataset buildDataset(CodeDxBuildAction lastAction,
 			int numBuildsInGraph, String statisticsName){
-		DataSetBuilder<StatisticGroup, NumberOnlyBuildLabel> builder = new DataSetBuilder<StatisticGroup, NumberOnlyBuildLabel>();
-		Set<StatisticGroup> allGroups = new HashSet<StatisticGroup>();
+		DataSetBuilder<String, NumberOnlyBuildLabel> builder = new DataSetBuilder<String, NumberOnlyBuildLabel>();
+		Set<String> allGroups = new HashSet<String>();
 
 		CodeDxBuildAction action = lastAction;
 		int numBuilds = 0;
@@ -131,21 +131,20 @@ public class CodeDxChartBuilder implements Serializable {
 				NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel((Run<?, ?>)action.getRun());
 
 				for (String group : result.getStatistics(statisticsName).getAllGroups()) {
-					StatisticGroup statisticGroup = StatisticGroup.forValue(group);
-					if (! hiddenGroups.contains(statisticGroup)) {
-						allGroups.add(StatisticGroup.forValue(group));
+					if (! hiddenGroups.contains(group)) {
+						allGroups.add(group);
 					}
 				}
-				Set<StatisticGroup> remainingGroups = StatisticGroup.valuesForStatistic(statisticsName);
+				Set<String> remainingGroups = StatisticGroup.valuesForStatistic(statisticsName);
 
 				for(CodeDxGroupStatistics groupStats : result.getStatistics(statisticsName).getStatistics()){
-					StatisticGroup statisticGroup = StatisticGroup.forValue(groupStats.getGroup());
+					String statisticGroup = groupStats.getGroup();
 					if (! hiddenGroups.contains(statisticGroup))
 						builder.add(groupStats.getFindings(), statisticGroup, buildLabel);
-					remainingGroups.remove(StatisticGroup.forValue(groupStats.getGroup()));
+					remainingGroups.remove(statisticGroup);
 				}
 
-				for(StatisticGroup group : remainingGroups) {
+				for(String group : remainingGroups) {
 					builder.add(0, group, buildLabel);
 				}
 

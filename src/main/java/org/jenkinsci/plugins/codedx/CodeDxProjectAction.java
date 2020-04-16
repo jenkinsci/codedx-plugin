@@ -182,15 +182,15 @@ public class CodeDxProjectAction implements Action, Serializable {
 
 		final Map<String,Color> colorMap = new HashMap<String,Color>();
 
-		colorMap.put(StatisticGroup.New.toString(), new Color(0x542788));
-		colorMap.put(StatisticGroup.Unresolved.toString(), new Color(0x998ec3));
-		colorMap.put(StatisticGroup.Reopened.toString(), new Color(0xAC5DA7));
-		colorMap.put(StatisticGroup.Fixed.toString(), new Color(0x3288bd));
-		colorMap.put(StatisticGroup.Mitigated.toString(), new Color(0x295ec6));
-		colorMap.put(StatisticGroup.Assigned.toString(), new Color(0x01665e));
-		colorMap.put(StatisticGroup.Escalated.toString(), new Color(0x5ab4ac));
-		colorMap.put(StatisticGroup.Ignored.toString(), new Color(0xd8b365));
-		colorMap.put(StatisticGroup.FalsePositive.toString(), new Color(0xd9d9d9));
+		colorMap.put(StatisticGroup.New, new Color(0x542788));
+		colorMap.put(StatisticGroup.Unresolved, new Color(0x998ec3));
+		colorMap.put(StatisticGroup.Reopened, new Color(0xAC5DA7));
+		colorMap.put(StatisticGroup.Fixed, new Color(0x3288bd));
+		colorMap.put(StatisticGroup.Mitigated, new Color(0x295ec6));
+		colorMap.put(StatisticGroup.Assigned, new Color(0x01665e));
+		colorMap.put(StatisticGroup.Escalated, new Color(0x5ab4ac));
+		colorMap.put(StatisticGroup.Ignored, new Color(0xd8b365));
+		colorMap.put(StatisticGroup.FalsePositive, new Color(0xd9d9d9));
 
 		(new Graph(-1, CHART_WIDTH, CHART_HEIGHT){
 			@Override
