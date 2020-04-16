@@ -76,12 +76,14 @@ public class CodeDxChartBuilder implements Serializable {
 		List<Color> colorList = new ArrayList<Color>();
 
 		if(colors != null){
-
 			for(Object row : rows){
-
 				if(colors.containsKey(row.toString())){
-
 					colorList.add(colors.get(row.toString()));
+				} else {
+					// Use color based on hash-code for a consistent
+					// display color. Might not be pretty, but will still
+					// allow us to show consistently-colored data.
+					colorList.add(new Color(row.toString().hashCode()));
 				}
 			}
 		}
@@ -116,42 +118,53 @@ public class CodeDxChartBuilder implements Serializable {
 		return chart;
 	}
 
-	private static CategoryDataset buildDataset(CodeDxBuildAction lastAction,
-			int numBuildsInGraph, String statisticsName){
-		DataSetBuilder<String, NumberOnlyBuildLabel> builder = new DataSetBuilder<String, NumberOnlyBuildLabel>();
-		Set<String> allGroups = new HashSet<String>();
-
+	private static List<CodeDxBuildAction> collectSuccessfulBuilds(CodeDxBuildAction lastAction, int maxNumBuilds) {
 		CodeDxBuildAction action = lastAction;
-		int numBuilds = 0;
+		List<CodeDxBuildAction> allBuildActions = new ArrayList<>();
 
-		// numBuildsInGraph <= 1 means unlimited
-		while(action != null && (numBuildsInGraph <= 1 || numBuilds < numBuildsInGraph)){
+		// maxNumBuilds <= 1 means unlimited
+		while(action != null && (maxNumBuilds <= 1 || allBuildActions.size() < maxNumBuilds)){
 			CodeDxResult result = action.getResult();
 			if(result != null){
-				NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel((Run<?, ?>)action.getRun());
-
-				for (String group : result.getStatistics(statisticsName).getAllGroups()) {
-					if (! hiddenGroups.contains(group)) {
-						allGroups.add(group);
-					}
-				}
-				Set<String> remainingGroups = StatisticGroup.valuesForStatistic(statisticsName);
-
-				for(CodeDxGroupStatistics groupStats : result.getStatistics(statisticsName).getStatistics()){
-					String statisticGroup = groupStats.getGroup();
-					if (! hiddenGroups.contains(statisticGroup))
-						builder.add(groupStats.getFindings(), statisticGroup, buildLabel);
-					remainingGroups.remove(statisticGroup);
-				}
-
-				for(String group : remainingGroups) {
-					builder.add(0, group, buildLabel);
-				}
-
-				++numBuilds;
+				allBuildActions.add(action);
 			}
 
 			action = action.getPreviousAction();
+		}
+		return allBuildActions;
+	}
+
+	private static CategoryDataset buildDataset(CodeDxBuildAction lastAction,
+			int numBuildsInGraph, String statisticsName){
+		DataSetBuilder<String, NumberOnlyBuildLabel> builder = new DataSetBuilder<String, NumberOnlyBuildLabel>();
+
+		List<CodeDxBuildAction> allBuildActions = collectSuccessfulBuilds(lastAction, numBuildsInGraph);
+
+		// Collect all known groups so we can fill in blanks. Can't just rely on `valuesForStatistics` in
+		// case there's a new/unknown group name, so we loop through all available builds first. Use
+		// `valuesForStatistics` as a base so we can still show empty values for groups that don't
+		// have any results.
+		Set<String> knownGroups = StatisticGroup.valuesForStatistic(statisticsName);
+		for (CodeDxBuildAction action : allBuildActions) {
+			knownGroups.addAll(action.getResult().getStatistics(statisticsName).getAllGroups());
+		}
+
+		for (CodeDxBuildAction action : allBuildActions) {
+			NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel((Run<?, ?>)action.getRun());
+			CodeDxResult result = action.getResult();
+
+			Set<String> remainingGroups = new HashSet<>(knownGroups);
+
+			for(CodeDxGroupStatistics groupStats : result.getStatistics(statisticsName).getStatistics()){
+				String statisticGroup = groupStats.getGroup();
+				if (! hiddenGroups.contains(statisticGroup))
+					builder.add(groupStats.getFindings(), statisticGroup, buildLabel);
+				remainingGroups.remove(statisticGroup);
+			}
+
+			for(String group : remainingGroups) {
+				builder.add(0, group, buildLabel);
+			}
 		}
 
 		return builder.build();
