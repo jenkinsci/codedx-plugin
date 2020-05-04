@@ -97,7 +97,7 @@ public class CodeDxProjectAction implements Action, Serializable {
 	 *         such build
 	 */
 	public Run<?, ?> getLastFinishedBuild() {
-		Run<?, ?> lastBuild = run.getPreviousBuild();
+		Run<?, ?> lastBuild = run;
 		while (lastBuild != null && (lastBuild.isBuilding() || lastBuild.getAction(CodeDxBuildAction.class) == null)) {
 			lastBuild = lastBuild.getPreviousBuild();
 		}
