@@ -115,6 +115,7 @@ public class CodeDxBuildAction implements Action, SimpleBuildStep.LastBuildActio
 		order.add("Escalated");
 		order.add("Assigned");
 		order.add("New");
+		order.add("Reopened");
 		order.add("Gone");
 
 		return CodeDxDiffSummary.getDiffSummary(getPreviousStatusStats(),
