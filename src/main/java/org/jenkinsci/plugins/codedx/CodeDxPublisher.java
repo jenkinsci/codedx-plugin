@@ -249,6 +249,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 					} catch (IOException e) {
 						buildOutput.println("Failed to add tool output file: " + path);
 					}
+				} else {
+					buildOutput.println("Path specified but could not be found: " + path);
 				}
 			}
 		}
@@ -435,7 +437,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 					buildOutput.println("Analysis status: " + status);
 				}
 			} catch (NumberFormatException e) {
-				buildOutput.println("Invalid project Id");
 				throw new IOException("Invalid project Id");
 			} finally {
 				if(sourceAndBinaryZip != null){
@@ -443,7 +444,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 				}
 			}
 		} else {
-			buildOutput.println("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
+			throw new IOException("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
 		}
 	}
 
