@@ -5,6 +5,8 @@ import hudson.model.Action;
 import java.io.Serializable;
 import java.util.*;
 
+import hudson.model.Run;
+import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 import org.kohsuke.stapler.StaplerProxy;
 
@@ -12,18 +14,21 @@ import org.kohsuke.stapler.StaplerProxy;
  *
  * @author ademartini This file is heavily derived from the sloccount-plugin (author: lordofthepigs)
  */
-public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
-	/** Serial version UID. */
-	private static final long serialVersionUID = 0L;
+public class CodeDxBuildAction implements Action, SimpleBuildStep.LastBuildAction, StaplerProxy {
 
 	public static final String URL_NAME = "codedxResult";
 
-	private AbstractBuild<?,?> build;
-	private CodeDxResult result;
+	private final Run<?,?> run;
+	private final CodeDxResult result;
+	private final List<CodeDxProjectAction> projectActions;
 
-	public CodeDxBuildAction(AbstractBuild<?,?> build, CodeDxResult result){
-		this.build = build;
+	public CodeDxBuildAction(Run<?,?> run, AnalysisResultConfiguration analysisResultConfiguration, String latestAnalysisUrl, CodeDxResult result){
+		this.run = run;
 		this.result = result;
+
+		List<CodeDxProjectAction> projectActions = new ArrayList<>();
+		projectActions.add(new CodeDxProjectAction(run, analysisResultConfiguration, latestAnalysisUrl));
+		this.projectActions = projectActions;
 	}
 
 	public String getIconFileName() {
@@ -38,7 +43,16 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 		return URL_NAME;
 	}
 
-	private class DiffGroupComparator implements Comparator<CodeDxDiffGroup>{
+	@Override
+	public Collection<? extends Action> getProjectActions() {
+		if (this.projectActions == null) {
+			return new ArrayList<>();
+		} else {
+			return this.projectActions;
+		}
+	}
+
+	private static class DiffGroupComparator implements Comparator<CodeDxDiffGroup>{
 
 		List<String> groupOrdering = new ArrayList<String>();
 
@@ -52,8 +66,6 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 
 			return Integer.compare(index1, index2);
 		}
-
-
 	}
 
 
@@ -82,7 +94,7 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 		iconMap.put("Unspecified", "/plugin/codedx/icons/unspecified.png");
 
 		return CodeDxDiffSummary.getDiffSummary(getPreviousSeverityStats(),
-				result.getStatistics("severity"), "Severity",new DiffGroupComparator(order),iconMap);
+				result.getStatistics("severity"), "Severity", new DiffGroupComparator(order),iconMap);
 	}
 
 	/**
@@ -101,6 +113,7 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 		order.add("Escalated");
 		order.add("Assigned");
 		order.add("New");
+		order.add("Reopened");
 		order.add("Gone");
 
 		return CodeDxDiffSummary.getDiffSummary(getPreviousStatusStats(),
@@ -145,11 +158,11 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 	 * @return the action or null
 	 */
 	CodeDxBuildAction getPreviousAction(){
-		if(this.build == null){
+		if(this.run == null){
 			return null;
 		}
 
-		AbstractBuild<?,?> previousBuild = this.build.getPreviousBuild();
+		Run<?,?> previousBuild = this.run.getPreviousBuild();
 
 		while(previousBuild != null){
 			CodeDxBuildAction action = previousBuild
@@ -169,8 +182,8 @@ public class CodeDxBuildAction implements Action, Serializable, StaplerProxy {
 		return null;
 	}
 
-	public AbstractBuild<?,?> getBuild(){
-		return this.build;
+	public Run<?,?> getRun(){
+		return this.run;
 	}
 
 	public Object getTarget() {

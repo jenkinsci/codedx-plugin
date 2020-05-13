@@ -4,8 +4,8 @@
 	<parent>
 		<groupId>org.jenkins-ci.plugins</groupId>
 		<artifactId>plugin</artifactId>
-		<!-- 1.609.2 because of token-macro 1.12.1 -->
-		<version>1.642.2</version><!-- which version of Jenkins is this plugin built against? Users must have at least this Jenkins version to use this plugin. -->
+		<!-- Use the most recent parent POM with 1.x support -->
+		<version>2.37</version>
 		<relativePath />
 	</parent>
 
@@ -32,6 +32,13 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<properties>
+		<!-- which version of Jenkins is this plugin built against? Users must have at least this Jenkins version to use this plugin. -->
+		<!-- 1.642.3 is the minimum Jenkins version for pipelines support -->
+		<jenkins.version>1.642.3</jenkins.version>
+		<java.level>7</java.level>
+	</properties>
 
 	<scm>
 		<connection>scm:git:ssh://github.com/jenkinsci/codedx-plugin.git</connection>
@@ -101,7 +108,8 @@
 		<dependency>
 			<groupId>org.jenkins-ci.plugins</groupId>
 			<artifactId>token-macro</artifactId>
-			<version>1.12.1</version>
+			<!-- Minimum version for use in pipeline scripts -->
+			<version>2.0</version>
 		</dependency>
 	</dependencies>
 </project>

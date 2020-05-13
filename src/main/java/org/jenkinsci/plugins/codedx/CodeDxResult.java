@@ -5,6 +5,7 @@ import java.util.Map;
 
 import hudson.model.AbstractBuild;
 
+import hudson.model.Run;
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 
 /**
@@ -12,22 +13,22 @@ import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
  * @author ademartini This file is heavily derived from the sloccount-plugin (author: lordofthepigs)
  *
  */
-public class CodeDxResult implements Serializable{
+public class CodeDxResult {
 
 	/** Serial version UID. */
 	private static final long serialVersionUID = 0L;
 
-	private final AbstractBuild<?,?> owner;
+	private final Run<?,?> owner;
 
 	private Map<String, CodeDxReportStatistics> statisticsMap;
 
-	public CodeDxResult(Map<String,CodeDxReportStatistics> statisticsMap, AbstractBuild<?,?> owner){
+	public CodeDxResult(Map<String,CodeDxReportStatistics> statisticsMap, Run<?,?> owner){
 
 		this.owner = owner;
 		this.statisticsMap = statisticsMap;
 	}
 
-	public AbstractBuild<?,?> getOwner() {
+	public Run<?,?> getOwner() {
 		return owner;
 	}
 

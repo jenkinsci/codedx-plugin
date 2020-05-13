@@ -149,6 +149,7 @@ public class Filter {
 	public static final String STATUS_UNRESOLVED = "unresolved";
 	public static final String STATUS_GONE = "gone";
 	public static final String STATUS_ASSIGNED = "assigned";
+	public static final String STATUS_REOPENED = "reopened";
 
 	public static final String SEVERITY_INFO = "Info";
 	public static final String SEVERITY_LOW = "Low";

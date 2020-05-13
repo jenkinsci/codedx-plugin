@@ -32,6 +32,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.io.IOUtils;
@@ -41,10 +42,7 @@ import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.*;
 
 import javax.net.ssl.SSLHandshakeException;
 import javax.servlet.ServletException;
@@ -52,6 +50,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
@@ -64,22 +63,28 @@ import java.util.logging.Logger;
  *
  * @author anthonyd
  */
-public class CodeDxPublisher extends Recorder {
+public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private final String url;
 	private final String key;
 	private final String projectId;
 
-	private final String sourceAndBinaryFiles;
-	private final String toolOutputFiles;
-	private final String excludedSourceAndBinaryFiles;
-	private final String analysisName;
+	// Comma separated list of source/binary file Ant GLOB patterns
+	private String sourceAndBinaryFiles;
+	// List of paths to tool output files
+	private String toolOutputFiles;
+	// Comma separated list of source/binary file Ant GLOB patterns to exclude
+	private String excludedSourceAndBinaryFiles;
 
-	private final AnalysisResultConfiguration analysisResultConfiguration;
+	private String analysisName;
+
+	// Contains the fields applicable when the user chooses to have Jenkins wait for
+	// analysis runs to complete.
+	private AnalysisResultConfiguration analysisResultConfiguration;
 
 	private transient CodeDxClient client;
 
-	private final String selfSignedCertificateFingerprint;
+	private String selfSignedCertificateFingerprint;
 
 	private final static Logger logger = Logger.getLogger(CodeDxPublisher.class.getName());
 
@@ -87,33 +92,25 @@ public class CodeDxPublisher extends Recorder {
 	 * @param url                          URL of the Code Dx server
 	 * @param key                          API key of the Code Dx server
 	 * @param projectId                    Code Dx project ID
-	 * @param sourceAndBinaryFiles         Comma separated list of source/binary file Ant GLOB patterns
-	 * @param toolOutputFiles              List of paths to tool output files
-	 * @param excludedSourceAndBinaryFiles Comma separated list of source/binary file Ant GLOB patterns to exclude
-	 * @param analysisResultConfiguration  Contains the fields applicable when the user chooses to have Jenkins wait for
-	 *                                     analysis runs to complete.
 	 */
 	@DataBoundConstructor
 	public CodeDxPublisher(
 			final String url,
 			final String key,
 			final String projectId,
-			final String sourceAndBinaryFiles,
-			final String toolOutputFiles,
-			final String excludedSourceAndBinaryFiles,
-			final String analysisName,
-			final AnalysisResultConfiguration analysisResultConfiguration,
-			final String selfSignedCertificateFingerprint
+			final String analysisName
 	) {
 		this.projectId = projectId;
 		this.url = url;
 		this.key = key;
-		this.sourceAndBinaryFiles = sourceAndBinaryFiles;
-		this.excludedSourceAndBinaryFiles = excludedSourceAndBinaryFiles;
-		this.toolOutputFiles = toolOutputFiles;
 		this.analysisName = analysisName.trim();
-		this.analysisResultConfiguration = analysisResultConfiguration;
-		this.selfSignedCertificateFingerprint = selfSignedCertificateFingerprint;
+
+		this.sourceAndBinaryFiles = "";
+		this.excludedSourceAndBinaryFiles = "";
+		this.toolOutputFiles = "";
+		this.analysisResultConfiguration = null;
+		this.selfSignedCertificateFingerprint = null;
+
 		setupClient();
 	}
 
@@ -127,17 +124,20 @@ public class CodeDxPublisher extends Recorder {
 		return analysisResultConfiguration;
 	}
 
+	@DataBoundSetter
+	public void setAnalysisResultConfiguration(AnalysisResultConfiguration analysisResultConfiguration) {
+		this.analysisResultConfiguration = analysisResultConfiguration;
+	}
+
 	public String getProjectId() {
 		return projectId;
 	}
 
 	public String getUrl() {
-
 		return url;
 	}
 
 	public String getKey() {
-
 		return key;
 	}
 
@@ -145,39 +145,58 @@ public class CodeDxPublisher extends Recorder {
 		return sourceAndBinaryFiles;
 	}
 
+	@DataBoundSetter
+	public void setSourceAndBinaryFiles(String sourceAndBinaryFiles) {
+		this.sourceAndBinaryFiles = sourceAndBinaryFiles;
+	}
 
 	public String getToolOutputFiles() {
 		return toolOutputFiles;
+	}
+
+	@DataBoundSetter
+	public void setToolOutputFiles(String toolOutputFiles) {
+		this.toolOutputFiles = toolOutputFiles;
 	}
 
 	public String getExcludedSourceAndBinaryFiles() {
 		return excludedSourceAndBinaryFiles;
 	}
 
+	@DataBoundSetter
+	public void setExcludedSourceAndBinaryFiles(String excludedSourceAndBinaryFiles) {
+		this.excludedSourceAndBinaryFiles = excludedSourceAndBinaryFiles;
+	}
+
 	public String getSelfSignedCertificateFingerprint() {
 		return selfSignedCertificateFingerprint;
 	}
 
+	@DataBoundSetter
+	public void setSelfSignedCertificateFingerprint(String selfSignedCertificateFingerprint) {
+		this.selfSignedCertificateFingerprint = selfSignedCertificateFingerprint;
+
+		this.client = null;
+		setupClient();
+	}
+
 	public String getAnalysisName(){ return analysisName; }
 
-	@Override
-	public Action getProjectAction(AbstractProject<?, ?> project) {
-
-		String latestUrl = null;
-
+	private String getLatestAnalysisUrl() {
 		if (projectId.length() != 0 && !projectId.equals("-1")) {
 			setupClient();
-			latestUrl = client.buildLatestFindingsUrl(Integer.parseInt(projectId));
+			return client.buildLatestFindingsUrl(Integer.parseInt(projectId));
+		} else {
+			return null;
 		}
-
-		return new CodeDxProjectAction(project, analysisResultConfiguration, latestUrl);
 	}
 
 	@Override
-	public boolean perform(
-			final AbstractBuild<?, ?> build,
+	public void perform(
+			final Run<?, ?> build,
+			final FilePath workspace,
 			final Launcher launcher,
-			final BuildListener listener) throws InterruptedException, IOException {
+			final TaskListener listener) throws InterruptedException, IOException {
 
 		Date startingDate = new Date();
 
@@ -190,14 +209,14 @@ public class CodeDxPublisher extends Recorder {
 		if (projectId.length() == 0 || projectId.equals("-1")) {
 
 			buildOutput.println("No project has been selected");
-			return true;
+			return;
 		}
 
 		buildOutput.println(String.format("Publishing to Code Dx server at %s to Code Dx project %s: ", url, projectId));
 
 		buildOutput.println("Creating source/binary zip...");
 
-		FilePath sourceAndBinaryZip = Archiver.Archive(build.getWorkspace(),
+		FilePath sourceAndBinaryZip = Archiver.archive(workspace,
 				Util.commaSeparatedToArray(sourceAndBinaryFiles),
 				Util.commaSeparatedToArray(excludedSourceAndBinaryFiles),
 				"source", buildOutput);
@@ -220,7 +239,7 @@ public class CodeDxPublisher extends Recorder {
 
 		for (String file : files) {
 			if (file.length() != 0) {
-				FilePath path = build.getWorkspace().child(file);
+				FilePath path = workspace.child(file);
 
 				if (path.exists()) {
 					try {
@@ -229,6 +248,8 @@ public class CodeDxPublisher extends Recorder {
 					} catch (IOException e) {
 						buildOutput.println("Failed to add tool output file: " + path);
 					}
+				} else {
+					buildOutput.println("Path specified but could not be found: " + path);
 				}
 			}
 		}
@@ -242,9 +263,7 @@ public class CodeDxPublisher extends Recorder {
 				cdxVersion = repeatingClient.getCodeDxVersion();
 				buildOutput.println("Got Code Dx version: " + cdxVersion);
 			} catch (CodeDxClientException e) {
-				e.printStackTrace(buildOutput);
-				buildOutput.println("Failed to get Code Dx version; aborting build.");
-				return false;
+				throw new IOException("Failed to get Code Dx version; aborting build.", e);
 			}
 
 			try {
@@ -258,29 +277,33 @@ public class CodeDxPublisher extends Recorder {
 					response = repeatingClient.startAnalysis(Integer.parseInt(projectId), toSend);
 				} catch (CodeDxClientException e) {
 					String errorSpecificMessage;
-						switch(e.getHttpCode()) {
-							case 400:
-								errorSpecificMessage =
-										" (Bad Request: have you included files from unsupported Tools? " +
-												"Code Dx Standard Edition does not support uploading tool results)";
-								break;
-							case 403:
-								errorSpecificMessage = " (Forbidden: have you configured your key and permissions correctly?)";
-								break;
-							case 404:
-								errorSpecificMessage = " (Project Not Found: is it possible it was deleted?)";
-								break;
-							case 500:
-								errorSpecificMessage = " (Internal Server Error: Please check your Code Dx server logs for more details)";
-								break;
-							default:
-								errorSpecificMessage = "";
-						}
-					buildOutput.println(String.format("Failed to start analysis%s.", errorSpecificMessage));
-					buildOutput.println(String.format("Response Status: %d: %s", e.getHttpCode(), e.getResponseMessage()));
-					buildOutput.println(String.format("Response Content: %s", e.getResponseContent()));
-					e.printStackTrace(buildOutput);
-					return false;
+
+					switch(e.getHttpCode()) {
+						case 400:
+							errorSpecificMessage =
+									" (Bad Request: have you included files from unsupported Tools? " +
+											"Code Dx Standard Edition does not support uploading tool results)";
+							break;
+						case 403:
+							errorSpecificMessage = " (Forbidden: have you configured your key and permissions correctly?)";
+							break;
+						case 404:
+							errorSpecificMessage = " (Project Not Found: is it possible it was deleted?)";
+							break;
+						case 500:
+							errorSpecificMessage = " (Internal Server Error: Please check your Code Dx server logs for more details)";
+							break;
+						default:
+							errorSpecificMessage = "";
+					}
+
+					String message =
+						String.format("Failed to start analysis%s.", errorSpecificMessage) + '\n' +
+						String.format("Response Status: %d: %s", e.getHttpCode(), e.getResponseMessage()) + '\n' +
+						String.format("Response Content: %s", e.getResponseContent()) + '\n' +
+						Util.getStackTrace(e);
+
+					throw new IOException(message);
 				} finally {
 					// close streams after we're done sending them
 					for(Map.Entry<String, InputStream> entry : toSend.entrySet()){
@@ -298,7 +321,7 @@ public class CodeDxPublisher extends Recorder {
 						buildOutput.println("Analysis Name (raw): " + analysisName);
 						String expandedAnalysisName = "";
 						try {
-							expandedAnalysisName = TokenMacro.expand(build, listener, analysisName);
+							expandedAnalysisName = TokenMacro.expand(build, workspace, listener, analysisName);
 							buildOutput.println("Analysis Name expression expanded to: " + expandedAnalysisName);
 						} catch (MacroEvaluationException e) {
 							buildOutput.println("Failed to expand Analysis Name expression using TokenMacro. " +
@@ -318,9 +341,7 @@ public class CodeDxPublisher extends Recorder {
 								repeatingClient.setAnalysisName(projectIdInt, response.getAnalysisId(), expandedAnalysisName);
 								buildOutput.println("Successfully updated analysis name.");
 							} catch (CodeDxClientException e) {
-								buildOutput.println("Got error from Code Dx API Client while trying to set the analysis name");
-								e.printStackTrace(buildOutput);
-								return false;
+								throw new IOException("Got error from Code Dx API Client while trying to set the analysis name", e);
 							}
 						}
 					}
@@ -328,7 +349,7 @@ public class CodeDxPublisher extends Recorder {
 
 				if (analysisResultConfiguration == null) {
 					logger.info("Project not configured to wait on analysis results");
-					return true;
+					return;
 				}
 
 				String status = null;
@@ -349,9 +370,7 @@ public class CodeDxPublisher extends Recorder {
 						}
 					} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
 				} catch (CodeDxClientException e) {
-					buildOutput.println("Fatal Error! There was a problem querying for the analysis status.");
-					e.printStackTrace(buildOutput);
-					return false;
+					throw new IOException("Fatal Error! There was a problem querying for the analysis status.", e);
 				}
 
 				if (Job.COMPLETED.equals(status)) {
@@ -367,22 +386,7 @@ public class CodeDxPublisher extends Recorder {
 						buildOutput.println("Fetching status counts");
 
 						Filter notAssignedFilter = new Filter();
-
-						// make sure not to put STATUS_NEW in a filter if the cdxVersion doesn't support it
-						List<String> notAssignedStatuses = new ArrayList<String>(7);
-						notAssignedStatuses.add(Filter.STATUS_ESCALATED);
-						notAssignedStatuses.add(Filter.STATUS_FALSE_POSITIVE);
-						notAssignedStatuses.add(Filter.STATUS_FIXED);
-						notAssignedStatuses.add(Filter.STATUS_MITIGATED);
-						notAssignedStatuses.add(Filter.STATUS_IGNORED);
-						notAssignedStatuses.add(Filter.STATUS_UNRESOLVED);
-						if(cdxVersion.supportsTriageNew()){
-							logger.fine("TriageNew supported by Code Dx version " + cdxVersion + ". Using 'New' in not-assigned status list.");
-							notAssignedStatuses.add(Filter.STATUS_NEW);
-						} else {
-							logger.fine("TriageNew not supported by Code Dx version " + cdxVersion + ". Omitting it from the not-assigned status list");
-						}
-						notAssignedFilter.setStatus(notAssignedStatuses.toArray(new String[notAssignedStatuses.size()]));
+						notAssignedFilter.setNotStatus(new String[]{ Filter.STATUS_ASSIGNED, Filter.STATUS_GONE });
 
 						List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notAssignedFilter, "status");
 
@@ -413,7 +417,7 @@ public class CodeDxPublisher extends Recorder {
 						CodeDxResult result = new CodeDxResult(statMap, build);
 
 						buildOutput.println("Adding CodeDx build action");
-						build.addAction(new CodeDxBuildAction(build, result));
+						build.addAction(new CodeDxBuildAction(build, analysisResultConfiguration, getLatestAnalysisUrl(), result));
 
 						AnalysisResultChecker checker = new AnalysisResultChecker(repeatingClient,
 								cdxVersion,
@@ -426,29 +430,21 @@ public class CodeDxPublisher extends Recorder {
 								buildOutput);
 						build.setResult(checker.checkResult());
 					} catch (CodeDxClientException e) {
-						buildOutput.println("Fatal Error! There was a problem retrieving analysis results.");
-						e.printStackTrace(buildOutput);
-
-						return false;
+						throw new IOException("Fatal Error! There was a problem retrieving analysis results.", e);
 					}
-					return true;
 				} else {
 					buildOutput.println("Analysis status: " + status);
-					return false;
 				}
-
 			} catch (NumberFormatException e) {
-				buildOutput.println("Invalid project Id");
+				throw new IOException("Invalid project Id");
 			} finally {
 				if(sourceAndBinaryZip != null){
 					sourceAndBinaryZip.delete();
 				}
 			}
 		} else {
-			buildOutput.println("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
+			throw new IOException("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
 		}
-
-		return false;
 	}
 
 	public static CodeDxClient buildClient(String url, String key, String fingerprint) {
@@ -623,6 +619,9 @@ public class CodeDxPublisher extends Recorder {
 		}
 
 		public FormValidation doCheckSourceAndBinaryFiles(@QueryParameter final String value, @QueryParameter final String toolOutputFiles, @AncestorInPath AbstractProject project) {
+			if (project == null) {
+				return FormValidation.ok();
+			}
 
 			if (value.length() == 0) {
 
@@ -636,11 +635,18 @@ public class CodeDxPublisher extends Recorder {
 		}
 
 		public FormValidation doCheckExcludedSourceAndBinaryFiles(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
-
-			return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
+			if (project == null) {
+				return FormValidation.ok();
+			} else {
+				return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
+			}
 		}
 
 		public FormValidation doCheckToolOutputFiles(@QueryParameter final String value, @QueryParameter final String sourceAndBinaryFiles, @AncestorInPath AbstractProject project) {
+
+			if (project == null) {
+				return FormValidation.ok();
+			}
 
 			if (value.length() == 0 && sourceAndBinaryFiles.length() == 0) {
 
@@ -654,8 +660,6 @@ public class CodeDxPublisher extends Recorder {
 			ListBoxModel listBox = new ListBoxModel();
 
 			CodeDxClient client = buildClient(url, key, selfSignedCertificateFingerprint);
-
-
 
 			try {
 				final List<Project> projects = client.getProjects();

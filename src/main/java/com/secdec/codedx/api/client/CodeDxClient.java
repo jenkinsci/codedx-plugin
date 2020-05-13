@@ -50,7 +50,7 @@ import java.util.Map;
  */
 public class CodeDxClient {
 
-	private final String KEY_HEADER  = "API-Key";
+	private static final String KEY_HEADER  = "API-Key";
 
 	protected String key;
 	protected String url;
@@ -376,8 +376,8 @@ public class CodeDxClient {
 
 		builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
 
-		for(String artifactName : artifacts.keySet()){
-			builder.addPart("file[]", new InputStreamBody(artifacts.get(artifactName), artifactName));
+		for(Map.Entry<String, InputStream> artifact : artifacts.entrySet()){
+			builder.addPart("file[]", new InputStreamBody(artifact.getValue(), artifact.getKey()));
 		}
 
 		HttpEntity entity = builder.build();
