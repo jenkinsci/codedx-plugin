@@ -13,7 +13,7 @@ import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
  * @author ademartini This file is heavily derived from the sloccount-plugin (author: lordofthepigs)
  *
  */
-public class CodeDxResult implements Serializable{
+public class CodeDxResult {
 
 	/** Serial version UID. */
 	private static final long serialVersionUID = 0L;

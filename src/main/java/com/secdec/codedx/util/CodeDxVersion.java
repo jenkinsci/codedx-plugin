@@ -39,7 +39,7 @@ public final class CodeDxVersion implements Comparable<CodeDxVersion> {
 			String[] rawNumbers = matchedNumbers.split("\\.");
 			int[] numbers = new int[rawNumbers.length];
 			for(int i=0; i<rawNumbers.length; ++i){
-				numbers[i] = Integer.valueOf(rawNumbers[i]);
+				numbers[i] = Integer.parseInt(rawNumbers[i]);
 			}
 			return new CodeDxVersion(numbers);
 		} else {

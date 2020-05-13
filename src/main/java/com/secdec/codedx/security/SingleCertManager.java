@@ -17,7 +17,6 @@ import java.security.cert.Certificate;
  */
 public class SingleCertManager implements ExtraCertManager {
 
-	private Certificate tempCert = null;
 	private char[] password;
 	private KeyStore keyStore;
 
@@ -27,29 +26,22 @@ public class SingleCertManager implements ExtraCertManager {
 
 
 	public void addTemporaryCert(Certificate cert) {
-		tempCert = cert;
 	}
 
 	public void addPermanentCert(Certificate cert) throws IOException, GeneralSecurityException {
-		tempCert = null;
-
 		// create a keystore and put the cert in it
 		keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 		keyStore.load(null, password);
 		keyStore.setCertificateEntry("default", cert);
-
 	}
 
 	public void purgeTemporaryCerts() {
-		tempCert = null;
 	}
 
 	public void purgePermanentCerts() {
-
 	}
 
 	public void purgeAllCerts() {
-		tempCert = null;
 	}
 
 	public KeyStore asKeyStore() throws GeneralSecurityException {

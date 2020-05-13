@@ -49,7 +49,7 @@ public class Archiver {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public static FilePath Archive(FilePath workspace, String[] paths, String[] excludePaths, String prefix, final PrintStream logger) throws IOException, InterruptedException{
+	public static FilePath archive(FilePath workspace, String[] paths, String[] excludePaths, String prefix, final PrintStream logger) throws IOException, InterruptedException{
 
 		final Set<String> includeFiles = new HashSet<String>();
 		final Set<String> excludeFiles = new HashSet<String>();

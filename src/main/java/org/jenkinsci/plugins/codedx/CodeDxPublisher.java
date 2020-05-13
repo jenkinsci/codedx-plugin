@@ -22,7 +22,6 @@ import com.secdec.codedx.api.client.Job;
 import com.secdec.codedx.api.client.Project;
 import com.secdec.codedx.security.JenkinsSSLConnectionSocketFactoryFactory;
 import com.secdec.codedx.util.CodeDxVersion;
-import hudson.AbortException;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Extension;
@@ -64,7 +63,7 @@ import java.util.logging.Logger;
  *
  * @author anthonyd
  */
-public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serializable {
+public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private final String url;
 	private final String key;
@@ -217,7 +216,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep, Serial
 
 		buildOutput.println("Creating source/binary zip...");
 
-		FilePath sourceAndBinaryZip = Archiver.Archive(workspace,
+		FilePath sourceAndBinaryZip = Archiver.archive(workspace,
 				Util.commaSeparatedToArray(sourceAndBinaryFiles),
 				Util.commaSeparatedToArray(excludedSourceAndBinaryFiles),
 				"source", buildOutput);

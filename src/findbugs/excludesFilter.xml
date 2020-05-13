@@ -1,0 +1,76 @@
+<FindBugsFilter>
+	<!-- Warnings regarding exposed internal state - these are serialization classes with intentionally-exposed state -->
+	<Match>
+		<Class name="com.secdec.codedx.api.client.AnalysisRun" />
+	</Match>
+	<Match>
+		<Class name="com.secdec.codedx.api.client.Filter" />
+	</Match>
+	<Match>
+		<Class name="org.jenkinsci.plugins.codedx.AnalysisResultChecker" />
+		<Bug pattern="EI_EXPOSE_REP2" />
+	</Match>
+
+	<!-- Warnings regarding unwritten/unused fields - these are serialization classes -->
+	<Match>
+		<Class name="com.secdec.codedx.api.client.CodeDxClient$CodeDxVersionResponse" />
+	</Match>
+
+	<!-- Warnings about not overriding .Equals (these classes should be reference-compared, so default impl. should be ok) -->
+	<Match>
+		<Class name="org.jenkinsci.plugins.codedx.CodeDxAreaRenderer" />
+		<Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS" />
+	</Match>
+	<Match>
+		<Class name="org.jenkinsci.plugins.codedx.CodeDxDiffGroup" />
+		<Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS" />
+	</Match>
+	<Match>
+		<Class name="org.jenkinsci.plugins.codedx.CodeDxDiffSummary" />
+		<Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS" />
+	</Match>
+
+	<!-- Comparator doesn't need to be serializable since it's only used transiently -->
+	<Match>
+		<Class name="org.jenkinsci.plugins.codedx.CodeDxBuildAction$DiffGroupComparator" />
+		<Bug pattern="SE_COMPARATOR_SHOULD_BE_SERIALIZABLE" />
+	</Match>
+
+<!--	<Match>-->
+<!--		<Class name="com.foobar.ClassWithSomeBugsMatched" />-->
+<!--		<Bug code="DE,UrF,SIC" />-->
+<!--	</Match>-->
+
+<!--	&lt;!&ndash; Match all XYZ violations. &ndash;&gt;-->
+<!--	<Match>-->
+<!--		<Bug code="XYZ" />-->
+<!--	</Match>-->
+
+<!--	&lt;!&ndash; Match all doublecheck violations in these methods of "AnotherClass". &ndash;&gt;-->
+<!--	<Match>-->
+<!--		<Class name="com.foobar.AnotherClass" />-->
+<!--		<Or>-->
+<!--			<Method name="nonOverloadedMethod" />-->
+<!--			<Method name="frob" params="int,java.lang.String" returns="void" />-->
+<!--			<Method name="blat" params="" returns="boolean" />-->
+<!--		</Or>-->
+<!--		<Bug code="DC" />-->
+<!--	</Match>-->
+
+<!--	&lt;!&ndash; A method with a dead local store false positive (medium priority). &ndash;&gt;-->
+<!--	<Match>-->
+<!--		<Class name="com.foobar.MyClass" />-->
+<!--		<Method name="someMethod" />-->
+<!--		<Bug pattern="DLS_DEAD_LOCAL_STORE" />-->
+<!--		<Priority value="2" />-->
+<!--	</Match>-->
+
+<!--	&lt;!&ndash; All bugs in test classes, except for JUnit-specific bugs &ndash;&gt;-->
+<!--	<Match>-->
+<!--		<Class name="~.*\.*Test" />-->
+<!--		<Not>-->
+<!--			<Bug code="IJU" />-->
+<!--		</Not>-->
+<!--	</Match>-->
+
+</FindBugsFilter>

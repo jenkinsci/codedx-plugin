@@ -14,9 +14,7 @@ import org.kohsuke.stapler.StaplerProxy;
  *
  * @author ademartini This file is heavily derived from the sloccount-plugin (author: lordofthepigs)
  */
-public class CodeDxBuildAction implements Action, SimpleBuildStep.LastBuildAction, Serializable, StaplerProxy {
-	/** Serial version UID. */
-	private static final long serialVersionUID = 1L;
+public class CodeDxBuildAction implements Action, SimpleBuildStep.LastBuildAction, StaplerProxy {
 
 	public static final String URL_NAME = "codedxResult";
 
@@ -54,7 +52,7 @@ public class CodeDxBuildAction implements Action, SimpleBuildStep.LastBuildActio
 		}
 	}
 
-	private class DiffGroupComparator implements Comparator<CodeDxDiffGroup>{
+	private static class DiffGroupComparator implements Comparator<CodeDxDiffGroup>{
 
 		List<String> groupOrdering = new ArrayList<String>();
 
@@ -96,7 +94,7 @@ public class CodeDxBuildAction implements Action, SimpleBuildStep.LastBuildActio
 		iconMap.put("Unspecified", "/plugin/codedx/icons/unspecified.png");
 
 		return CodeDxDiffSummary.getDiffSummary(getPreviousSeverityStats(),
-				result.getStatistics("severity"), "Severity",new DiffGroupComparator(order),iconMap);
+				result.getStatistics("severity"), "Severity", new DiffGroupComparator(order),iconMap);
 	}
 
 	/**

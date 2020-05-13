@@ -25,9 +25,7 @@ import com.secdec.codedx.api.client.Filter;
  *
  * @author ademartini This file is heavily derived from the sloccount-plugin (author: lordofthepigs)
  */
-public class CodeDxProjectAction implements Action, Serializable {
-	/** Serial version UID. */
-	private static final long serialVersionUID = 0L;
+public class CodeDxProjectAction implements Action {
 
 	public static final String URL_NAME = "codedxResult";
 
