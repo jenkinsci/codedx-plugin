@@ -4,8 +4,8 @@
 	<parent>
 		<groupId>org.jenkins-ci.plugins</groupId>
 		<artifactId>plugin</artifactId>
-		<!-- 1.609.2 because of token-macro 1.12.1 -->
-		<version>1.642.3</version><!-- which version of Jenkins is this plugin built against? Users must have at least this Jenkins version to use this plugin. -->
+		<!-- Use the most recent parent POM with 1.x support -->
+		<version>2.37</version>
 		<relativePath />
 	</parent>
 
@@ -23,8 +23,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.6.1</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>1.7</source>
+					<target>1.7</target>
 					<compilerArgs>
 						<arg>-Xlint:deprecation,unchecked</arg>
 					</compilerArgs>
@@ -34,8 +34,10 @@
 	</build>
 
 	<properties>
-		<jenkins.version>2.150.3</jenkins.version>
-		<java.level>8</java.level>
+		<!-- which version of Jenkins is this plugin built against? Users must have at least this Jenkins version to use this plugin. -->
+		<!-- 1.642.3 is the minimum Jenkins version for pipelines support -->
+		<jenkins.version>1.642.3</jenkins.version>
+		<java.level>7</java.level>
 	</properties>
 
 	<scm>
@@ -106,17 +108,8 @@
 		<dependency>
 			<groupId>org.jenkins-ci.plugins</groupId>
 			<artifactId>token-macro</artifactId>
+			<!-- Minimum version for use in pipeline scripts -->
 			<version>2.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jenkins-ci.plugins.workflow</groupId>
-			<artifactId>workflow-step-api</artifactId>
-			<version>2.16</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jenkins-ci.plugins</groupId>
-			<artifactId>structs</artifactId>
-			<version>1.1</version>
 		</dependency>
 	</dependencies>
 </project>
