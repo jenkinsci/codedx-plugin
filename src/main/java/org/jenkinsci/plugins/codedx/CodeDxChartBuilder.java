@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.codedx;
 
+import hudson.model.AbstractBuild;
+import hudson.model.Build;
 import hudson.model.Run;
 import hudson.util.ChartUtil.NumberOnlyBuildLabel;
 import hudson.util.DataSetBuilder;
@@ -7,6 +9,8 @@ import hudson.util.ShiftedCategoryAxis;
 
 import java.awt.Color;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
@@ -134,6 +138,30 @@ public class CodeDxChartBuilder implements Serializable {
 		return allBuildActions;
 	}
 
+	/**
+	 * Generates a NumberOnlyBuildLabel by using the provided Run, if available. Otherwise will
+	 * fall back to using the provided AbstractBuild. Run is the current expected parameter, but
+	 * accept AbstractBuild if available from previous plugin version.
+	 */
+	private static NumberOnlyBuildLabel MakeBuildLabel(Run<?, ?> run, AbstractBuild<?, ?> build)
+	{
+		if (run != null) {
+			return new NumberOnlyBuildLabel(run);
+		} else if (build != null) {
+			// There's a constructor accepting an `AbstractBuild` but I can't use it without
+			// getting ambiguous method errors. Grab the constructor and call it explicitly
+			// instead.
+			Class<?> cls = NumberOnlyBuildLabel.class;
+			try {
+				Constructor<?> ctor = cls.getConstructor(AbstractBuild.class);
+				return (NumberOnlyBuildLabel)ctor.newInstance(build);
+			} catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+
 	private static CategoryDataset buildDataset(CodeDxBuildAction lastAction,
 			int numBuildsInGraph, String statisticsName){
 		DataSetBuilder<String, NumberOnlyBuildLabel> builder = new DataSetBuilder<String, NumberOnlyBuildLabel>();
@@ -150,7 +178,8 @@ public class CodeDxChartBuilder implements Serializable {
 		}
 
 		for (CodeDxBuildAction action : allBuildActions) {
-			NumberOnlyBuildLabel buildLabel = new NumberOnlyBuildLabel((Run<?, ?>)action.getRun());
+			NumberOnlyBuildLabel buildLabel = MakeBuildLabel(action.getRun(), action.getBuild());
+
 			CodeDxResult result = action.getResult();
 
 			Set<String> remainingGroups = new HashSet<>(knownGroups);

@@ -5,6 +5,7 @@ import hudson.model.Action;
 import java.io.Serializable;
 import java.util.*;
 
+import hudson.model.Build;
 import hudson.model.Run;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
@@ -17,6 +18,9 @@ import org.kohsuke.stapler.StaplerProxy;
 public class CodeDxBuildAction implements Action, SimpleBuildStep.LastBuildAction, StaplerProxy {
 
 	public static final String URL_NAME = "codedxResult";
+
+	// Carry-over from previous plugin version
+	private Build<?, ?> build;
 
 	private final Run<?,?> run;
 	private final CodeDxResult result;
@@ -158,11 +162,18 @@ public class CodeDxBuildAction implements Action, SimpleBuildStep.LastBuildActio
 	 * @return the action or null
 	 */
 	CodeDxBuildAction getPreviousAction(){
-		if(this.run == null){
+		Run<?, ?> currentRun = null;
+		if (this.run != null) {
+			currentRun = this.run;
+		} else if (this.build != null) {
+			currentRun = this.build;
+		}
+
+		if(currentRun == null){
 			return null;
 		}
 
-		Run<?,?> previousBuild = this.run.getPreviousBuild();
+		Run<?,?> previousBuild = currentRun.getPreviousBuild();
 
 		while(previousBuild != null){
 			CodeDxBuildAction action = previousBuild
@@ -184,6 +195,10 @@ public class CodeDxBuildAction implements Action, SimpleBuildStep.LastBuildActio
 
 	public Run<?,?> getRun(){
 		return this.run;
+	}
+
+	public Build<?, ?> getBuild() {
+		return this.build;
 	}
 
 	public Object getTarget() {
