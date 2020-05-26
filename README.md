@@ -1,106 +1,46 @@
-codedx-jenkins-plugin
-=====================
+# Code Dx Jenkins Plugin
 
-A Code Dx plugin for Jenkins
+Allows Jenkins to push source and build artifacts to [Code
+Dx](http://codedx.com/) and display the aggregated results of its [full
+suite](http://codedx.com/supported-tools/) of analysis tools.
 
-To compile and run use the following commands in the root directory:
+#### Notes
 
-**Windows**
+- This plugin is maintained by Code Dx, Inc.
+- Plugin version 3.0.0 supports Code Dx 2.0+ (any edition)
+- Plugin version 3.0.0 and later support Pipelines projects as well as Freestyle
 
-```bat
-set MAVEN_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n
-mvn hpi:run
-```
+## Features
 
-**Mac/Linux**
-```sh
-export MAVEN_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n"
-mvn hpi:run
-```
-Mac users should ensure that their JAVA_HOME environment variable points to a Java 7 version of the JDK. If this isn't done explicitly, the mvn script will use the directory pointed to by the `/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK` symlink, which is the latest Apple JDK installed and isn't overwritten by Oracle's JDK installer.
+-   Upload your source, binaries, and/or scan file(s) from your Jenkins
+    jobs to your Code Dx installation easily
+-   Scan your source and binaries for potential vulnerabilities and
+    quality issues using Code Dx
+-   Code Dx is an application vulnerability correlation and management
+    system that supports C/C++, C\#, Java/JSP, Javascript, PHP, Python,
+    Ruby on Rails, Scala, and Visual Basic .NET
+-   See Code Dx finding trends right in Jenkins
+-   Prevent serious issues from slipping through the cracks by
+    configuring Jenkins to fail your builds with customizable Code Dx
+    findings criteria
+-   For more information see the [Code Dx
+    overview](http://codedx.com/product-overview/)
 
-As Code Dx also runs on port 8080 by default, you can adjust the port by appending the argument `-Djetty.port=PORT` to have Jenkins start on a port of your choosing.
+![](doc/results-tables.png)
 
-To package the plugin run:
+![](doc/trend-graphs.png)
 
-```sh
-mvn package
+## Requirements
 
-```
+A [Code Dx server](http://www.codedx.com/) deployment with an API Key
+created from the Code Dx admin page.
 
-To install the package, use the Jenkins web interface.
+## Documentation
 
-**Releasing to Jenkins plugin repository (for end-users to install easily within Jenkins)**
+Consult the latest [Code Dx online
+documentation](http://codedx.com/Documentation/PluginsGuide.html#Jenkins) for
+instructions on how to configure your build.
 
-I had some difficulties releasing this plugin.  Below are the steps I ended up needing to take (on windows).  
+## Contact
 
-* Sign up for a Jenkins account (https://jenkins-ci.org/account/signup).   
-* Have git bash installed.  You will want to do the release using git bash. 
-* Have the code code checked out and ready to be released.
-* Edit your Maven settings.xml file (in C:\users\YOUR_USERNAME\.m2\ on Windows) for  so that it contains the following:
-
-
-```xml
-<settings>
-  <pluginGroups>
-    <pluginGroup>org.jenkins-ci.tools</pluginGroup>
-  </pluginGroups>
-
-  <profiles>
-    <!-- Give access to Jenkins plugins -->
-    <profile>
-      <id>jenkins</id>
-      <activation>
-        <activeByDefault>true</activeByDefault> <!-- change this to false, if you don't like to have it on per default -->
-      </activation>
-      <repositories>
-        <repository>
-          <id>repo.jenkins-ci.org</id>
-          <url>http://repo.jenkins-ci.org/public/</url>
-        </repository>
-      </repositories>
-      <pluginRepositories>
-        <pluginRepository>
-          <id>repo.jenkins-ci.org</id>
-          <url>http://repo.jenkins-ci.org/public/</url>
-        </pluginRepository>
-      </pluginRepositories>
-    </profile>
-  </profiles>
-  <mirrors>
-    <mirror>
-      <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
-      <mirrorOf>m.g.o-public</mirrorOf>
-    </mirror>
-  </mirrors>
-  <servers>
-    <server>
-      <id>maven.jenkins-ci.org</id> <!-- For parent 1.397 or newer; before this use id java.net-m2-repository -->
-      <username>JENKINS_USERNAME</username>
-      <password>JENKINS_PASSWORD</password>
-    </server>
-  </servers>
-</settings>
-  
-  ```
-  
-  
-* Follow the instructions here: https://help.github.com/articles/generating-ssh-keys/ to generate an SSH key and add to github (if you don't already have this in place).  Make sure you have an ssh agent started and thet you add your key.
-* Run the following commands to prepare and perform the release.  You will be prompted about the new version number.
-
-```
-mvn org.apache.maven.plugins:maven-release-plugin:2.5:prepare
-mvn org.apache.maven.plugins:maven-release-plugin:2.5:perform
-
-```
-
-It is important to use 2.5 because some prior versions of the maven-release-plugin have issues that cause things to fail silently.
-
-Check if the files were pushed here:
-
-http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/codedx/
-
-Eventually the information will be published to the JSON catalog here:
-
-https://ci.jenkins-ci.org/job/infra_update_center/
+<support@codedx.com>

@@ -1,3 +1,17 @@
+## Code Dx Jenkins Plugin 3.0.0 `Released 5/26/2020`
+
+### Changes
+- Minimum jenkins version raised to 2.200 (or supported LTS release) as part of update to parent POM 4.2
+- Added support for use in Pipelines projects via the `step` metastep
+
+### Fixes
+- Fixed graphs skipping the oldest build in its history
+- Trend graphs now allow unrecognized finding statuses with a randomly-generated chart color
+
+### Notes
+- New plugin is compatible with data from previous versions, but pre-3.x plugin versions will not be able to read from 3.x versions
+- If upgrading to 3.0.0 from an old version, graphs for a project will be unavailable (running the build again will fix the issue and allow displaying older data)
+
 ##Code Dx Jenkins Plugin 1.4.0 `Released 6/29/2015`
 
 ###Additions
