@@ -12,7 +12,7 @@
 	<groupId>org.jenkins-ci.plugins</groupId>
 	<artifactId>codedx</artifactId>
 	<name>Code Dx Plugin</name>
-	<version>3.0.0</version>
+	<version>3.0.1-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 	<url>https://wiki.jenkins-ci.org/display/JENKINS/Code+Dx+Plugin</url>
 
@@ -44,7 +44,7 @@
 		<connection>scm:git:ssh://github.com/jenkinsci/codedx-plugin.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/jenkinsci/codedx-plugin.git</developerConnection>
 		<url>https://github.com/jenkinsci/codedx-plugin</url>
-		<tag>codedx-3.0.0</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<developers>
