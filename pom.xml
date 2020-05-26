@@ -14,7 +14,7 @@
 	<name>Code Dx Plugin</name>
 	<version>3.0.1-SNAPSHOT</version>
 	<packaging>hpi</packaging>
-	<url>https://wiki.jenkins-ci.org/display/JENKINS/Code+Dx+Plugin</url>
+	<url>https://github.com/jenkinsci/codedx-plugin</url>
 
 	<build>
 		<plugins>
