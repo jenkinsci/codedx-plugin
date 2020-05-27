@@ -7,7 +7,6 @@ suite](http://codedx.com/supported-tools/) of analysis tools.
 #### Notes
 
 - This plugin is maintained by Code Dx, Inc.
-- Plugin version 3.0.0 supports Code Dx 2.0+ (any edition)
 - Plugin version 3.0.0 and later support Pipelines projects as well as Freestyle
 
 ## Features
