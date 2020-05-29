@@ -11,6 +11,22 @@ pipeline {
 				sh "mvn clean package"
 				
 				archiveArtifacts artifacts: 'target/*.hpi', fingerprint: true, onlyIfSuccessful: true
+
+				withCredentials([
+					string(credentialsId: 'codedx-internal-api-key', variable: 'API_KEY'),
+					string(credentialsId: 'codedx-internal-fingerprint', variable: 'CERT_FINGERPRINT'),
+					string(credentialsId: 'codedx-internal-url', variable: 'CODEDX_URL')
+				]) {
+					step([
+						$class: 'CodeDxPublisher',
+						analysisName: 'Build #${BUILD_NUMBER}',
+						key: "$API_KEY",
+						projectId: '48',
+						selfSignedCertificateFingerprint: "$CERT_FINGERPRINT",
+						sourceAndBinaryFiles: '**',
+						url: "$CODEDX_URL"
+					])
+				}
 			}
 			
 			post {
