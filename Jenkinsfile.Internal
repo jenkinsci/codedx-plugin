@@ -23,7 +23,8 @@ pipeline {
 						key: "$API_KEY",
 						projectId: '48',
 						selfSignedCertificateFingerprint: "$CERT_FINGERPRINT",
-						sourceAndBinaryFiles: 'src/**,target/codedx.jar',
+						// target/codedx/** */ includes codedx.jar as well as dependencies
+						sourceAndBinaryFiles: 'src/**,target/codedx/**',
 						url: "$CODEDX_URL"
 					])
 				}
