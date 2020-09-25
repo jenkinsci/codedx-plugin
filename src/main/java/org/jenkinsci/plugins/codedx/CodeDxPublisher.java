@@ -223,14 +223,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 
 		if (sourceAndBinaryZip != null) {
-
-			try {
-				buildOutput.println("Adding source/binary zip...");
-				toSend.put("Jenkins-SourceAndBinary", sourceAndBinaryZip.read());
-			} catch (IOException e) {
-				buildOutput.println("Failed to add source/binary zip.");
-			}
-
+			buildOutput.println("Adding source/binary zip...");
+			toSend.put("Jenkins-SourceAndBinary", new DeferredFilePathInputStream(sourceAndBinaryZip));
 		} else {
 			buildOutput.println("No matching source/binary files.");
 		}
@@ -242,12 +236,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				FilePath path = workspace.child(file);
 
 				if (path.exists()) {
-					try {
-						buildOutput.println("Add tool output file " + path.getRemote() + " to request.");
-						toSend.put(path.getName(), path.read());
-					} catch (IOException e) {
-						buildOutput.println("Failed to add tool output file: " + path);
-					}
+					buildOutput.println("Add tool output file " + path.getRemote() + " to request.");
+					toSend.put(path.getName(), new DeferredFilePathInputStream(path));
 				} else {
 					buildOutput.println("Path specified but could not be found: " + path);
 				}
