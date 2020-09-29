@@ -418,7 +418,11 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 								analysisResultConfiguration.isUnstableOnlyNew(),
 								projectIdInt,
 								buildOutput);
-						build.setResult(checker.checkResult());
+						Result buildResult = checker.checkResult();
+						build.setResult(buildResult);
+						if (buildResult.isWorseThan(Result.SUCCESS)) {
+							throw new IOException("Build result is non-success, terminating build");
+						}
 					} catch (CodeDxClientException e) {
 						throw new IOException("Fatal Error! There was a problem retrieving analysis results.", e);
 					}
