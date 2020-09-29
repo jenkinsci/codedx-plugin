@@ -224,7 +224,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 		if (sourceAndBinaryZip != null) {
 			buildOutput.println("Adding source/binary zip...");
-			toSend.put("Jenkins-SourceAndBinary", new DeferredFilePathInputStream(sourceAndBinaryZip));
+			toSend.put("Jenkins-SourceAndBinary.zip", new DeferredFilePathInputStream(sourceAndBinaryZip));
 		} else {
 			buildOutput.println("No matching source/binary files.");
 		}
