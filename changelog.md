@@ -1,3 +1,12 @@
+## Code Dx Jenkins plugin 3.0.2 `Released 11/10/2020`
+
+### Changes
+- Adds `.zip` extension to source+binary package uploaded to Code Dx
+
+### Fixes
+- *(Major)* Fixed a bug causing the plugin to hang when uploading files to Code Dx. This affects users uploading multiple files using the plugin _and_ using a distributed build system (such that the plugin runs on the jenkins master node, but the files being uploaded were on a worker node)
+- When "Wait for analysis Results" is enabled with "Build Failure" conditions assigned in a pipeline project, the plugin will now properly fail the job (whereas previously the build _result_ was set to "failure", but the build was not terminated)
+
 ## Code Dx Jenkins Plugin 3.0.0 `Released 5/26/2020`
 
 ### Changes
