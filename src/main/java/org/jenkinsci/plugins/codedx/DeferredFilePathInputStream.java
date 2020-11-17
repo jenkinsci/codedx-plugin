@@ -26,12 +26,20 @@ public class DeferredFilePathInputStream extends InputStream {
 	}
 
 	@Override
+	public void close() throws IOException {
+		if (this.is != null) {
+			this.is.close();
+			this.is = null;
+		}
+	}
+
+	@Override
 	public int read(byte[] b) throws IOException {
 		initStream();
 
 		int numRead = this.is.read(b);
-		if (numRead < b.length) {
-			this.is.close();
+		if (numRead < 0) {
+			close();
 		}
 
 		return numRead;
@@ -42,8 +50,8 @@ public class DeferredFilePathInputStream extends InputStream {
 		initStream();
 
 		int numRead = this.is.read(b, off, len);
-		if (numRead < len) {
-			this.is.close();
+		if (numRead < 0) {
+			close();
 		}
 
 		return numRead;
