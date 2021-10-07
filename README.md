@@ -37,7 +37,7 @@ created from the Code Dx admin page.
 ## Documentation
 
 Consult the latest [Code Dx online
-documentation](http://codedx.com/Documentation/PluginsGuide.html#Jenkins) for
+documentation](https://community.synopsys.com/s/document-item?bundleId=codedx&topicId=plugins_guide%2FJenkins%2Foverview.html&_LANG=enus) for
 instructions on how to configure your build.
 
 ## Contact
