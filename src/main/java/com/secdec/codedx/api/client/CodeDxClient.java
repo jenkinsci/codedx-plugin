@@ -367,8 +367,11 @@ public class CodeDxClient {
 	 * @throws CodeDxClientException
 	 *
 	 */
-	public StartAnalysisResponse startAnalysis(int projectId, Map<String, InputStream> artifacts) throws IOException, CodeDxClientException {
+	public StartAnalysisResponse startAnalysis(int projectId, Boolean includeGitSource, Map<String, InputStream> artifacts) throws IOException, CodeDxClientException {
 		String path = "projects/" + projectId + "/analysis";
+		if (includeGitSource) {
+			path += "?includeGitSource=true";
+		}
 		HttpPost postRequest = new HttpPost(url + path);
 		postRequest.addHeader(KEY_HEADER, key);
 

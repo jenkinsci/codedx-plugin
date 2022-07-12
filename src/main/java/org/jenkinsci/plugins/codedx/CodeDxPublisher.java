@@ -78,6 +78,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private String analysisName;
 
+	private Boolean includeGitSource;
+
 	// Contains the fields applicable when the user chooses to have Jenkins wait for
 	// analysis runs to complete.
 	private AnalysisResultConfiguration analysisResultConfiguration;
@@ -110,6 +112,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		this.toolOutputFiles = "";
 		this.analysisResultConfiguration = null;
 		this.selfSignedCertificateFingerprint = null;
+
+		this.includeGitSource = false;
 
 		setupClient();
 	}
@@ -180,6 +184,15 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		setupClient();
 	}
 
+	public Boolean isIncludeGitSource() {
+		return this.includeGitSource;
+	}
+
+	@DataBoundSetter
+	public void setIncludeGitSource(Boolean include) {
+		this.includeGitSource = include;
+	}
+
 	public String getAnalysisName(){ return analysisName; }
 
 	private String getLatestAnalysisUrl() {
@@ -244,7 +257,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			}
 		}
 
-		if (toSend.size() > 0) {
+		if (toSend.size() > 0 || includeGitSource) {
 
 			final CodeDxClient repeatingClient = new CodeDxRepeatingClient(this.client, buildOutput);
 
@@ -259,12 +272,16 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			try {
 				buildOutput.println("Submitting files to Code Dx for analysis");
 
+				if (includeGitSource) {
+					buildOutput.println("Git Source fetch is enabled");
+				}
+
 				int projectIdInt = Integer.parseInt(projectId);
 
 				StartAnalysisResponse response;
 
 				try {
-					response = repeatingClient.startAnalysis(Integer.parseInt(projectId), toSend);
+					response = repeatingClient.startAnalysis(Integer.parseInt(projectId), includeGitSource, toSend);
 				} catch (CodeDxClientException e) {
 					String errorSpecificMessage;
 
@@ -305,8 +322,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 				// Set the analysis name on the server
 				if(response != null){
-					if(analysisName == null || analysisName.length() == 0){
+					if(analysisName == null || analysisName.length() == 0) {
 						buildOutput.println("No 'Analysis Name' was chosen.");
+					} else if (!response.hasAnalysisId()) {
+						buildOutput.println("Code Dx did not provide an analysis ID - the 'Analysis Name' will not be applied.");
 					} else {
 						buildOutput.println("Analysis Name (raw): " + analysisName);
 						String expandedAnalysisName = "";

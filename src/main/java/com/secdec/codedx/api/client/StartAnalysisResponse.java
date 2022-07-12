@@ -28,6 +28,15 @@ public class StartAnalysisResponse {
 	private int analysisId;
 	private String jobId;
 
+	StartAnalysisResponse() {
+		analysisId = -1;
+		jobId = null;
+	}
+
+	public Boolean hasAnalysisId() {
+		return analysisId != -1;
+	}
+
 	public int getAnalysisId(){ return analysisId; }
 	public void setAnalysisId(int analysisId) { this.analysisId = analysisId; }
 
