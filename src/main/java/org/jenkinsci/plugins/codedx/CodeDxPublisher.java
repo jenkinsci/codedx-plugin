@@ -431,7 +431,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					buildOutput.println("Analysis status: " + status);
 				}
 			} catch (NumberFormatException e) {
-				throw new AbortException("Invalid project Id");
+				throw new IOException("Invalid project Id", e);
 			} finally {
 				if(sourceAndBinaryZip != null){
 					sourceAndBinaryZip.delete();
