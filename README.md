@@ -42,4 +42,4 @@ instructions on how to configure your build.
 
 ## Contact
 
-<support@codedx.com>
+[Visit the Synopsys Community Forums for support.](https://community.synopsys.com/s/)
