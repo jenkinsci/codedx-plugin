@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -155,6 +156,25 @@ public class CodeDxClient {
 		);
 	}
 
+	public List<AnalysisInfo> getAnalyses(int projectId) throws CodeDxClientException, IOException {
+		return doHttpRequest(
+			new HttpGet(),
+			"projects/" + projectId + "/analyses",
+			false,
+			new TypeToken<ArrayList<AnalysisInfo>>(){}.getType(),
+			null
+		);
+	}
+
+	public List<IncompleteWork> getIncompleteWork(int projectId) throws CodeDxClientException, IOException {
+		return doHttpRequest(
+			new HttpGet(),
+			"projects/" + projectId + "/incomplete-work",
+			false,
+			new TypeToken<ArrayList<IncompleteWork>>(){}.getType(),
+			null
+		);
+	}
 
 	/**
 	 * Retrieves all Triage statuses for a given project.

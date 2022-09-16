@@ -54,6 +54,7 @@ import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+import java.time.Instant;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -269,6 +270,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				throw new IOException("Failed to get Code Dx version; aborting build.", e);
 			}
 
+			Instant analysisQueueTimestamp = Instant.now();
 			try {
 				buildOutput.println("Submitting files to Code Dx for analysis");
 
@@ -319,6 +321,47 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				}
 
 				buildOutput.println("Code Dx accepted files for analysis");
+
+				if (includeGitSource) {
+					// analysis with Git source will first queue a Git fetch job before beginning
+					// the real analysis. monitor the provided job until it completes, and fetch
+					// the ID of the analysis which matches the given inputs
+
+					String status = null;
+					String oldStatus = null;
+					try {
+						do {
+							Thread.sleep(3000);
+							oldStatus = status;
+							if(response != null) {
+								status = repeatingClient.getJobStatus(response.getJobId());
+							}
+							if (status != null && !status.equals(oldStatus)) {
+								if (Job.QUEUED.equals(status)) {
+									buildOutput.println("Git fetch is queued");
+								} else if (Job.RUNNING.equals(status)) {
+									buildOutput.println("Git fetch is running");
+								}
+							}
+						} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
+					} catch (CodeDxClientException e) {
+						throw new IOException("Fatal Error! There was a problem querying for Git fetch job status.", e);
+					}
+
+					try {
+						Set<String> expectedInputs = toSend.keySet();
+						List<AnalysisInfo> projectAnalyses = repeatingClient.getAnalyses(projectIdInt);
+						AnalysisInfo matchedAnalysis = null;
+						for (AnalysisInfo info : projectAnalyses) {
+							if (info.getCreationTimeInstant().isBefore(analysisQueueTimestamp)) continue;
+
+
+						}
+
+					} catch (CodeDxClientException e) {
+						throw new IOException("Fatal Error! There was a problem while finding the analysis ID for the finished Git fetch job.", e);
+					}
+				}
 
 				// Set the analysis name on the server
 				if(response != null){
