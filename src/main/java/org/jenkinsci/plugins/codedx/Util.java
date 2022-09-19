@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2014 Applied Visions
+ * © 2022 Synopsys, Inc. All rights reserved worldwide.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
