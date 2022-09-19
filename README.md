@@ -1,8 +1,8 @@
 # Code Dx Jenkins Plugin
 
 Allows Jenkins to push source and build artifacts to [Code
-Dx](http://codedx.com/) and display the aggregated results of its [full
-suite](http://codedx.com/supported-tools/) of analysis tools.
+Dx](https://www.synopsys.com/software-integrity/code-dx.html) and display the aggregated results of its [full
+suite](https://community.synopsys.com/s/document-item?bundleId=codedx&topicId=user_guide%2FAnalysis%2Fimporting-scan-results.html&_LANG=enus) of analysis tools.
 
 #### Notes
 
@@ -22,8 +22,6 @@ suite](http://codedx.com/supported-tools/) of analysis tools.
 -   Prevent serious issues from slipping through the cracks by
     configuring Jenkins to fail your builds with customizable Code Dx
     findings criteria
--   For more information see the [Code Dx
-    overview](http://codedx.com/product-overview/)
 
 ![](doc/results-tables.png)
 
@@ -31,7 +29,7 @@ suite](http://codedx.com/supported-tools/) of analysis tools.
 
 ## Requirements
 
-A [Code Dx server](http://www.codedx.com/) deployment with an API Key
+A [Code Dx server](https://www.synopsys.com/software-integrity/code-dx.html) deployment with an API Key
 created from the Code Dx admin page.
 
 ## Documentation
