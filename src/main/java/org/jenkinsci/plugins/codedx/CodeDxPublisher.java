@@ -22,6 +22,7 @@ import com.secdec.codedx.api.client.Job;
 import com.secdec.codedx.api.client.Project;
 import com.secdec.codedx.security.JenkinsSSLConnectionSocketFactoryFactory;
 import com.secdec.codedx.util.CodeDxVersion;
+import hudson.AbortException;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Extension;
@@ -293,7 +294,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 						String.format("Response Content: %s", e.getResponseContent()) + '\n' +
 						Util.getStackTrace(e);
 
-					throw new IOException(message);
+					throw new AbortException(message);
 				} finally {
 					// close streams after we're done sending them
 					for(Map.Entry<String, InputStream> entry : toSend.entrySet()){
@@ -421,7 +422,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 						Result buildResult = checker.checkResult();
 						build.setResult(buildResult);
 						if (buildResult.isWorseThan(Result.SUCCESS)) {
-							throw new IOException("Build result is non-success, terminating build");
+							throw new AbortException("Build result is non-success, terminating build");
 						}
 					} catch (CodeDxClientException e) {
 						throw new IOException("Fatal Error! There was a problem retrieving analysis results.", e);
@@ -430,14 +431,14 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					buildOutput.println("Analysis status: " + status);
 				}
 			} catch (NumberFormatException e) {
-				throw new IOException("Invalid project Id");
+				throw new IOException("Invalid project Id", e);
 			} finally {
 				if(sourceAndBinaryZip != null){
 					sourceAndBinaryZip.delete();
 				}
 			}
 		} else {
-			throw new IOException("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
+			throw new AbortException("Nothing to send, this doesn't seem right! Please check your 'Code Dx > Source and Binary Files' configuration.");
 		}
 	}
 
