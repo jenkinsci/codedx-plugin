@@ -47,6 +47,8 @@ public final class CodeDxVersion implements Comparable<CodeDxVersion> {
 	/** First version that supports the "analysis names" feature. */
 	public final static CodeDxVersion MIN_FOR_ANALYSIS_NAMES = fromString("2.4.0");
 
+	public final static CodeDxVersion MIN_FOR_BRANCHING = fromString("2022.4.0");
+
 	public static CodeDxVersion fromString(String version){
 		// format is expected to be "x(.y)*-abc", and we want the x.y.z part
 		Pattern versionRegex = Pattern.compile("^(\\d+(?:\\.\\d+)*).*");

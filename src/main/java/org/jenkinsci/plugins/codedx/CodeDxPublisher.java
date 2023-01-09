@@ -87,6 +87,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private String selfSignedCertificateFingerprint;
 
+	private String targetBranchName, baseBranchName;
+
 	private final static Logger logger = Logger.getLogger(CodeDxPublisher.class.getName());
 
 	/**
@@ -111,6 +113,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		this.toolOutputFiles = "";
 		this.analysisResultConfiguration = null;
 		this.selfSignedCertificateFingerprint = null;
+		this.targetBranchName = null;
+		this.baseBranchName = null;
 
 		setupClient();
 	}
@@ -192,6 +196,30 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		}
 	}
 
+	public String getTargetBranchName() {
+		return targetBranchName;
+	}
+
+	@DataBoundSetter
+	public void setTargetBranchName(String targetBranchName) {
+		if (targetBranchName != null && targetBranchName.length() > 0)
+			this.targetBranchName = targetBranchName.trim();
+		else
+			this.targetBranchName = null;
+	}
+
+	public String getBaseBranchName() {
+		return baseBranchName;
+	}
+
+	@DataBoundSetter
+	public void setBaseBranchName(String baseBranchName) {
+		if (baseBranchName != null && baseBranchName.length() > 0)
+			this.baseBranchName = baseBranchName.trim();
+		else
+			this.baseBranchName = null;
+	}
+
 	@Override
 	public void perform(
 			final Run<?, ?> build,
@@ -257,6 +285,62 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				throw new IOException("Failed to get Code Dx version; aborting build.", e);
 			}
 
+			String effectiveTargetBranch = null, effectiveBaseBranch = null;
+
+			if (targetBranchName != null) {
+				if (cdxVersion.compareTo(CodeDxVersion.MIN_FOR_BRANCHING) < 0) {
+					throw new AbortException(
+						"The connected Code Dx server with version " + cdxVersion + " does not support project branches. " +
+						"The minimum required version is " + CodeDxVersion.MIN_FOR_BRANCHING + ". Remove " +
+						"the target branch name or upgrade to a more recent version of Code Dx."
+					);
+				}
+
+				if (baseBranchName == null) {
+					throw new AbortException("A parent branch must be specified when using a target branch");
+				}
+
+				try {
+					effectiveTargetBranch = TokenMacro.expandAll(build, workspace, listener, targetBranchName);
+				} catch (MacroEvaluationException e) {
+					buildOutput.println("Macro expansion for target branch failed, falling back to default behavior");
+					buildOutput.println(e);
+					effectiveTargetBranch = build.getEnvironment(listener).expand(targetBranchName);
+				}
+
+				try {
+					effectiveBaseBranch = TokenMacro.expandAll(build, workspace, listener, baseBranchName);
+				} catch (MacroEvaluationException e) {
+					buildOutput.println("Macro expansion for base branch failed, falling back to default behavior");
+					buildOutput.println(e);
+					effectiveBaseBranch = build.getEnvironment(listener).expand(baseBranchName);
+				}
+
+				buildOutput.println("Validating base branch selection...");
+				List<Branch> availableBranches;
+				try {
+					availableBranches = repeatingClient.getProjectBranches(projectId);
+				} catch (CodeDxClientException e) {
+					throw new IOException("An error occurred when fetching available branches for project " + projectId, e);
+				}
+
+				boolean baseBranchExists = false;
+				for (Branch branch : availableBranches) {
+					if (branch.getName().equals(baseBranchName)) {
+						baseBranchExists = true;
+						break;
+					}
+				}
+
+				if (!baseBranchExists) {
+					throw new AbortException("The specified parent branch does not exist: " + baseBranchName);
+				}
+			}
+
+			if (effectiveTargetBranch != null) {
+				buildOutput.println("Code Dx branch will be set to " + effectiveTargetBranch + " with base branch " + effectiveBaseBranch);
+			}
+
 			try {
 				buildOutput.println("Submitting files to Code Dx for analysis");
 
@@ -265,7 +349,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				StartAnalysisResponse response;
 
 				try {
-					response = repeatingClient.startAnalysis(Integer.parseInt(projectId), toSend);
+					response = repeatingClient.startAnalysis(Integer.parseInt(projectId), effectiveBaseBranch, effectiveTargetBranch, toSend);
 				} catch (CodeDxClientException e) {
 					String errorSpecificMessage;
 

@@ -298,6 +298,16 @@ public class CodeDxClient {
 		public String date;
 	}
 
+	public List<Branch> getProjectBranches(String projectId) throws IOException, CodeDxClientException {
+		return doHttpRequest(
+			new HttpGet(),
+			"projects/" + projectId + "/branches",
+			true,
+			new TypeToken<List<Branch>>(){}.getType(),
+			null
+		);
+	}
+
 	/**
 	 * Perform an HttpRequest to the given api path, with an optional request body, and parse the response
 	 * @param request Generally a new `HttpGet`, `HttpPost`, or `HttpPut`
@@ -367,8 +377,17 @@ public class CodeDxClient {
 	 * @throws CodeDxClientException
 	 *
 	 */
-	public StartAnalysisResponse startAnalysis(int projectId, Map<String, InputStream> artifacts) throws IOException, CodeDxClientException {
-		String path = "projects/" + projectId + "/analysis";
+	public StartAnalysisResponse startAnalysis(int projectId, String parentBranchName, String targetBranchName, Map<String, InputStream> artifacts) throws IOException, CodeDxClientException {
+		String projectSpecifier = Integer.toString(projectId);
+		if (parentBranchName != null && parentBranchName.length() > 0) {
+			// (parent branch is pulled from project context, will use default branch if not set)
+			projectSpecifier += ";branch=" + parentBranchName;
+		}
+
+		String path = "projects/" + projectSpecifier + "/analysis";
+		if (targetBranchName != null && targetBranchName.length() > 0) {
+			path += "?branchName=" + targetBranchName;
+		}
 		HttpPost postRequest = new HttpPost(url + path);
 		postRequest.addHeader(KEY_HEADER, key);
 
