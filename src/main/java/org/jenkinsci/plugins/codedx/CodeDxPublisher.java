@@ -202,8 +202,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	@DataBoundSetter
 	public void setTargetBranchName(String targetBranchName) {
+		if (targetBranchName != null) targetBranchName = targetBranchName.trim();
+
 		if (targetBranchName != null && targetBranchName.length() > 0)
-			this.targetBranchName = targetBranchName.trim();
+			this.targetBranchName = targetBranchName;
 		else
 			this.targetBranchName = null;
 	}
@@ -214,8 +216,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	@DataBoundSetter
 	public void setBaseBranchName(String baseBranchName) {
+		if (baseBranchName != null) baseBranchName = baseBranchName.trim();
+
 		if (baseBranchName != null && baseBranchName.length() > 0)
-			this.baseBranchName = baseBranchName.trim();
+			this.baseBranchName = baseBranchName;
 		else
 			this.baseBranchName = null;
 	}
@@ -296,10 +300,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					);
 				}
 
-				if (baseBranchName == null) {
-					throw new AbortException("A parent branch must be specified when using a target branch");
-				}
-
 				try {
 					effectiveTargetBranch = TokenMacro.expandAll(build, workspace, listener, targetBranchName);
 				} catch (MacroEvaluationException e) {
@@ -309,7 +309,9 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				}
 
 				try {
-					effectiveBaseBranch = TokenMacro.expandAll(build, workspace, listener, baseBranchName);
+					if (baseBranchName != null) {
+						effectiveBaseBranch = TokenMacro.expandAll(build, workspace, listener, baseBranchName);
+					}
 				} catch (MacroEvaluationException e) {
 					buildOutput.println("Macro expansion for base branch failed, falling back to default behavior");
 					buildOutput.println(e);
@@ -324,21 +326,34 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					throw new IOException("An error occurred when fetching available branches for project " + projectId, e);
 				}
 
+				boolean targetBranchExists = false;
 				boolean baseBranchExists = false;
 				for (Branch branch : availableBranches) {
-					if (branch.getName().equals(baseBranchName)) {
+					if (branch.getName().equals(effectiveBaseBranch)) {
 						baseBranchExists = true;
-						break;
+					} else if (branch.getName().equals(effectiveTargetBranch)) {
+						targetBranchExists = true;
 					}
 				}
+				if (targetBranchExists) {
+					buildOutput.println("Using existing Code Dx branch: " + effectiveTargetBranch);
+					// not necessary, base branch is currently ignored in the backend if the target
+					// branch already exists. just setting to null to safeguard in case of future changes
+					effectiveBaseBranch = null;
+				} if (!targetBranchExists) {
+					if (effectiveBaseBranch == null) {
+						throw new AbortException("A parent branch must be specified when using a target branch");
+					}
 
-				if (!baseBranchExists) {
-					throw new AbortException("The specified parent branch does not exist: " + baseBranchName);
+					if (!baseBranchExists) {
+						throw new AbortException("The specified parent branch does not exist: " + effectiveBaseBranch);
+					}
+
+					buildOutput.println(
+						"Analysis will create a new branch named '" +
+						effectiveTargetBranch + "' based on the branch '" + effectiveBaseBranch + "'"
+					);
 				}
-			}
-
-			if (effectiveTargetBranch != null) {
-				buildOutput.println("Code Dx branch will be set to " + effectiveTargetBranch + " with base branch " + effectiveBaseBranch);
 			}
 
 			try {
