@@ -28,7 +28,7 @@ public class ValueResolver {
 			return TokenMacro.expandAll(run, workspace, listener, value);
 		} catch (MacroEvaluationException e) {
 			logger.println("Macro expansion for '" + label + "' failed, falling back to default behavior");
-			logger.println(e);
+			e.printStackTrace(logger);
 			return run.getEnvironment(listener).expand(value);
 		}
 	}
