@@ -14,16 +14,11 @@
  */
 package org.jenkinsci.plugins.codedx;
 
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Run;
-import hudson.util.Area;
-import hudson.util.ChartUtil;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +28,7 @@ import org.jfree.chart.JFreeChart;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import com.secdec.codedx.api.client.Filter;
+import com.codedx.api.client.Filter;
 
 /**
  *

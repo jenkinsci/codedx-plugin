@@ -36,6 +36,14 @@
     	<f:textbox default="Build #$${BUILD_NUMBER}" />
 	</f:entry>
 
+	<f:entry title="Target Branch" field="targetBranchName" help="/plugin/codedx/help-targetBranch.html">
+		<f:textbox />
+	</f:entry>
+
+	<f:entry title="Base Branch" field="baseBranchName" help="/plugin/codedx/help-baseBranch.html">
+		<f:textbox />
+	</f:entry>
+
     <f:block>
      <table id="analysisResultConfiguration">
        <j:set var="analysisResultConfiguration" value="${instance.analysisResultConfiguration}"/>
