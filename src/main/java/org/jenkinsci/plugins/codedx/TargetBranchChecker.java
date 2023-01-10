@@ -40,17 +40,16 @@ public class TargetBranchChecker {
 	public void validate(CodeDxVersion codedxVersion, String targetBranch, String baseBranch) throws IOException, InterruptedException {
 		if (targetBranch == null) {
 			// no target branch, nothing branch-related to do here
-			this.targetBranchName = null;
-			this.baseBranchName = null;
 			return;
 		}
 
 		if (codedxVersion.compareTo(CodeDxVersion.MIN_FOR_BRANCHING) < 0) {
-			throw new AbortException(
+			logger.println(
 				"The connected Code Dx server with version " + codedxVersion + " does not support project branches. " +
-				"The minimum required version is " + CodeDxVersion.MIN_FOR_BRANCHING + ". Remove " +
-				"the target branch name or upgrade to a more recent version of Code Dx."
+				"The minimum required version is " + CodeDxVersion.MIN_FOR_BRANCHING + ". The target branch and base " +
+				"branch options will be ignored."
 			);
+			return;
 		}
 
 		this.targetBranchName = resolver.resolve("target branch", targetBranch);

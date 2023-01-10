@@ -1,10 +1,19 @@
 <div>
-	<span>
+	<p>
 		The Code Dx branch to store analysis results in. If the branch does not exist, it
 		will be created with the specified "base branch". The "base branch" parameter is required
 		if the target branch does not exist yet.
-	</span>
-	<span>
+	</p>
+	<p>
 		("Branches" refer to branches within the Code Dx project, not SCM branches.)
-	</span>
+	</p>
+	<p>
+		You can use build/environment variables to construct the target branch dynamically. For example:
+		<pre><code>${BRANCH_NAME}</code></pre>
+		would target the branch specified by that build variable.
+	</p>
+	<p>
+		Note: the branching feature is only supported by Code Dx versions 2022.4.0 and up. This
+		option is ignored for older versions.
+	</p>
 </div>
