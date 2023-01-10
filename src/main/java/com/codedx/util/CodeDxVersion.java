@@ -44,7 +44,9 @@ public final class CodeDxVersion implements Comparable<CodeDxVersion> {
 	/** First version that supports the "analysis names" feature. */
 	public final static CodeDxVersion MIN_FOR_ANALYSIS_NAMES = fromString("2.4.0");
 
-	public final static CodeDxVersion MIN_FOR_BRANCHING = fromString("2022.4.0");
+	// branching was introduced in 2022.4.0, but the analysis endpoint used here wasn't updated
+	// until 2022.4.3
+	public final static CodeDxVersion MIN_FOR_BRANCHING = fromString("2022.4.3");
 
 	public static CodeDxVersion fromString(String version){
 		// format is expected to be "x(.y)*-abc", and we want the x.y.z part
