@@ -240,12 +240,32 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		buildOutput.println("Publishing build to Code Dx:");
 
 		if (projectId.length() == 0 || projectId.equals("-1")) {
-
 			buildOutput.println("No project has been selected");
 			return;
 		}
 
+		int parsedProjectId;
+		try {
+			parsedProjectId = Integer.parseInt(projectId);
+		} catch (NumberFormatException e) {
+			throw new AbortException("Invalid project ID: " + projectId);
+		}
+
 		buildOutput.println(String.format("Publishing to Code Dx server at %s to Code Dx project %s: ", url, projectId));
+
+		final CodeDxClient repeatingClient = new CodeDxRepeatingClient(this.client, buildOutput);
+
+		CodeDxVersion cdxVersion = null;
+		try {
+			cdxVersion = repeatingClient.getCodeDxVersion();
+			buildOutput.println("Got Code Dx version: " + cdxVersion);
+		} catch (CodeDxClientException e) {
+			throw new IOException("Failed to get Code Dx version; aborting build.", e);
+		}
+
+		ValueResolver valueResolver = new ValueResolver(build, workspace, listener, buildOutput);
+		TargetBranchChecker branchChecker = new TargetBranchChecker(parsedProjectId, repeatingClient, valueResolver, buildOutput);
+		branchChecker.validate(cdxVersion, targetBranchName, baseBranchName);
 
 		buildOutput.println("Creating source/binary zip...");
 
@@ -253,7 +273,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				Util.commaSeparatedToArray(sourceAndBinaryFiles),
 				Util.commaSeparatedToArray(excludedSourceAndBinaryFiles),
 				"source", buildOutput);
-
 
 		if (sourceAndBinaryZip != null) {
 			buildOutput.println("Adding source/binary zip...");
@@ -278,93 +297,13 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		}
 
 		if (toSend.size() > 0) {
-
-			final CodeDxClient repeatingClient = new CodeDxRepeatingClient(this.client, buildOutput);
-
-			CodeDxVersion cdxVersion = null;
-			try {
-				cdxVersion = repeatingClient.getCodeDxVersion();
-				buildOutput.println("Got Code Dx version: " + cdxVersion);
-			} catch (CodeDxClientException e) {
-				throw new IOException("Failed to get Code Dx version; aborting build.", e);
-			}
-
-			String effectiveTargetBranch = null, effectiveBaseBranch = null;
-
-			if (targetBranchName != null) {
-				if (cdxVersion.compareTo(CodeDxVersion.MIN_FOR_BRANCHING) < 0) {
-					throw new AbortException(
-						"The connected Code Dx server with version " + cdxVersion + " does not support project branches. " +
-						"The minimum required version is " + CodeDxVersion.MIN_FOR_BRANCHING + ". Remove " +
-						"the target branch name or upgrade to a more recent version of Code Dx."
-					);
-				}
-
-				try {
-					effectiveTargetBranch = TokenMacro.expandAll(build, workspace, listener, targetBranchName);
-				} catch (MacroEvaluationException e) {
-					buildOutput.println("Macro expansion for target branch failed, falling back to default behavior");
-					buildOutput.println(e);
-					effectiveTargetBranch = build.getEnvironment(listener).expand(targetBranchName);
-				}
-
-				try {
-					if (baseBranchName != null) {
-						effectiveBaseBranch = TokenMacro.expandAll(build, workspace, listener, baseBranchName);
-					}
-				} catch (MacroEvaluationException e) {
-					buildOutput.println("Macro expansion for base branch failed, falling back to default behavior");
-					buildOutput.println(e);
-					effectiveBaseBranch = build.getEnvironment(listener).expand(baseBranchName);
-				}
-
-				buildOutput.println("Validating base branch selection...");
-				List<Branch> availableBranches;
-				try {
-					availableBranches = repeatingClient.getProjectBranches(projectId);
-				} catch (CodeDxClientException e) {
-					throw new IOException("An error occurred when fetching available branches for project " + projectId, e);
-				}
-
-				boolean targetBranchExists = false;
-				boolean baseBranchExists = false;
-				for (Branch branch : availableBranches) {
-					if (branch.getName().equals(effectiveBaseBranch)) {
-						baseBranchExists = true;
-					} else if (branch.getName().equals(effectiveTargetBranch)) {
-						targetBranchExists = true;
-					}
-				}
-				if (targetBranchExists) {
-					buildOutput.println("Using existing Code Dx branch: " + effectiveTargetBranch);
-					// not necessary, base branch is currently ignored in the backend if the target
-					// branch already exists. just setting to null to safeguard in case of future changes
-					effectiveBaseBranch = null;
-				} if (!targetBranchExists) {
-					if (effectiveBaseBranch == null) {
-						throw new AbortException("A parent branch must be specified when using a target branch");
-					}
-
-					if (!baseBranchExists) {
-						throw new AbortException("The specified parent branch does not exist: " + effectiveBaseBranch);
-					}
-
-					buildOutput.println(
-						"Analysis will create a new branch named '" +
-						effectiveTargetBranch + "' based on the branch '" + effectiveBaseBranch + "'"
-					);
-				}
-			}
-
 			try {
 				buildOutput.println("Submitting files to Code Dx for analysis");
-
-				int projectIdInt = Integer.parseInt(projectId);
 
 				StartAnalysisResponse response;
 
 				try {
-					response = repeatingClient.startAnalysis(Integer.parseInt(projectId), effectiveBaseBranch, effectiveTargetBranch, toSend);
+					response = repeatingClient.startAnalysis(parsedProjectId, branchChecker.getBaseBranchName(), branchChecker.getTargetBranchName(), toSend);
 				} catch (CodeDxClientException e) {
 					String errorSpecificMessage;
 
@@ -408,17 +347,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					if(analysisName == null || analysisName.length() == 0){
 						buildOutput.println("No 'Analysis Name' was chosen.");
 					} else {
-						buildOutput.println("Analysis Name (raw): " + analysisName);
-						String expandedAnalysisName = "";
-						try {
-							expandedAnalysisName = TokenMacro.expand(build, workspace, listener, analysisName);
-							buildOutput.println("Analysis Name expression expanded to: " + expandedAnalysisName);
-						} catch (MacroEvaluationException e) {
-							buildOutput.println("Failed to expand Analysis Name expression using TokenMacro. " +
-									"Falling back to built-in Jenkins functionality");
-							e.printStackTrace(buildOutput);
-							expandedAnalysisName = build.getEnvironment(listener).expand(analysisName);
-						}
+						String expandedAnalysisName = valueResolver.resolve("analysis name", analysisName);
 						buildOutput.println("Analysis Name: " + expandedAnalysisName);
 						buildOutput.println("Analysis Id: " + response.getAnalysisId());
 
@@ -428,7 +357,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 									CodeDxVersion.MIN_FOR_ANALYSIS_NAMES + "). The analysis name will not be set.");
 						} else {
 							try {
-								repeatingClient.setAnalysisName(projectIdInt, response.getAnalysisId(), expandedAnalysisName);
+								repeatingClient.setAnalysisName(parsedProjectId, response.getAnalysisId(), expandedAnalysisName);
 								buildOutput.println("Successfully updated analysis name.");
 							} catch (CodeDxClientException e) {
 								throw new IOException("Got error from Code Dx API Client while trying to set the analysis name", e);
@@ -471,14 +400,14 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 						Filter notGoneFilter = new Filter();
 						notGoneFilter.setNotStatus(new String[]{Filter.STATUS_GONE});
-						List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notGoneFilter, "severity");
+						List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(parsedProjectId, notGoneFilter, "severity");
 
 						buildOutput.println("Fetching status counts");
 
 						Filter notAssignedFilter = new Filter();
 						notAssignedFilter.setNotStatus(new String[]{ Filter.STATUS_ASSIGNED, Filter.STATUS_GONE });
 
-						List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(projectIdInt, notAssignedFilter, "status");
+						List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(parsedProjectId, notAssignedFilter, "status");
 
 						Filter assignedFilter = new Filter();
 						assignedFilter.setStatus(new String[]{Filter.STATUS_ASSIGNED});
@@ -487,7 +416,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 						//Since CodeDx splits assigned status into different statuses (one per user),
 						//we need to get the total assigned count and add our own CountGroup.
-						int assignedCount = repeatingClient.getFindingsCount(projectIdInt, assignedFilter);
+						int assignedCount = repeatingClient.getFindingsCount(parsedProjectId, assignedFilter);
 
 						if (assignedCount > 0) {
 
@@ -516,7 +445,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 								startingDate, // the time this process started is the "new" threshold for filtering
 								analysisResultConfiguration.isFailureOnlyNew(),
 								analysisResultConfiguration.isUnstableOnlyNew(),
-								projectIdInt,
+								parsedProjectId,
 								buildOutput);
 						Result buildResult = checker.checkResult();
 						build.setResult(buildResult);
@@ -529,8 +458,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				} else {
 					buildOutput.println("Analysis status: " + status);
 				}
-			} catch (NumberFormatException e) {
-				throw new IOException("Invalid project Id", e);
 			} finally {
 				if(sourceAndBinaryZip != null){
 					sourceAndBinaryZip.delete();

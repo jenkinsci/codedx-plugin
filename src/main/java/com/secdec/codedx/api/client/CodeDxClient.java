@@ -298,7 +298,7 @@ public class CodeDxClient {
 		public String date;
 	}
 
-	public List<Branch> getProjectBranches(String projectId) throws IOException, CodeDxClientException {
+	public List<Branch> getProjectBranches(int projectId) throws IOException, CodeDxClientException {
 		return doHttpRequest(
 			new HttpGet(),
 			"projects/" + projectId + "/branches",
