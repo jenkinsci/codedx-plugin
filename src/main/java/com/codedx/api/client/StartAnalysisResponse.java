@@ -12,56 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package com.secdec.codedx.api.client;
-
-import java.util.List;
-
+package com.codedx.api.client;
 
 /**
- * Represents the JSON data for a CountGroup
+ * Represents the JSON response data when starting an analysis run.
  *
  * @author anthonyd
  *
  */
-public class CountGroup {
+public class StartAnalysisResponse {
 
-	String id;
-	String name;
-	int count;
+	private int analysisId;
+	private String jobId;
 
-	List<CountGroup> children;
+	public int getAnalysisId(){ return analysisId; }
+	public void setAnalysisId(int analysisId) { this.analysisId = analysisId; }
 
-	public String getId() {
-		return id;
+	public String getJobId() {
+		return jobId;
 	}
-
-	public void setId(String id) {
-		this.id = id;
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
 	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public int getCount() {
-		return count;
-	}
-
-	public void setCount(int count) {
-		this.count = count;
-	}
-
-	public List<CountGroup> getChildren() {
-		return children;
-	}
-
-	public void setChildren(List<CountGroup> children) {
-		this.children = children;
-	}
-
-
 }

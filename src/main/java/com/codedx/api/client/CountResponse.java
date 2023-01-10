@@ -12,42 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package com.secdec.codedx.api.client;
+package com.codedx.api.client;
 
-public class Branch {
-	int id, projectId;
-	String name;
-	boolean isDefault;
+/**
+ * Represents the response JSON data containing a count.
+ * 
+ * @author anthonyd
+ *
+ */
+public class CountResponse {
 
-	public void setId(int id) {
-		this.id = id;
+	int count;
+
+	public int getCount() {
+		return count;
 	}
 
-	public int getId() {
-		return id;
-	}
-
-	public void setProjectId(int projectId) {
-		this.projectId = projectId;
-	}
-
-	public int getProjectId() {
-		return projectId;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setIsDefault(boolean isDefault) {
-		this.isDefault = isDefault;
-	}
-
-	public boolean getIsDefault() {
-		return isDefault;
-	}
+	public void setCount(int count) {
+		this.count = count;
+	}	
 }

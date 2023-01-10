@@ -14,13 +14,11 @@
  */
 package org.jenkinsci.plugins.codedx;
 
-import com.secdec.codedx.api.client.Branch;
-import com.secdec.codedx.api.client.CodeDxClient;
-import com.secdec.codedx.api.client.CodeDxClientException;
-import com.secdec.codedx.util.CodeDxVersion;
+import com.codedx.api.client.Branch;
+import com.codedx.api.client.CodeDxClient;
+import com.codedx.api.client.CodeDxClientException;
+import com.codedx.util.CodeDxVersion;
 import hudson.AbortException;
-import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
-import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 
 import java.io.IOException;
 import java.io.PrintStream;

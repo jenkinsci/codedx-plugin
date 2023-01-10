@@ -12,26 +12,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package com.secdec.codedx.api.client;
+package com.codedx.api.client;
 
 /**
- * Represents the JSON response data when starting an analysis run.
+ * Represents the request JSON data to get a count.
  *
  * @author anthonyd
  *
  */
-public class StartAnalysisResponse {
+public class CountRequest {
 
-	private int analysisId;
-	private String jobId;
+	private Filter filter;
 
-	public int getAnalysisId(){ return analysisId; }
-	public void setAnalysisId(int analysisId) { this.analysisId = analysisId; }
+	public CountRequest(){
 
-	public String getJobId() {
-		return jobId;
 	}
-	public void setJobId(String jobId) {
-		this.jobId = jobId;
+
+	public CountRequest(Filter filter){
+
+		this.filter = filter;
+	}
+
+	public Filter getFilter() {
+		return filter;
+	}
+
+	public void setFilter(Filter filter) {
+		this.filter = filter;
 	}
 }

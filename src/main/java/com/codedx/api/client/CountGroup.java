@@ -12,32 +12,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package com.secdec.codedx.api.client;
+package com.codedx.api.client;
+
+import java.util.List;
+
 
 /**
- * Represents the request JSON data to get a count.
+ * Represents the JSON data for a CountGroup
  *
  * @author anthonyd
  *
  */
-public class CountRequest {
+public class CountGroup {
 
-	private Filter filter;
+	String id;
+	String name;
+	int count;
 
-	public CountRequest(){
+	List<CountGroup> children;
 
+	public String getId() {
+		return id;
 	}
 
-	public CountRequest(Filter filter){
-
-		this.filter = filter;
+	public void setId(String id) {
+		this.id = id;
 	}
 
-	public Filter getFilter() {
-		return filter;
+	public String getName() {
+		return name;
 	}
 
-	public void setFilter(Filter filter) {
-		this.filter = filter;
+	public void setName(String name) {
+		this.name = name;
 	}
+
+	public int getCount() {
+		return count;
+	}
+
+	public void setCount(int count) {
+		this.count = count;
+	}
+
+	public List<CountGroup> getChildren() {
+		return children;
+	}
+
+	public void setChildren(List<CountGroup> children) {
+		this.children = children;
+	}
+
+
 }

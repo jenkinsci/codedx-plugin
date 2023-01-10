@@ -19,14 +19,14 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Date;
 
-import com.secdec.codedx.util.CodeDxVersion;
+import com.codedx.util.CodeDxVersion;
 import org.apache.http.client.ClientProtocolException;
 
 import hudson.model.Result;
 
-import com.secdec.codedx.api.client.CodeDxClient;
-import com.secdec.codedx.api.client.CodeDxClientException;
-import com.secdec.codedx.api.client.Filter;
+import com.codedx.api.client.CodeDxClient;
+import com.codedx.api.client.CodeDxClientException;
+import com.codedx.api.client.Filter;
 
 /**
  * Used to to determine if a build should be considered unstable or a failure,

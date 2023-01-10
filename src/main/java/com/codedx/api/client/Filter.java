@@ -12,10 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package com.secdec.codedx.api.client;
+package com.codedx.api.client;
 
 import com.google.gson.annotations.SerializedName;
-import com.secdec.codedx.util.CodeDxVersion;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;

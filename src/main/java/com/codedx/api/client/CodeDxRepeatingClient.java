@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package com.secdec.codedx.api.client;
+package com.codedx.api.client;
 
 import org.apache.http.client.methods.HttpRequestBase;
 

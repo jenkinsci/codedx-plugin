@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package com.secdec.codedx.security;
+package com.codedx.security;
 
-import com.secdec.codedx.util.HashUtil;
+import com.codedx.util.HashUtil;
 
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;

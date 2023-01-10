@@ -12,27 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package com.secdec.codedx.api.client;
-
-import java.util.List;
+package com.codedx.api.client;
 
 /**
- * Used to wrap the list of projects returned by the getProjects call.
- * 
- * I guess eventually pagination-related properties would go here.
+ * Represents the JSON data for a Job
  * 
  * @author anthonyd
  *
  */
-public class GetProjectsResponse {
+public class Job {
 
-	private List<Project> projects;
-
-	public List<Project> getProjects() {
-		return projects;
+	private String jobId;
+	private String status;
+	
+	public static final String QUEUED = "queued";
+	public static final String RUNNING = "running";
+	public static final String COMPLETED = "completed";
+	public static final String FAILED = "failed";
+	
+	public String getJobId() {
+		return jobId;
 	}
-
-	public void setProjects(List<Project> projects) {
-		this.projects = projects;
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
+	}
+	public String getStatus() {
+		return status;
+	}
+	public void setStatus(String status) {
+		this.status = status;
 	}
 }

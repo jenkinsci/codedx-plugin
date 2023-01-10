@@ -12,32 +12,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package com.secdec.codedx.api.client;
+package com.codedx.api.client;
 
-/**
- * Represents the JSON request data to get grouped counts
- * 
- * @author anthonyd
- *
- */
-public class GroupedCountRequest extends CountRequest{
+public class Branch {
+	int id, projectId;
+	String name;
+	boolean isDefault;
 
-	public GroupedCountRequest() {
-
+	public void setId(int id) {
+		this.id = id;
 	}
 
-	public GroupedCountRequest(Filter filter, String countBy) {
-		super(filter);
-		this.countBy = countBy;
+	public int getId() {
+		return id;
 	}
 
-	private String countBy;
-
-	public String getCountBy() {
-		return countBy;
+	public void setProjectId(int projectId) {
+		this.projectId = projectId;
 	}
 
-	public void setCountBy(String countBy) {
-		this.countBy = countBy;
+	public int getProjectId() {
+		return projectId;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setIsDefault(boolean isDefault) {
+		this.isDefault = isDefault;
+	}
+
+	public boolean getIsDefault() {
+		return isDefault;
 	}
 }

@@ -12,23 +12,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package com.secdec.codedx.api.client;
+package com.codedx.api.client;
 
 /**
- * Represents the response JSON data containing a count.
+ * Represents the JSON request data to get grouped counts
  * 
  * @author anthonyd
  *
  */
-public class CountResponse {
+public class GroupedCountRequest extends CountRequest{
 
-	int count;
+	public GroupedCountRequest() {
 
-	public int getCount() {
-		return count;
 	}
 
-	public void setCount(int count) {
-		this.count = count;
-	}	
+	public GroupedCountRequest(Filter filter, String countBy) {
+		super(filter);
+		this.countBy = countBy;
+	}
+
+	private String countBy;
+
+	public String getCountBy() {
+		return countBy;
+	}
+
+	public void setCountBy(String countBy) {
+		this.countBy = countBy;
+	}
 }

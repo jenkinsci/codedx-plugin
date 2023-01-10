@@ -14,11 +14,11 @@
  */
 package org.jenkinsci.plugins.codedx;
 
-import com.secdec.codedx.api.client.*;
-import com.secdec.codedx.api.client.Job;
-import com.secdec.codedx.api.client.Project;
-import com.secdec.codedx.security.JenkinsSSLConnectionSocketFactoryFactory;
-import com.secdec.codedx.util.CodeDxVersion;
+import com.codedx.api.client.*;
+import com.codedx.api.client.Job;
+import com.codedx.api.client.Project;
+import com.codedx.security.JenkinsSSLConnectionSocketFactoryFactory;
+import com.codedx.util.CodeDxVersion;
 import hudson.AbortException;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -38,8 +38,6 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
-import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
-import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.kohsuke.stapler.*;
 
 import javax.net.ssl.SSLHandshakeException;
@@ -48,7 +46,6 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
