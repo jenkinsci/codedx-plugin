@@ -15,7 +15,6 @@
 package org.jenkinsci.plugins.codedx;
 
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Contains the plugin configuration options that are applicable when the user
