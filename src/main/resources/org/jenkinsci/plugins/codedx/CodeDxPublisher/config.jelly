@@ -40,12 +40,24 @@
     	<f:textbox default="Build #$${BUILD_NUMBER}" />
 	</f:entry>
 
+	<f:entry title="Target Branch" field="targetBranchName" help="/plugin/codedx/help-targetBranch.html">
+		<f:textbox />
+	</f:entry>
+
+	<f:entry title="Base Branch" field="baseBranchName" help="/plugin/codedx/help-baseBranch.html">
+		<f:textbox />
+	</f:entry>
+
     <f:block>
      <table id="analysisResultConfiguration">
        <j:set var="analysisResultConfiguration" value="${instance.analysisResultConfiguration}"/>
        <f:optionalBlock title="Wait for Analysis Results" name="analysisResultConfiguration" checked="${analysisResultConfiguration != null}" help="/plugin/codedx/help-analysisResultConfiguration.html">
 
        	<f:section title="Build Failure Conditions">
+       	    <f:entry title="Analysis Error" field="breakIfFailed" help="/plugin/codedx/help-breakIfFailed.html">
+       	        <f:checkbox checked="${analysisResultConfiguration.breakIfFailed}" default="true" />
+       	    </f:entry>
+
 	       	<f:entry title="Severity" field="failureSeverity" help="/plugin/codedx/help-failureSeverity.html">
 		    	<f:select value="${analysisResultConfiguration.failureSeverity}"/>
 			</f:entry>

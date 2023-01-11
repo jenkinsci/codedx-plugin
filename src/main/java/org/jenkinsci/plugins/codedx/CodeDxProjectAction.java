@@ -1,6 +1,5 @@
 /*
- *
- * © 2022 Synopsys, Inc. All rights reserved worldwide.
+ * © 2023 Synopsys, Inc. All rights reserved worldwide.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,21 +11,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License
- *
  */
-
 package org.jenkinsci.plugins.codedx;
 
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Run;
-import hudson.util.Area;
-import hudson.util.ChartUtil;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,7 +28,7 @@ import org.jfree.chart.JFreeChart;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import com.secdec.codedx.api.client.Filter;
+import com.codedx.api.client.Filter;
 
 /**
  *

@@ -12,31 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package org.jenkinsci.plugins.codedx;
+package com.codedx.api.client;
 
 /**
+ * Represents the response JSON data containing a count.
  * 
- * @author ademartini This file is heavily derived from the sloccount-plugin (author: Michal Turek)
+ * @author anthonyd
  *
  */
-public class CodeDxDiffGroup extends CodeDxDiff{
+public class CountResponse {
 
-	private final String name;
-	private String icon;
+	int count;
 
-	public CodeDxDiffGroup(String name, int findings, int findingsDelta, String icon) {
-		super(findings, findingsDelta);
-		// TODO Auto-generated constructor stub
-		
-		this.name = name;
-		this.icon = icon;
+	public int getCount() {
+		return count;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public String getIcon() {
-		return icon;
-	}
+	public void setCount(int count) {
+		this.count = count;
+	}	
 }

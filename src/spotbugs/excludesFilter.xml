@@ -1,10 +1,10 @@
 <FindBugsFilter>
 	<!-- Warnings regarding exposed internal state - these are serialization classes with intentionally-exposed state -->
 	<Match>
-		<Class name="com.secdec.codedx.api.client.AnalysisRun" />
+		<Class name="com.codedx.api.client.AnalysisRun" />
 	</Match>
 	<Match>
-		<Class name="com.secdec.codedx.api.client.Filter" />
+		<Class name="com.codedx.api.client.Filter" />
 	</Match>
 	<Match>
 		<Class name="org.jenkinsci.plugins.codedx.AnalysisResultChecker" />
@@ -13,7 +13,7 @@
 
 	<!-- Warnings regarding unwritten/unused fields - these are serialization classes -->
 	<Match>
-		<Class name="com.secdec.codedx.api.client.CodeDxClient$CodeDxVersionResponse" />
+		<Class name="com.codedx.api.client.CodeDxClient$CodeDxVersionResponse" />
 	</Match>
 
 	<!-- Warnings about not overriding .Equals (these classes should be reference-compared, so default impl. should be ok) -->

@@ -12,31 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package org.jenkinsci.plugins.codedx;
+package com.codedx.api.client;
+
+import java.util.List;
 
 /**
+ * Used to wrap the list of projects returned by the getProjects call.
  * 
- * @author ademartini This file is heavily derived from the sloccount-plugin (author: Michal Turek)
+ * I guess eventually pagination-related properties would go here.
+ * 
+ * @author anthonyd
  *
  */
-public class CodeDxDiffGroup extends CodeDxDiff{
+public class GetProjectsResponse {
 
-	private final String name;
-	private String icon;
+	private List<Project> projects;
 
-	public CodeDxDiffGroup(String name, int findings, int findingsDelta, String icon) {
-		super(findings, findingsDelta);
-		// TODO Auto-generated constructor stub
-		
-		this.name = name;
-		this.icon = icon;
+	public List<Project> getProjects() {
+		return projects;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public String getIcon() {
-		return icon;
+	public void setProjects(List<Project> projects) {
+		this.projects = projects;
 	}
 }

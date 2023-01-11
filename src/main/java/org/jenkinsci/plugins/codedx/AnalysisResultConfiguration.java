@@ -1,6 +1,5 @@
 /*
- * 
- * © 2022 Synopsys, Inc. All rights reserved worldwide.
+ * © 2023 Synopsys, Inc. All rights reserved worldwide.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,9 +11,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License
- *  
  */
-
 package org.jenkinsci.plugins.codedx;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -32,17 +29,20 @@ public class AnalysisResultConfiguration {
 	private boolean failureOnlyNew;
 	private boolean unstableOnlyNew;
 	private int numBuildsInGraph;
-	
+	private boolean breakIfFailed;
+
 	@DataBoundConstructor
 	public AnalysisResultConfiguration(String failureSeverity,
 			String unstableSeverity, boolean failureOnlyNew,
-			boolean unstableOnlyNew, int numBuildsInGraph) {
+			boolean unstableOnlyNew, int numBuildsInGraph,
+			boolean breakIfFailed) {
 	
 		this.failureSeverity = failureSeverity;
 		this.unstableSeverity = unstableSeverity;
 		this.failureOnlyNew = failureOnlyNew;
 		this.unstableOnlyNew = unstableOnlyNew;
 		this.numBuildsInGraph = numBuildsInGraph;
+		this.breakIfFailed = breakIfFailed;
 	}
 	public String getFailureSeverity() {
 		return failureSeverity;
@@ -73,5 +73,11 @@ public class AnalysisResultConfiguration {
 	}
 	public void setNumBuildsInGraph(int numBuildsInGraph) {
 		this.numBuildsInGraph = numBuildsInGraph;
+	}
+	public boolean getBreakIfFailed() {
+		return breakIfFailed;
+	}
+	public void setBreakIfFailed(boolean breakIfFailed) {
+		this.breakIfFailed = breakIfFailed;
 	}
 }

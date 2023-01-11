@@ -12,31 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package org.jenkinsci.plugins.codedx;
+package com.codedx.api.client;
+
 
 /**
+ * Represents the JSON data for a CodeDx project.
  * 
- * @author ademartini This file is heavily derived from the sloccount-plugin (author: Michal Turek)
+ * @author anthonyd
  *
  */
-public class CodeDxDiffGroup extends CodeDxDiff{
+public class Project {
 
-	private final String name;
-	private String icon;
 
-	public CodeDxDiffGroup(String name, int findings, int findingsDelta, String icon) {
-		super(findings, findingsDelta);
-		// TODO Auto-generated constructor stub
-		
-		this.name = name;
-		this.icon = icon;
+	private int id;
+	private String name;
+
+	public int getId() {
+		return id;
 	}
-
+	public void setId(int id) {
+		this.id = id;
+	}
 	public String getName() {
 		return name;
 	}
-
-	public String getIcon() {
-		return icon;
+	public void setName(String name) {
+		this.name = name;
 	}
 }

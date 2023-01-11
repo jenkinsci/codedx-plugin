@@ -12,31 +12,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package org.jenkinsci.plugins.codedx;
+package com.codedx.api.client;
 
 /**
+ * Represents the JSON request data to get grouped counts
  * 
- * @author ademartini This file is heavily derived from the sloccount-plugin (author: Michal Turek)
+ * @author anthonyd
  *
  */
-public class CodeDxDiffGroup extends CodeDxDiff{
+public class GroupedCountRequest extends CountRequest{
 
-	private final String name;
-	private String icon;
+	public GroupedCountRequest() {
 
-	public CodeDxDiffGroup(String name, int findings, int findingsDelta, String icon) {
-		super(findings, findingsDelta);
-		// TODO Auto-generated constructor stub
-		
-		this.name = name;
-		this.icon = icon;
 	}
 
-	public String getName() {
-		return name;
+	public GroupedCountRequest(Filter filter, String countBy) {
+		super(filter);
+		this.countBy = countBy;
 	}
 
-	public String getIcon() {
-		return icon;
+	private String countBy;
+
+	public String getCountBy() {
+		return countBy;
+	}
+
+	public void setCountBy(String countBy) {
+		this.countBy = countBy;
 	}
 }

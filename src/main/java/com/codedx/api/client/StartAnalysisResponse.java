@@ -12,31 +12,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package org.jenkinsci.plugins.codedx;
+package com.codedx.api.client;
 
 /**
- * 
- * @author ademartini This file is heavily derived from the sloccount-plugin (author: Michal Turek)
+ * Represents the JSON response data when starting an analysis run.
+ *
+ * @author anthonyd
  *
  */
-public class CodeDxDiffGroup extends CodeDxDiff{
+public class StartAnalysisResponse {
 
-	private final String name;
-	private String icon;
+	private int analysisId;
+	private String jobId;
 
-	public CodeDxDiffGroup(String name, int findings, int findingsDelta, String icon) {
-		super(findings, findingsDelta);
-		// TODO Auto-generated constructor stub
-		
-		this.name = name;
-		this.icon = icon;
+	StartAnalysisResponse() {
+		analysisId = -1;
+		jobId = null;
 	}
 
-	public String getName() {
-		return name;
+	public Boolean hasAnalysisId() {
+		return analysisId != -1;
 	}
 
-	public String getIcon() {
-		return icon;
+	public int getAnalysisId(){ return analysisId; }
+	public void setAnalysisId(int analysisId) { this.analysisId = analysisId; }
+
+	public String getJobId() {
+		return jobId;
+	}
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
 	}
 }

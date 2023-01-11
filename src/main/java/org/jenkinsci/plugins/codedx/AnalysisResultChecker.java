@@ -1,6 +1,5 @@
 /*
- *
- * © 2022 Synopsys, Inc. All rights reserved worldwide.
+ * © 2023 Synopsys, Inc. All rights reserved worldwide.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,9 +11,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License
- *
  */
-
 package org.jenkinsci.plugins.codedx;
 
 import java.io.IOException;
@@ -22,14 +19,14 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Date;
 
-import com.secdec.codedx.util.CodeDxVersion;
+import com.codedx.util.CodeDxVersion;
 import org.apache.http.client.ClientProtocolException;
 
 import hudson.model.Result;
 
-import com.secdec.codedx.api.client.CodeDxClient;
-import com.secdec.codedx.api.client.CodeDxClientException;
-import com.secdec.codedx.api.client.Filter;
+import com.codedx.api.client.CodeDxClient;
+import com.codedx.api.client.CodeDxClientException;
+import com.codedx.api.client.Filter;
 
 /**
  * Used to to determine if a build should be considered unstable or a failure,

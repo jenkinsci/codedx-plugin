@@ -12,31 +12,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package org.jenkinsci.plugins.codedx;
+package com.codedx.api.client;
+
+import java.util.List;
+
 
 /**
- * 
- * @author ademartini This file is heavily derived from the sloccount-plugin (author: Michal Turek)
+ * Represents the JSON data for a CountGroup
+ *
+ * @author anthonyd
  *
  */
-public class CodeDxDiffGroup extends CodeDxDiff{
+public class CountGroup {
 
-	private final String name;
-	private String icon;
+	String id;
+	String name;
+	int count;
 
-	public CodeDxDiffGroup(String name, int findings, int findingsDelta, String icon) {
-		super(findings, findingsDelta);
-		// TODO Auto-generated constructor stub
-		
-		this.name = name;
-		this.icon = icon;
+	List<CountGroup> children;
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public String getIcon() {
-		return icon;
+	public void setName(String name) {
+		this.name = name;
 	}
+
+	public int getCount() {
+		return count;
+	}
+
+	public void setCount(int count) {
+		this.count = count;
+	}
+
+	public List<CountGroup> getChildren() {
+		return children;
+	}
+
+	public void setChildren(List<CountGroup> children) {
+		this.children = children;
+	}
+
+
 }
