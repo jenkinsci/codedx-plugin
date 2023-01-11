@@ -48,6 +48,8 @@ public final class CodeDxVersion implements Comparable<CodeDxVersion> {
 	// until 2022.4.3
 	public final static CodeDxVersion MIN_FOR_BRANCHING = fromString("2022.4.3");
 
+	public final static CodeDxVersion MIN_FOR_POLICIES = fromString("2023.1.0");
+
 	public static CodeDxVersion fromString(String version){
 		// format is expected to be "x(.y)*-abc", and we want the x.y.z part
 		Pattern versionRegex = Pattern.compile("^(\\d+(?:\\.\\d+)*).*");
