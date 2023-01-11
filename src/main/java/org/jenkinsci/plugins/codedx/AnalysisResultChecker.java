@@ -19,6 +19,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Date;
 
+import com.codedx.api.client.ProjectContext;
 import com.codedx.util.CodeDxVersion;
 import org.apache.http.client.ClientProtocolException;
 
@@ -44,13 +45,12 @@ public class AnalysisResultChecker {
 	private Date newThreshold;
 	private boolean failureOnlyNew;
 	private boolean unstableOnlyNew;
-	private int projectId;
 	private PrintStream logger;
-
+	private ProjectContext project;
 
 	public AnalysisResultChecker(CodeDxClient client, CodeDxVersion cdxVersion, String failureSeverity,
-			String unstableSeverity, Date newThreshold, boolean failureOnlyNew,
-			boolean unstableOnlyNew, int projectId, PrintStream logger) {
+								 String unstableSeverity, Date newThreshold, boolean failureOnlyNew,
+								 boolean unstableOnlyNew, ProjectContext project, PrintStream logger) {
 
 		this.client = client;
 		this.cdxVersion = cdxVersion;
@@ -59,21 +59,21 @@ public class AnalysisResultChecker {
 		this.newThreshold = newThreshold;
 		this.failureOnlyNew = failureOnlyNew;
 		this.unstableOnlyNew = unstableOnlyNew;
-		this.projectId = projectId;
+		this.project = project;
 		this.logger = logger;
 	}
 
 	public Result checkResult() throws ClientProtocolException, CodeDxClientException, IOException{
 
 		logger.println("Checking for findings that indicate build failure...");
-		if(!"None".equalsIgnoreCase(failureSeverity) && client.getFindingsCount(projectId, createFilter(failureSeverity, failureOnlyNew)) > 0){
+		if(!"None".equalsIgnoreCase(failureSeverity) && client.getFindingsCount(project, createFilter(failureSeverity, failureOnlyNew)) > 0){
 
 			logger.println(String.format("Failure: Code Dx reported %s or higher severity issues.", failureSeverity));
 			return Result.FAILURE;
 		}
 
 		logger.println("Checking for findings that indicate unstable build.");
-		if(!"None".equalsIgnoreCase(unstableSeverity) && client.getFindingsCount(projectId, createFilter(unstableSeverity, unstableOnlyNew)) > 0){
+		if(!"None".equalsIgnoreCase(unstableSeverity) && client.getFindingsCount(project, createFilter(unstableSeverity, unstableOnlyNew)) > 0){
 
 			logger.println("Unstable!");
 			return Result.UNSTABLE;

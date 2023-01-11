@@ -238,9 +238,9 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return;
 		}
 
-		int parsedProjectId;
+		ProjectContext project;
 		try {
-			parsedProjectId = Integer.parseInt(projectId);
+			project = new ProjectContext(Integer.parseInt(projectId));
 		} catch (NumberFormatException e) {
 			throw new AbortException("Invalid project ID: " + projectId);
 		}
@@ -258,8 +258,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		}
 
 		ValueResolver valueResolver = new ValueResolver(build, workspace, listener, buildOutput);
-		TargetBranchChecker branchChecker = new TargetBranchChecker(parsedProjectId, repeatingClient, valueResolver, buildOutput);
+		TargetBranchChecker branchChecker = new TargetBranchChecker(project, repeatingClient, valueResolver, buildOutput);
 		branchChecker.validate(cdxVersion, targetBranchName, baseBranchName);
+
+		project = project.withBranch(branchChecker.getTargetBranchName());
 
 		buildOutput.println("Creating source/binary zip...");
 
@@ -297,7 +299,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				StartAnalysisResponse response;
 
 				try {
-					response = repeatingClient.startAnalysis(parsedProjectId, branchChecker.getBaseBranchName(), branchChecker.getTargetBranchName(), toSend);
+					response = repeatingClient.startAnalysis(project.getProjectId(), branchChecker.getBaseBranchName(), branchChecker.getTargetBranchName(), toSend);
 				} catch (CodeDxClientException e) {
 					String errorSpecificMessage;
 
@@ -351,7 +353,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 									CodeDxVersion.MIN_FOR_ANALYSIS_NAMES + "). The analysis name will not be set.");
 						} else {
 							try {
-								repeatingClient.setAnalysisName(parsedProjectId, response.getAnalysisId(), expandedAnalysisName);
+								repeatingClient.setAnalysisName(project, response.getAnalysisId(), expandedAnalysisName);
 								buildOutput.println("Successfully updated analysis name.");
 							} catch (CodeDxClientException e) {
 								throw new IOException("Got error from Code Dx API Client while trying to set the analysis name", e);
@@ -394,14 +396,14 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 						Filter notGoneFilter = new Filter();
 						notGoneFilter.setNotStatus(new String[]{Filter.STATUS_GONE});
-						List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(parsedProjectId, notGoneFilter, "severity");
+						List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(project, notGoneFilter, "severity");
 
 						buildOutput.println("Fetching status counts");
 
 						Filter notAssignedFilter = new Filter();
 						notAssignedFilter.setNotStatus(new String[]{ Filter.STATUS_ASSIGNED, Filter.STATUS_GONE });
 
-						List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(parsedProjectId, notAssignedFilter, "status");
+						List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(project, notAssignedFilter, "status");
 
 						Filter assignedFilter = new Filter();
 						assignedFilter.setStatus(new String[]{Filter.STATUS_ASSIGNED});
@@ -410,7 +412,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 						//Since CodeDx splits assigned status into different statuses (one per user),
 						//we need to get the total assigned count and add our own CountGroup.
-						int assignedCount = repeatingClient.getFindingsCount(parsedProjectId, assignedFilter);
+						int assignedCount = repeatingClient.getFindingsCount(project, assignedFilter);
 
 						if (assignedCount > 0) {
 
@@ -439,7 +441,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 								startingDate, // the time this process started is the "new" threshold for filtering
 								analysisResultConfiguration.isFailureOnlyNew(),
 								analysisResultConfiguration.isUnstableOnlyNew(),
-								parsedProjectId,
+								project,
 								buildOutput);
 						Result buildResult = checker.checkResult();
 						build.setResult(buildResult);

@@ -17,6 +17,7 @@ package org.jenkinsci.plugins.codedx;
 import com.codedx.api.client.Branch;
 import com.codedx.api.client.CodeDxClient;
 import com.codedx.api.client.CodeDxClientException;
+import com.codedx.api.client.ProjectContext;
 import com.codedx.util.CodeDxVersion;
 import hudson.AbortException;
 
@@ -25,15 +26,15 @@ import java.io.PrintStream;
 import java.util.List;
 
 public class TargetBranchChecker {
-	final private int projectId;
+	final private ProjectContext project;
 	final private CodeDxClient client;
 	final private ValueResolver resolver;
 	final private PrintStream logger;
 
 	private String targetBranchName, baseBranchName;
 
-	public TargetBranchChecker(int projectId, CodeDxClient client, ValueResolver resolver, PrintStream logger) {
-		this.projectId = projectId;
+	public TargetBranchChecker(ProjectContext project, CodeDxClient client, ValueResolver resolver, PrintStream logger) {
+		this.project = project;
 		this.client = client;
 		this.resolver = resolver;
 		this.logger = logger;
@@ -72,9 +73,9 @@ public class TargetBranchChecker {
 		logger.println("Validating base branch selection...");
 		List<Branch> availableBranches;
 		try {
-			availableBranches = client.getProjectBranches(projectId);
+			availableBranches = client.getProjectBranches(project);
 		} catch (CodeDxClientException e) {
-			throw new IOException("An error occurred when fetching available branches for project " + projectId, e);
+			throw new IOException("An error occurred when fetching available branches for project " + project.getProjectId(), e);
 		}
 
 		boolean targetBranchExists = false;
