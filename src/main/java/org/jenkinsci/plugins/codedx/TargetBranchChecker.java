@@ -91,7 +91,7 @@ public class TargetBranchChecker {
 			// not necessary, base branch is currently ignored in the backend if the target
 			// branch already exists. just setting to null to safeguard in case of future changes
 			this.baseBranchName = null;
-		} if (!targetBranchExists) {
+		} else {
 			if (this.baseBranchName == null) {
 				throw new AbortException("A parent branch must be specified when using a target branch");
 			}
