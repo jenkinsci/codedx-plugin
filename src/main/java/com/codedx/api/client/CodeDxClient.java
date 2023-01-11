@@ -302,6 +302,16 @@ public class CodeDxClient {
 		);
 	}
 
+	public boolean projectPolicyShouldBreakTheBuild(ProjectContext project) throws IOException, CodeDxClientException {
+		return doHttpRequest(
+			new HttpGet(),
+			"projects/" + project.toString() + "/policies/any/build-broken",
+			true,
+			new TypeToken<Boolean>(){}.getType(),
+			null
+		);
+	}
+
 	/**
 	 * Perform an HttpRequest to the given api path, with an optional request body, and parse the response
 	 * @param request Generally a new `HttpGet`, `HttpPost`, or `HttpPut`

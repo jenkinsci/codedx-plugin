@@ -441,6 +441,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 								startingDate, // the time this process started is the "new" threshold for filtering
 								analysisResultConfiguration.isFailureOnlyNew(),
 								analysisResultConfiguration.isUnstableOnlyNew(),
+								analysisResultConfiguration.getBreakForPolicy(),
 								project,
 								buildOutput);
 						Result buildResult = checker.checkResult();

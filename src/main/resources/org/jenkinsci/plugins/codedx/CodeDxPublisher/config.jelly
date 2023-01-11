@@ -1,98 +1,111 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" escapeText="false">
-  <!--
-    This jelly script is used for per-project configuration.
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+		 xmlns:t="/lib/hudson" xmlns:f="/lib/form" escapeText="false">
+	<!--
+	  This jelly script is used for per-project configuration.
 
-    See global.jelly for a general discussion about jelly script.
-  -->
+	  See global.jelly for a general discussion about jelly script.
+	-->
 
 	<f:entry title="Server URL" field="url" help="/plugin/codedx/help-url.html">
-    	<f:textbox clazz="codedx-url" />
-    </f:entry>
+		<f:textbox clazz="codedx-url"/>
+	</f:entry>
 	<f:advanced>
-		<f:entry field="selfSignedCertificateFingerprint" title="Self-Signed Certificate Fingerprint" help="/plugin/codedx/help-fingerprint.html">
+		<f:entry field="selfSignedCertificateFingerprint" title="Self-Signed Certificate Fingerprint"
+				 help="/plugin/codedx/help-fingerprint.html">
 			<f:textbox/>
 		</f:entry>
 
 	</f:advanced>
 
-    <f:entry title="Server API Key" field="key" help="/plugin/codedx/help-key.html">
-    	<f:textbox />
-    </f:entry>
-
-	<f:entry title="Code Dx Project" field="projectId">
-	    <f:select />
+	<f:entry title="Server API Key" field="key" help="/plugin/codedx/help-key.html">
+		<f:textbox/>
 	</f:entry>
 
-    <f:entry title="Source and Binary Files" field="sourceAndBinaryFiles" help="/plugin/codedx/help-sourceAndBinaryFiles.html">
-    	<f:textbox default="**" />
-    </f:entry>
+	<f:entry title="Code Dx Project" field="projectId">
+		<f:select/>
+	</f:entry>
 
-    <f:entry title="Tool Output Files" field="toolOutputFiles" help="/plugin/codedx/help-toolOutputFiles.html">
-    	<f:textbox />
-    </f:entry>
+	<f:entry title="Source and Binary Files" field="sourceAndBinaryFiles"
+			 help="/plugin/codedx/help-sourceAndBinaryFiles.html">
+		<f:textbox default="**"/>
+	</f:entry>
 
-    <f:entry title="Analysis Name" field="analysisName" help="/plugin/codedx/help-analysisName.html">
-    	<f:textbox default="Build #$${BUILD_NUMBER}" />
+	<f:entry title="Tool Output Files" field="toolOutputFiles" help="/plugin/codedx/help-toolOutputFiles.html">
+		<f:textbox/>
+	</f:entry>
+
+	<f:entry title="Analysis Name" field="analysisName" help="/plugin/codedx/help-analysisName.html">
+		<f:textbox default="Build #$${BUILD_NUMBER}"/>
 	</f:entry>
 
 	<f:entry title="Target Branch" field="targetBranchName" help="/plugin/codedx/help-targetBranch.html">
-		<f:textbox />
+		<f:textbox/>
 	</f:entry>
 
 	<f:entry title="Base Branch" field="baseBranchName" help="/plugin/codedx/help-baseBranch.html">
-		<f:textbox />
+		<f:textbox/>
 	</f:entry>
 
-    <f:block>
-     <table id="analysisResultConfiguration">
-       <j:set var="analysisResultConfiguration" value="${instance.analysisResultConfiguration}"/>
-       <f:optionalBlock title="Wait for Analysis Results" name="analysisResultConfiguration" checked="${analysisResultConfiguration != null}" help="/plugin/codedx/help-analysisResultConfiguration.html">
+	<f:block>
+		<table id="analysisResultConfiguration">
+			<j:set var="analysisResultConfiguration" value="${instance.analysisResultConfiguration}"/>
+			<f:optionalBlock title="Wait for Analysis Results" name="analysisResultConfiguration"
+							 checked="${analysisResultConfiguration != null}"
+							 help="/plugin/codedx/help-analysisResultConfiguration.html">
 
-       	<f:section title="Build Failure Conditions">
-       	    <f:entry title="Analysis Error" field="breakIfFailed" help="/plugin/codedx/help-breakIfFailed.html">
-       	        <f:checkbox checked="${analysisResultConfiguration.breakIfFailed}" default="true" />
-       	    </f:entry>
+				<f:section title="Build Failure Conditions">
+					<f:entry title="Analysis Error" field="breakIfFailed" help="/plugin/codedx/help-breakIfFailed.html">
+						<f:checkbox checked="${analysisResultConfiguration.breakIfFailed}" default="true"/>
+					</f:entry>
 
-	       	<f:entry title="Severity" field="failureSeverity" help="/plugin/codedx/help-failureSeverity.html">
-		    	<f:select value="${analysisResultConfiguration.failureSeverity}"/>
+					<f:entry title="'Break the build' Policy Action" field="breakForPolicy" help="/plugin/codedx/help-breakForPolicy.html">
+						<f:checkbox checked="${analysisResultConfiguration.breakForPolicy}" default="true"/>
+					</f:entry>
+
+					<f:entry title="Severity" field="failureSeverity" help="/plugin/codedx/help-failureSeverity.html">
+						<f:select value="${analysisResultConfiguration.failureSeverity}"/>
+					</f:entry>
+
+					<f:entry title="Only consider new findings." field="failureOnlyNew"
+							 help="/plugin/codedx/help-failureOnlyNew.html">
+						<f:checkbox checked="${analysisResultConfiguration.failureOnlyNew}"/>
+					</f:entry>
+				</f:section>
+
+				<f:section title="Build Unstable Conditions">
+					<f:entry title="Severity" field="unstableSeverity" help="/plugin/codedx/help-unstableSeverity.html">
+						<f:select value="${analysisResultConfiguration.unstableSeverity}"/>
+					</f:entry>
+
+					<f:entry title="Only consider new findings." field="unstableOnlyNew"
+							 help="/plugin/codedx/help-unstableOnlyNew.html">
+						<f:checkbox checked="${analysisResultConfiguration.unstableOnlyNew}"/>
+					</f:entry>
+				</f:section>
+
+
+				<f:section title="Graph Options">
+					<f:entry title="Number of Builds in Graph" field="numBuildsInGraph"
+							 description="Any value less than 2 means unlimited.">
+						<f:number value="${analysisResultConfiguration.numBuildsInGraph}" default="0" clazz="number"/>
+					</f:entry>
+
+				</f:section>
+
+
+			</f:optionalBlock>
+		</table>
+	</f:block>
+
+	<f:section title="Advanced Options">
+		<f:advanced>
+			<f:entry title="Excluded Source and Binary Files" field="excludedSourceAndBinaryFiles"
+					 help="/plugin/codedx/help-excludedSourceAndBinaryFiles.html">
+				<f:textbox/>
 			</f:entry>
 
-			<f:entry title="Only consider new findings." field="failureOnlyNew" help="/plugin/codedx/help-failureOnlyNew.html">
-		    	<f:checkbox checked="${analysisResultConfiguration.failureOnlyNew}"/>
-			</f:entry>
-       	</f:section>
-
-       	<f:section title="Build Unstable Conditions">
-	       	<f:entry title="Severity" field="unstableSeverity" help="/plugin/codedx/help-unstableSeverity.html">
-		    	<f:select value="${analysisResultConfiguration.unstableSeverity}"/>
-			</f:entry>
-
-			<f:entry title="Only consider new findings." field="unstableOnlyNew" help="/plugin/codedx/help-unstableOnlyNew.html">
-		    	<f:checkbox checked="${analysisResultConfiguration.unstableOnlyNew}"/>
-			</f:entry>
-       	</f:section>
-
-
-        <f:section title="Graph Options">
-	       	<f:entry title="Number of Builds in Graph" field="numBuildsInGraph" description="Any value less than 2 means unlimited.">
-		    	<f:number value="${analysisResultConfiguration.numBuildsInGraph}" default="0" clazz="number"/>
-			</f:entry>
-
-       	</f:section>
-
-
-       </f:optionalBlock>
-     </table>
-   </f:block>
-
-    <f:section title="Advanced Options">
-	  <f:advanced>
-	    <f:entry title="Excluded Source and Binary Files" field="excludedSourceAndBinaryFiles" help="/plugin/codedx/help-excludedSourceAndBinaryFiles.html">
-	    	<f:textbox />
-	    </f:entry>
-
-	  </f:advanced>
+		</f:advanced>
 	</f:section>
 
 </j:jelly>
