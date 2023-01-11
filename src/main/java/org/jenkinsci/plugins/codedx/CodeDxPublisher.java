@@ -451,6 +451,9 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					}
 				} else {
 					buildOutput.println("Analysis status: " + status);
+					if (analysisResultConfiguration.getBreakIfFailed()) {
+						throw new AbortException("Code Dx analysis ended with status '" + status + "' instead of '" + Job.COMPLETED + "', terminating build");
+					}
 				}
 			} finally {
 				if(sourceAndBinaryZip != null){
