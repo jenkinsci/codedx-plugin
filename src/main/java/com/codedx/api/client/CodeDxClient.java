@@ -170,7 +170,6 @@ public class CodeDxClient {
 		);
 	}
 
-
 	/**
 	 * Retrieves a specific job from CodeDx
 	 *
@@ -237,7 +236,7 @@ public class CodeDxClient {
 	/**
 	 * Retrieves the total findings count for a given project using the provided Filter
 	 *
-	 * @param projectContext The project context string, a raw projectId optionally concatenated with branch info
+	 * @param project The project context string, a raw projectId optionally concatenated with branch info
 	 * @param filter A Filter object (set to null to not filter)
 	 * @return The count
 	 * @throws CodeDxClientException
@@ -318,6 +317,16 @@ public class CodeDxClient {
 			"projects/" + project.toString() + "/policies/any/build-broken",
 			true,
 			new TypeToken<Boolean>(){}.getType(),
+			null
+		);
+	}
+
+	public GitConfigResponse getProjectGitConfig(ProjectContext project) throws IOException, CodeDxClientException {
+		return doHttpRequest(
+			new HttpGet(),
+			"gitconf/" + project.getProjectId(),
+			true,
+			new TypeToken<GitConfigResponse>(){}.getType(),
 			null
 		);
 	}

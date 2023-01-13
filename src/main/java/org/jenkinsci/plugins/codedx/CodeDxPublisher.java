@@ -309,15 +309,29 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			}
 		}
 
-		if (toSend.size() > 0 || includeGitSource) {
+		boolean effectiveIncludeGitSource = includeGitSource;
+		if (effectiveIncludeGitSource) {
+			buildOutput.println("Verifying git config for Code Dx project...");
+			try {
+				GitConfigResponse response = repeatingClient.getProjectGitConfig(project);
+				if (response.getUrl().isEmpty()) {
+					buildOutput.println("'Include Git Source' was enabled but the project does not have a Git config assigned. 'Include Git Source' will be disabled for this run.");
+					effectiveIncludeGitSource = false;
+				}
+			} catch (CodeDxClientException e) {
+				throw new IOException("Fatal Error! There was a problem fetching the project's Git config.", e);
+			}
+		}
+
+		if (toSend.size() > 0 || effectiveIncludeGitSource) {
 			try {
 				buildOutput.println("Submitting files to Code Dx for analysis");
 
 				AnalysisMonitor analysisMonitor;
 
 				try {
-					StartAnalysisResponse response = repeatingClient.startAnalysis(project.getProjectId(), includeGitSource, branchChecker.getBaseBranchName(), branchChecker.getTargetBranchName(), toSend);
-					analysisMonitor = includeGitSource
+					StartAnalysisResponse response = repeatingClient.startAnalysis(project.getProjectId(), effectiveIncludeGitSource, branchChecker.getBaseBranchName(), branchChecker.getTargetBranchName(), toSend);
+					analysisMonitor = effectiveIncludeGitSource
 						? new GitJobAnalysisMonitor(project, response, buildOutput)
 						: new DirectAnalysisMonitor(response, buildOutput);
 				} catch (CodeDxClientException e) {
