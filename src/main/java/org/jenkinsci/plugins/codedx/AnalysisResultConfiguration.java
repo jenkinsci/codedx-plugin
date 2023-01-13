@@ -30,12 +30,13 @@ public class AnalysisResultConfiguration {
 	private boolean unstableOnlyNew;
 	private int numBuildsInGraph;
 	private boolean breakIfFailed;
+	private boolean breakForPolicy;
 
 	@DataBoundConstructor
 	public AnalysisResultConfiguration(String failureSeverity,
 			String unstableSeverity, boolean failureOnlyNew,
 			boolean unstableOnlyNew, int numBuildsInGraph,
-			boolean breakIfFailed) {
+			boolean breakIfFailed, boolean breakForPolicy) {
 	
 		this.failureSeverity = failureSeverity;
 		this.unstableSeverity = unstableSeverity;
@@ -43,6 +44,7 @@ public class AnalysisResultConfiguration {
 		this.unstableOnlyNew = unstableOnlyNew;
 		this.numBuildsInGraph = numBuildsInGraph;
 		this.breakIfFailed = breakIfFailed;
+		this.breakForPolicy = breakForPolicy;
 	}
 	public String getFailureSeverity() {
 		return failureSeverity;
@@ -79,5 +81,11 @@ public class AnalysisResultConfiguration {
 	}
 	public void setBreakIfFailed(boolean breakIfFailed) {
 		this.breakIfFailed = breakIfFailed;
+	}
+	public boolean getBreakForPolicy() {
+		return breakForPolicy;
+	}
+	public void setBreakForPolicy(boolean breakForPolicy) {
+		this.breakForPolicy = breakForPolicy;
 	}
 }

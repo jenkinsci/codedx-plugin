@@ -143,10 +143,10 @@ public class CodeDxClient {
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	public Project getProject(int id) throws CodeDxClientException, IOException{
+	public Project getProject(ProjectContext project) throws CodeDxClientException, IOException{
 		return doHttpRequest(
 			new HttpGet(),
-			"projects/" + id,
+			"projects/" + project.getProjectId(),
 			true,
 			new TypeToken<Project>(){}.getType(),
 			null
@@ -176,16 +176,14 @@ public class CodeDxClient {
 	/**
 	 * Retrieves all Triage statuses for a given project.
 	 *
-	 * @param id The project ID
-	 * @return A map from status code String to TriageStatus
 	 * @throws CodeDxClientException
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	public Map<String,TriageStatus> getTriageStatuses(int id) throws CodeDxClientException, IOException{
+	public Map<String,TriageStatus> getTriageStatuses(ProjectContext project) throws CodeDxClientException, IOException{
 		return doHttpRequest(
 			new HttpGet(),
-			"projects/" + id + "/statuses",
+			"projects/" + project.toString() + "/statuses",
 			true,
 			new TypeToken<Map<String,TriageStatus>>(){}.getType(),
 			null
@@ -249,17 +247,17 @@ public class CodeDxClient {
 	/**
 	 * Retrieves the total findings count for a given project using the provided Filter
 	 *
-	 * @param projectId The project ID
+	 * @param projectContext The project context string, a raw projectId optionally concatenated with branch info
 	 * @param filter A Filter object (set to null to not filter)
 	 * @return The count
 	 * @throws CodeDxClientException
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	public int getFindingsCount(int projectId, Filter filter) throws CodeDxClientException, IOException{
+	public int getFindingsCount(ProjectContext project, Filter filter) throws CodeDxClientException, IOException{
 		CountResponse resp = doHttpRequest(
 			new HttpPost(),
-			"projects/" + projectId + "/findings/count",
+			"projects/" + project.toString() + "/findings/count",
 			true,
 			new TypeToken<CountResponse>(){}.getType(),
 			new CountRequest(filter)
@@ -270,7 +268,6 @@ public class CodeDxClient {
 	/**
 	 * Retrieves an array of CountGroups using the provided Filter and countBy field name.
 	 *
-	 * @param projectId The project ID
 	 * @param filter A Filter object
 	 * @param countBy The field to group the counts by
 	 * @return A list of CountGroups
@@ -278,22 +275,22 @@ public class CodeDxClient {
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	public List<CountGroup> getFindingsGroupedCounts(int projectId, Filter filter, String countBy) throws CodeDxClientException, IOException{
+	public List<CountGroup> getFindingsGroupedCounts(ProjectContext project, Filter filter, String countBy) throws CodeDxClientException, IOException{
 		return doHttpRequest(
 			new HttpPost(),
-			"projects/" + projectId + "/findings/grouped-counts",
+			"projects/" + project.toString() + "/findings/grouped-counts",
 			true,
 			new TypeToken<List<CountGroup>>(){}.getType(),
 			new GroupedCountRequest(filter,countBy)
 		);
 	}
 
-	public void setAnalysisName(int projectId, int analysisId, String name) throws IOException, CodeDxClientException {
+	public void setAnalysisName(ProjectContext project, int analysisId, String name) throws IOException, CodeDxClientException {
 		JsonObject reqBody = new JsonObject();
 		reqBody.addProperty("name", name);
 		doHttpRequest(
 			new HttpPut(),
-			"projects/" + projectId + "/analyses/" + analysisId,
+			"projects/" + project.getProjectId() + "/analyses/" + analysisId,
 			true,
 			null,
 			reqBody
@@ -315,12 +312,22 @@ public class CodeDxClient {
 		public String date;
 	}
 
-	public List<Branch> getProjectBranches(int projectId) throws IOException, CodeDxClientException {
+	public List<Branch> getProjectBranches(ProjectContext project) throws IOException, CodeDxClientException {
 		return doHttpRequest(
 			new HttpGet(),
-			"projects/" + projectId + "/branches",
+			"projects/" + project.getProjectId() + "/branches",
 			true,
 			new TypeToken<List<Branch>>(){}.getType(),
+			null
+		);
+	}
+
+	public boolean projectPolicyShouldBreakTheBuild(ProjectContext project) throws IOException, CodeDxClientException {
+		return doHttpRequest(
+			new HttpGet(),
+			"projects/" + project.toString() + "/policies/any/build-broken",
+			true,
+			new TypeToken<Boolean>(){}.getType(),
 			null
 		);
 	}
@@ -385,6 +392,10 @@ public class CodeDxClient {
 
 	/**
 	 * Kicks off a CodeDx analysis run on a specified project
+	 *
+	 * (Requires projectId instead of ProjectContext since the use of ProjectContext differs for this endpoint compared to others.
+	 * Other endpoints use the ProjectContext to indicate target project and branch, but this uses ProjectContext to determine
+	 * parent/base branch.)
 	 *
 	 * @return A StartAnalysisResponse object
 	 * @param projectId The project ID
