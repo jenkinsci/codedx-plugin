@@ -210,6 +210,16 @@ public class CodeDxClient {
 		);
 	}
 
+	public StartAnalysisResponse getGitJobResult(String id) throws CodeDxClientException, IOException {
+		return doHttpRequest(
+			new HttpGet(),
+		"jobs/" + id + "/result",
+			false,
+			new TypeToken<StartAnalysisResponse>(){}.getType(),
+			null
+		);
+	}
+
 	/**
 	 * Retrieves a job status from CodeDx.  This is a convenience method for polling that
 	 * relies on getJob.
