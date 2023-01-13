@@ -153,26 +153,6 @@ public class CodeDxClient {
 		);
 	}
 
-	public List<AnalysisInfo> getAnalyses(int projectId) throws CodeDxClientException, IOException {
-		return doHttpRequest(
-			new HttpGet(),
-			"projects/" + projectId + "/analyses",
-			false,
-			new TypeToken<ArrayList<AnalysisInfo>>(){}.getType(),
-			null
-		);
-	}
-
-	public List<IncompleteWork> getIncompleteWork(int projectId) throws CodeDxClientException, IOException {
-		return doHttpRequest(
-			new HttpGet(),
-			"projects/" + projectId + "/incomplete-work",
-			false,
-			new TypeToken<ArrayList<IncompleteWork>>(){}.getType(),
-			null
-		);
-	}
-
 	/**
 	 * Retrieves all Triage statuses for a given project.
 	 *

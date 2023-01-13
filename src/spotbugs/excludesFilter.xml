@@ -1,9 +1,6 @@
 <FindBugsFilter>
 	<!-- Warnings regarding exposed internal state - these are serialization classes with intentionally-exposed state -->
 	<Match>
-		<Class name="com.codedx.api.client.AnalysisRun" />
-	</Match>
-	<Match>
 		<Class name="com.codedx.api.client.Filter" />
 	</Match>
 	<Match>
