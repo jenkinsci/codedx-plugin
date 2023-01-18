@@ -235,7 +235,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 	// since those issues aren't related to Code Dx itself.
 	//
 	// returns true if we ignore the error, false if we want to exit prematurely
-	private Boolean handleCodeDxError(Run<?, ?> build, PrintStream buildOutput, String cause) {
+	private Boolean handleCodeDxError(Run<?, ?> build, PrintStream buildOutput, String cause, boolean allowRecovery) throws AbortException {
 		buildOutput.println(cause);
 		switch (errorHandlingBehavior) {
 			case MarkUnstable:
@@ -249,9 +249,17 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				return false;
 
 			default:
-				buildOutput.println("This will be ignored since errorHandlingBehavior is set to " + errorHandlingBehavior.getLabel());
-				return true;
+				if (allowRecovery) {
+					buildOutput.println("This will be ignored since errorHandlingBehavior is set to " + errorHandlingBehavior.getLabel());
+					return true;
+				} else {
+					throw new AbortException("The previous ");
+				}
 		}
+	}
+
+	private Boolean handleCodeDxError(Run<?, ?> build, PrintStream buildOutput, String cause) throws AbortException {
+		return handleCodeDxError(build, buildOutput, cause, true);
 	}
 
 	@Override
@@ -290,12 +298,18 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			cdxVersion = repeatingClient.getCodeDxVersion();
 			buildOutput.println("Got Code Dx version: " + cdxVersion);
 		} catch (CodeDxClientException e) {
-			if (!handleCodeDxError(build, buildOutput, "Failed to get Code Dx version")) {
-				return;
-			} else {
-				cdxVersion = CodeDxVersion.fromString("1.0.0");
-				buildOutput.println("Continuing with placeholder Code Dx version " + cdxVersion);
-			}
+			// here we'll deviate from the "only throw for configuration issues" pattern - we
+			// COULD continue with some fake Code Dx version, eg 1.0.0, but if Code Dx branches are specified
+			// we won't be able to handle that and may end up inserting data to an incorrect target.
+			//
+			// play it safe and always break the build for this case
+			// (and use a specific exception type so we don't try to catch misc. exceptions)
+
+			// (still use `handleCodeDxError` to respect the choice of Unstable vs Failed builds, but throw an exception
+			// if we're expected to ignore it)
+			e.printStackTrace(buildOutput);
+			handleCodeDxError(build, buildOutput, "An error occurred fetching the Code Dx version", false);
+			return;
 		}
 
 		ValueResolver valueResolver = new ValueResolver(build, workspace, listener, buildOutput);
