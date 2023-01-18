@@ -83,6 +83,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private String targetBranchName, baseBranchName;
 
+	private BuildEffectBehavior errorHandlingBehavior;
+
 	private final static Logger logger = Logger.getLogger(CodeDxPublisher.class.getName());
 
 	/**
@@ -109,6 +111,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		this.selfSignedCertificateFingerprint = null;
 		this.targetBranchName = null;
 		this.baseBranchName = null;
+		this.errorHandlingBehavior = BuildEffectBehavior.MarkFailed;
 
 		setupClient();
 	}
@@ -218,20 +221,31 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			this.baseBranchName = null;
 	}
 
-	private void handleAnalysisFailure(Run<?, ?> build, PrintStream buildOutput, String cause) {
-		switch (analysisResultConfiguration.getAnalysisFailedBehavior()) {
+	public BuildEffectBehavior getErrorHandlingBehavior() {
+		return errorHandlingBehavior;
+	}
+
+	@DataBoundSetter
+	public void setErrorHandlingBehavior(BuildEffectBehavior behavior) {
+		errorHandlingBehavior = behavior;
+	}
+
+	// returns true if we ignore the error, false if we want to exit prematurely
+	private Boolean handleAnalysisFailure(Run<?, ?> build, PrintStream buildOutput, String cause) {
+		buildOutput.println(cause);
+		switch (errorHandlingBehavior) {
 			case MarkUnstable:
-				buildOutput.println(cause + ", marking build as Unstable");
+				buildOutput.println("Marking build as Unstable");
 				build.setResult(Result.UNSTABLE);
-				break;
+				return false;
 
 			case MarkFailed:
-				buildOutput.println(cause + ", marking build as Failure");
+				buildOutput.println("Marking build as Failure");
 				build.setResult(Result.FAILURE);
-				break;
+				return false;
 
-			case None:
-				break;
+			default:
+				return true;
 		}
 	}
 
@@ -271,7 +285,12 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			cdxVersion = repeatingClient.getCodeDxVersion();
 			buildOutput.println("Got Code Dx version: " + cdxVersion);
 		} catch (CodeDxClientException e) {
-			throw new IOException("Failed to get Code Dx version; aborting build.", e);
+			if (!handleAnalysisFailure(build, buildOutput, "Failed to get Code Dx version")) {
+				return;
+			} else {
+				cdxVersion = CodeDxVersion.fromString("1.0.0");
+				buildOutput.println("Continuing with placeholder Code Dx version " + cdxVersion);
+			}
 		}
 
 		ValueResolver valueResolver = new ValueResolver(build, workspace, listener, buildOutput);
@@ -345,7 +364,9 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 						String.format("Response Content: %s", e.getResponseContent()) + '\n' +
 						Util.getStackTrace(e);
 
-					throw new AbortException(message);
+					buildOutput.println(message);
+					handleAnalysisFailure(build, buildOutput, "Failed to start analysis");
+					return; // nothing else to do if we can't start the analysis, everything else relies on it
 				} finally {
 					// close streams after we're done sending them
 					for(Map.Entry<String, InputStream> entry : toSend.entrySet()){
@@ -373,7 +394,11 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 								repeatingClient.setAnalysisName(project, response.getAnalysisId(), expandedAnalysisName);
 								buildOutput.println("Successfully updated analysis name.");
 							} catch (CodeDxClientException e) {
-								throw new IOException("Got error from Code Dx API Client while trying to set the analysis name", e);
+								e.printStackTrace(buildOutput);
+								// this doesn't affect anything else in the plugin, only exit early if we're meant to fail
+								if (!handleAnalysisFailure(build, buildOutput, "Got error from Code Dx API Client while trying to set the analysis name")) {
+									return;
+								}
 							}
 						}
 					}
@@ -402,7 +427,9 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 						}
 					} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
 				} catch (CodeDxClientException e) {
-					throw new IOException("Fatal Error! There was a problem querying for the analysis status.", e);
+					e.printStackTrace(buildOutput);
+					handleAnalysisFailure(build, buildOutput, "There was an error querying for the analysis status");
+					return; // nothing else to do if the analysis failed
 				}
 
 				if (Job.COMPLETED.equals(status)) {
@@ -467,7 +494,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 							throw new AbortException("Build result is non-success, terminating build");
 						}
 					} catch (CodeDxClientException e) {
-						throw new IOException("Fatal Error! There was a problem retrieving analysis results.", e);
+						e.printStackTrace(buildOutput);
+						handleAnalysisFailure(build, buildOutput, "There was an error retrieving analysis results");
 					}
 				} else {
 					buildOutput.println("Analysis status: " + status);
@@ -730,7 +758,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return listBox;
 		}
 
-		public ListBoxModel doFillAnalysisFailedBehaviorItems() {
+		public ListBoxModel doFillErrorHandlingBehaviorItems() {
 			ListBoxModel listBox = new ListBoxModel();
 			listBox.add(BuildEffectBehavior.None.getLabel(), BuildEffectBehavior.None.name());
 			listBox.add(BuildEffectBehavior.MarkUnstable.getLabel(), BuildEffectBehavior.MarkUnstable.name());

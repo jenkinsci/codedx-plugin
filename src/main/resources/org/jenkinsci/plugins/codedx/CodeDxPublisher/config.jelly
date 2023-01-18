@@ -47,18 +47,17 @@
 		<f:textbox/>
 	</f:entry>
 
+	<f:entry title="Error Handling" field="errorHandlingBehavior" help="/plugin/codedx/help-errorHandlingBehavior.html">
+		<!-- note: we could use <enum> instead, but it looks like this is semi-broken and unreliable (depending on jenkins version) -->
+		<f:select default="MarkFailed" />
+	</f:entry>
+
 	<f:block>
 		<table id="analysisResultConfiguration">
 			<j:set var="analysisResultConfiguration" value="${instance.analysisResultConfiguration}"/>
 			<f:optionalBlock title="Wait for Analysis Results" name="analysisResultConfiguration"
 							 checked="${analysisResultConfiguration != null}"
 							 help="/plugin/codedx/help-analysisResultConfiguration.html">
-
-				<f:section title="Error Handling">
-					<f:entry title="Analysis Error Behavior" field="analysisFailedBehavior">
-						<f:select default="None" />
-					</f:entry>
-				</f:section>
 
 				<f:section title="Build Failure Conditions">
 					<f:entry title="'Break the build' Policy Action" field="breakForPolicy" help="/plugin/codedx/help-breakForPolicy.html">

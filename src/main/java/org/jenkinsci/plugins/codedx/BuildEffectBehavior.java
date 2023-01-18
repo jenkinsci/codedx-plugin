@@ -1,9 +1,9 @@
 package org.jenkinsci.plugins.codedx;
 
 public enum BuildEffectBehavior {
-	MarkFailed("Mark Failed"),
-	MarkUnstable("Mark Unstable"),
-	None("Ignore");
+	MarkFailed("Mark Build as Failed"),
+	MarkUnstable("Mark Build as Unstable"),
+	None("Ignore Errors");
 
 	private String label;
 	BuildEffectBehavior(String label) {
