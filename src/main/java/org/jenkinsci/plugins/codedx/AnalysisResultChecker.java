@@ -45,13 +45,13 @@ public class AnalysisResultChecker {
 	private Date newThreshold;
 	private boolean failureOnlyNew;
 	private boolean unstableOnlyNew;
-	private boolean breakForPolicy;
+	private BuildEffectBehavior policyBehavior;
 	private PrintStream logger;
 	private ProjectContext project;
 
 	public AnalysisResultChecker(CodeDxClient client, CodeDxVersion cdxVersion, String failureSeverity,
 								 String unstableSeverity, Date newThreshold, boolean failureOnlyNew,
-								 boolean unstableOnlyNew, boolean breakForPolicy, ProjectContext project, PrintStream logger) {
+								 boolean unstableOnlyNew, BuildEffectBehavior policyBehavior, ProjectContext project, PrintStream logger) {
 
 		this.client = client;
 		this.cdxVersion = cdxVersion;
@@ -60,26 +60,26 @@ public class AnalysisResultChecker {
 		this.newThreshold = newThreshold;
 		this.failureOnlyNew = failureOnlyNew;
 		this.unstableOnlyNew = unstableOnlyNew;
-		this.breakForPolicy = breakForPolicy;
+		this.policyBehavior = policyBehavior;
 		this.project = project;
 		this.logger = logger;
 
-		if (breakForPolicy && cdxVersion.compareTo(CodeDxVersion.MIN_FOR_POLICIES) < 0) {
+		if (policyBehavior != BuildEffectBehavior.None && cdxVersion.compareTo(CodeDxVersion.MIN_FOR_POLICIES) < 0) {
 			logger.println(
 				"The discovered Code Dx version " + cdxVersion.toString() + " is older than the minimum required " +
 				"version for Policies (" + CodeDxVersion.MIN_FOR_POLICIES + "), policy-related options will be ignored."
 			);
-			this.breakForPolicy = false;
+			this.policyBehavior = BuildEffectBehavior.None;
 		}
 	}
 
 	public Result checkResult() throws ClientProtocolException, CodeDxClientException, IOException {
 
-		if (breakForPolicy) {
+		if (policyBehavior != BuildEffectBehavior.None) {
 			logger.println("Checking for build-breaking policy violations...");
 			if (client.projectPolicyShouldBreakTheBuild(project)) {
-				logger.println("Failure: At least one Policy is violated and requires build failure");
-				return Result.FAILURE;
+				logger.println("Failure: At least one Policy is violated and set to 'Break build'");
+				return policyBehavior.getEquivalentResult();
 			}
 		}
 

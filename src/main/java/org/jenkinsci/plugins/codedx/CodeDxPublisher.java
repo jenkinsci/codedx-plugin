@@ -237,20 +237,12 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 	// returns true if we ignore the error, false if we want to exit prematurely
 	private Boolean handleCodeDxError(Run<?, ?> build, PrintStream buildOutput, String cause) throws AbortException {
 		buildOutput.println(cause);
-		switch (errorHandlingBehavior) {
-			case MarkUnstable:
-				buildOutput.println("Marking build as Unstable");
-				build.setResult(Result.UNSTABLE);
-				return false;
-
-			case MarkFailed:
-				buildOutput.println("Marking build as Failure");
-				build.setResult(Result.FAILURE);
-				return false;
-
-			default:
-				buildOutput.println("This will be ignored since errorHandlingBehavior is set to " + errorHandlingBehavior.getLabel());
-				return true;
+		if (errorHandlingBehavior != BuildEffectBehavior.None) {
+			build.setResult(errorHandlingBehavior.getEquivalentResult());
+			return false;
+		} else {
+			buildOutput.println("This will be ignored since errorHandlingBehavior is set to " + errorHandlingBehavior.getLabel());
+			return true;
 		}
 	}
 
@@ -268,6 +260,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		final PrintStream buildOutput = listener.getLogger();
 
 		buildOutput.println("Publishing build to Code Dx:");
+		buildOutput.println("Error handling set to: " + errorHandlingBehavior.getLabel());
 
 		if (projectId.length() == 0 || projectId.equals("-1")) {
 			buildOutput.println("No project has been selected");
@@ -506,17 +499,14 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 								startingDate, // the time this process started is the "new" threshold for filtering
 								analysisResultConfiguration.isFailureOnlyNew(),
 								analysisResultConfiguration.isUnstableOnlyNew(),
-								analysisResultConfiguration.getBreakForPolicy(),
+								analysisResultConfiguration.getPolicyBreakBuildBehavior(),
 								project,
 								buildOutput);
 						Result buildResult = checker.checkResult();
 						build.setResult(buildResult);
-						if (buildResult.isWorseThan(Result.SUCCESS)) {
-							throw new AbortException("Build result is non-success, terminating build");
-						}
 					} catch (CodeDxClientException e) {
 						e.printStackTrace(buildOutput);
-						handleCodeDxError(build, buildOutput, "There was an error retrieving analysis results");
+						handleCodeDxError(build, buildOutput, "There was an error fetching/processing analysis results");
 					}
 				} else {
 					buildOutput.println("Analysis status: " + status);
@@ -788,12 +778,20 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return listBox;
 		}
 
-		public ListBoxModel doFillErrorHandlingBehaviorItems() {
+		private ListBoxModel getErrorBehaviorItems() {
 			ListBoxModel listBox = new ListBoxModel();
 			listBox.add(BuildEffectBehavior.None.getLabel(), BuildEffectBehavior.None.name());
 			listBox.add(BuildEffectBehavior.MarkUnstable.getLabel(), BuildEffectBehavior.MarkUnstable.name());
 			listBox.add(BuildEffectBehavior.MarkFailed.getLabel(), BuildEffectBehavior.MarkFailed.name());
 			return listBox;
+		}
+
+		public ListBoxModel doFillErrorHandlingBehaviorItems() {
+			return getErrorBehaviorItems();
+		}
+
+		public ListBoxModel doFillPolicyBreakBuildBehaviorItems() {
+			return getErrorBehaviorItems();
 		}
 
 		public ListBoxModel doFillFailureSeverityItems() {
