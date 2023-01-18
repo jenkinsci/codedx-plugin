@@ -438,9 +438,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					do {
 						Thread.sleep(3000);
 						oldStatus = status;
-						if(response != null) {
-							status = repeatingClient.getJobStatus(response.getJobId());
-						}
+						status = repeatingClient.getJobStatus(response.getJobId());
 						if (status != null && !status.equals(oldStatus)) {
 							if (Job.QUEUED.equals(status)) {
 								buildOutput.println("Code Dx analysis is queued");
