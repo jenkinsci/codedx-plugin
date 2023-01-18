@@ -54,11 +54,13 @@
 							 checked="${analysisResultConfiguration != null}"
 							 help="/plugin/codedx/help-analysisResultConfiguration.html">
 
-				<f:section title="Build Failure Conditions">
-					<f:entry title="Analysis Error" field="breakIfFailed" help="/plugin/codedx/help-breakIfFailed.html">
-						<f:checkbox checked="${analysisResultConfiguration.breakIfFailed}" default="true"/>
+				<f:section title="Error Handling">
+					<f:entry title="Analysis Error Behavior" field="analysisFailedBehavior">
+						<f:select default="None" />
 					</f:entry>
+				</f:section>
 
+				<f:section title="Build Failure Conditions">
 					<f:entry title="'Break the build' Policy Action" field="breakForPolicy" help="/plugin/codedx/help-breakForPolicy.html">
 						<f:checkbox checked="${analysisResultConfiguration.breakForPolicy}" default="true"/>
 					</f:entry>

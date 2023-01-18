@@ -218,6 +218,23 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			this.baseBranchName = null;
 	}
 
+	private void handleAnalysisFailure(Run<?, ?> build, PrintStream buildOutput, String cause) {
+		switch (analysisResultConfiguration.getAnalysisFailedBehavior()) {
+			case MarkUnstable:
+				buildOutput.println(cause + ", marking build as Unstable");
+				build.setResult(Result.UNSTABLE);
+				break;
+
+			case MarkFailed:
+				buildOutput.println(cause + ", marking build as Failure");
+				build.setResult(Result.FAILURE);
+				break;
+
+			case None:
+				break;
+		}
+	}
+
 	@Override
 	public void perform(
 			final Run<?, ?> build,
@@ -454,9 +471,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					}
 				} else {
 					buildOutput.println("Analysis status: " + status);
-					if (analysisResultConfiguration.getBreakIfFailed()) {
-						throw new AbortException("Code Dx analysis ended with status '" + status + "' instead of '" + Job.COMPLETED + "', terminating build");
-					}
+					handleAnalysisFailure(build, buildOutput, "Analysis status was non-success");
 				}
 			} finally {
 				if(sourceAndBinaryZip != null){
@@ -712,6 +727,14 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				listBox.add("", "-1");
 			}
 
+			return listBox;
+		}
+
+		public ListBoxModel doFillAnalysisFailedBehaviorItems() {
+			ListBoxModel listBox = new ListBoxModel();
+			listBox.add(BuildEffectBehavior.None.getLabel(), BuildEffectBehavior.None.name());
+			listBox.add(BuildEffectBehavior.MarkUnstable.getLabel(), BuildEffectBehavior.MarkUnstable.name());
+			listBox.add(BuildEffectBehavior.MarkFailed.getLabel(), BuildEffectBehavior.MarkFailed.name());
 			return listBox;
 		}
 
