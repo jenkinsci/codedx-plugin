@@ -230,8 +230,12 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		errorHandlingBehavior = behavior;
 	}
 
+	// Sets the build status based on `errorHandlingBehavior`. Only meant to be used for Code Dx-specific
+	// errors, eg analysis failure and connection issues. Configuration errors will be thrown as usual
+	// since those issues aren't related to Code Dx itself.
+	//
 	// returns true if we ignore the error, false if we want to exit prematurely
-	private Boolean handleAnalysisFailure(Run<?, ?> build, PrintStream buildOutput, String cause) {
+	private Boolean handleCodeDxError(Run<?, ?> build, PrintStream buildOutput, String cause) {
 		buildOutput.println(cause);
 		switch (errorHandlingBehavior) {
 			case MarkUnstable:
@@ -245,6 +249,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				return false;
 
 			default:
+				buildOutput.println("This will be ignored since errorHandlingBehavior is set to " + errorHandlingBehavior.getLabel());
 				return true;
 		}
 	}
@@ -285,7 +290,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			cdxVersion = repeatingClient.getCodeDxVersion();
 			buildOutput.println("Got Code Dx version: " + cdxVersion);
 		} catch (CodeDxClientException e) {
-			if (!handleAnalysisFailure(build, buildOutput, "Failed to get Code Dx version")) {
+			if (!handleCodeDxError(build, buildOutput, "Failed to get Code Dx version")) {
 				return;
 			} else {
 				cdxVersion = CodeDxVersion.fromString("1.0.0");
@@ -295,7 +300,18 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 		ValueResolver valueResolver = new ValueResolver(build, workspace, listener, buildOutput);
 		TargetBranchChecker branchChecker = new TargetBranchChecker(project, repeatingClient, valueResolver, buildOutput);
-		branchChecker.validate(cdxVersion, targetBranchName, baseBranchName);
+		try {
+			branchChecker.validate(cdxVersion, targetBranchName, baseBranchName);
+		} catch (AbortException e) {
+			// configuration error
+			throw e;
+		} catch (IOException e) {
+			e.printStackTrace(buildOutput);
+			handleCodeDxError(build, buildOutput, "An error occurred while validating branch selection");
+			// connection error; this will only happen if a target branch was specified. we can't continue without
+			// applying that target branch, or we might cause data to be written to an unexpected target branch
+			return;
+		}
 
 		project = project.withBranch(branchChecker.getTargetBranchName());
 
@@ -365,7 +381,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 						Util.getStackTrace(e);
 
 					buildOutput.println(message);
-					handleAnalysisFailure(build, buildOutput, "Failed to start analysis");
+					handleCodeDxError(build, buildOutput, "Failed to start analysis");
 					return; // nothing else to do if we can't start the analysis, everything else relies on it
 				} finally {
 					// close streams after we're done sending them
@@ -374,31 +390,37 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					}
 				}
 
+				// (shouldn't be necessary, but this condition was checked in previous impl., so it will be preserved)
+				if (response == null) {
+					handleCodeDxError(build, buildOutput, "Received null data for the analysis job");
+					// everything else has to do with checking for the analysis indicated by the response, nothing
+					// else to do if this fails
+					return;
+				}
+
 				buildOutput.println("Code Dx accepted files for analysis");
 
 				// Set the analysis name on the server
-				if(response != null){
-					if(analysisName == null || analysisName.length() == 0){
-						buildOutput.println("No 'Analysis Name' was chosen.");
-					} else {
-						String expandedAnalysisName = valueResolver.resolve("analysis name", analysisName);
-						buildOutput.println("Analysis Name: " + expandedAnalysisName);
-						buildOutput.println("Analysis Id: " + response.getAnalysisId());
+				if(analysisName == null || analysisName.length() == 0){
+					buildOutput.println("No 'Analysis Name' was chosen.");
+				} else {
+					String expandedAnalysisName = valueResolver.resolve("analysis name", analysisName);
+					buildOutput.println("Analysis Name: " + expandedAnalysisName);
+					buildOutput.println("Analysis Id: " + response.getAnalysisId());
 
-						if(cdxVersion.compareTo(CodeDxVersion.MIN_FOR_ANALYSIS_NAMES) < 0){
-							buildOutput.println("The connected Code Dx server is only version " + cdxVersion +
-									", which doesn't support naming analyses (minimum supported version is " +
-									CodeDxVersion.MIN_FOR_ANALYSIS_NAMES + "). The analysis name will not be set.");
-						} else {
-							try {
-								repeatingClient.setAnalysisName(project, response.getAnalysisId(), expandedAnalysisName);
-								buildOutput.println("Successfully updated analysis name.");
-							} catch (CodeDxClientException e) {
-								e.printStackTrace(buildOutput);
-								// this doesn't affect anything else in the plugin, only exit early if we're meant to fail
-								if (!handleAnalysisFailure(build, buildOutput, "Got error from Code Dx API Client while trying to set the analysis name")) {
-									return;
-								}
+					if(cdxVersion.compareTo(CodeDxVersion.MIN_FOR_ANALYSIS_NAMES) < 0){
+						buildOutput.println("The connected Code Dx server is only version " + cdxVersion +
+								", which doesn't support naming analyses (minimum supported version is " +
+								CodeDxVersion.MIN_FOR_ANALYSIS_NAMES + "). The analysis name will not be set.");
+					} else {
+						try {
+							repeatingClient.setAnalysisName(project, response.getAnalysisId(), expandedAnalysisName);
+							buildOutput.println("Successfully updated analysis name.");
+						} catch (CodeDxClientException e) {
+							e.printStackTrace(buildOutput);
+							// this doesn't affect anything else in the plugin, only exit early if we're meant to fail
+							if (!handleCodeDxError(build, buildOutput, "Got error from Code Dx API Client while trying to set the analysis name")) {
+								return;
 							}
 						}
 					}
@@ -428,7 +450,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
 				} catch (CodeDxClientException e) {
 					e.printStackTrace(buildOutput);
-					handleAnalysisFailure(build, buildOutput, "There was an error querying for the analysis status");
+					handleCodeDxError(build, buildOutput, "There was an error querying for the analysis status");
 					return; // nothing else to do if the analysis failed
 				}
 
@@ -495,12 +517,21 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 						}
 					} catch (CodeDxClientException e) {
 						e.printStackTrace(buildOutput);
-						handleAnalysisFailure(build, buildOutput, "There was an error retrieving analysis results");
+						handleCodeDxError(build, buildOutput, "There was an error retrieving analysis results");
 					}
 				} else {
 					buildOutput.println("Analysis status: " + status);
-					handleAnalysisFailure(build, buildOutput, "Analysis status was non-success");
+					handleCodeDxError(build, buildOutput, "Analysis status was non-success");
 				}
+			}
+			catch (AbortException e) {
+				// re-throw any "expected" exceptions; if we didn't want these to be thrown due to error
+				// handling behavior, they wouldn't have been thrown in the first place
+				throw e;
+			} catch (Exception e) {
+				// any remaining exceptions from this `try` block should be related to comms with Code Dx
+				e.printStackTrace(buildOutput);
+				handleCodeDxError(build, buildOutput, "An unexpected error occurred");
 			} finally {
 				if(sourceAndBinaryZip != null){
 					sourceAndBinaryZip.delete();
