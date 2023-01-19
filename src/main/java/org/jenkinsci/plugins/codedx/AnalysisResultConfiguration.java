@@ -14,6 +14,7 @@
  */
 package org.jenkinsci.plugins.codedx;
 
+import hudson.model.Build;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -29,22 +30,20 @@ public class AnalysisResultConfiguration {
 	private boolean failureOnlyNew;
 	private boolean unstableOnlyNew;
 	private int numBuildsInGraph;
-	private boolean breakIfFailed;
-	private boolean breakForPolicy;
+	private BuildEffectBehavior policyBreakBuildBehavior;
 
 	@DataBoundConstructor
 	public AnalysisResultConfiguration(String failureSeverity,
 			String unstableSeverity, boolean failureOnlyNew,
 			boolean unstableOnlyNew, int numBuildsInGraph,
-			boolean breakIfFailed, boolean breakForPolicy) {
+			BuildEffectBehavior policyBreakBuildBehavior) {
 	
 		this.failureSeverity = failureSeverity;
 		this.unstableSeverity = unstableSeverity;
 		this.failureOnlyNew = failureOnlyNew;
 		this.unstableOnlyNew = unstableOnlyNew;
 		this.numBuildsInGraph = numBuildsInGraph;
-		this.breakIfFailed = breakIfFailed;
-		this.breakForPolicy = breakForPolicy;
+		this.policyBreakBuildBehavior = policyBreakBuildBehavior;
 	}
 	public String getFailureSeverity() {
 		return failureSeverity;
@@ -76,16 +75,10 @@ public class AnalysisResultConfiguration {
 	public void setNumBuildsInGraph(int numBuildsInGraph) {
 		this.numBuildsInGraph = numBuildsInGraph;
 	}
-	public boolean getBreakIfFailed() {
-		return breakIfFailed;
+	public BuildEffectBehavior getPolicyBreakBuildBehavior() {
+		return policyBreakBuildBehavior;
 	}
-	public void setBreakIfFailed(boolean breakIfFailed) {
-		this.breakIfFailed = breakIfFailed;
-	}
-	public boolean getBreakForPolicy() {
-		return breakForPolicy;
-	}
-	public void setBreakForPolicy(boolean breakForPolicy) {
-		this.breakForPolicy = breakForPolicy;
+	public void setPolicyBreakBuildBehavior(BuildEffectBehavior behavior) {
+		policyBreakBuildBehavior = behavior;
 	}
 }
