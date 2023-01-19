@@ -4,6 +4,12 @@
 		its action set to "Break build".
 	</p>
 	<p>
+		A policy is only violated if one of its rules is matched and the finding age exceeds the "fix by"
+		field of the policy rule. If a new finding is introduced which violates a policy rule, but that
+		rule has its "fix by" set to anything other than "Not required", the build will not be
+		affected until a finding meets the required age.
+	</p>
+	<p>
 		(Note: policies are supported in Code Dx 2023.1.0 and up. This option will be ignored if using an older Code Dx version.)
 	</p>
 </div>
