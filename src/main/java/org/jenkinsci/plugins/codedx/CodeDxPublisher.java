@@ -89,6 +89,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private String targetBranchName, baseBranchName;
 
+	private BuildEffectBehavior errorHandlingBehavior;
+
 	private final static Logger logger = Logger.getLogger(CodeDxPublisher.class.getName());
 
 	/**
@@ -115,6 +117,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		this.selfSignedCertificateFingerprint = null;
 		this.targetBranchName = null;
 		this.baseBranchName = null;
+		this.errorHandlingBehavior = BuildEffectBehavior.MarkFailed;
 
 		this.includeGitSource = false;
 
@@ -235,6 +238,31 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			this.baseBranchName = null;
 	}
 
+	public BuildEffectBehavior getErrorHandlingBehavior() {
+		return errorHandlingBehavior;
+	}
+
+	@DataBoundSetter
+	public void setErrorHandlingBehavior(BuildEffectBehavior behavior) {
+		errorHandlingBehavior = behavior;
+	}
+
+	// Sets the build status based on `errorHandlingBehavior`. Only meant to be used for Code Dx-specific
+	// errors, eg analysis failure and connection issues. Configuration errors will be thrown as usual
+	// since those issues aren't related to Code Dx itself.
+	//
+	// returns true if we ignore the error, false if we want to exit prematurely
+	private Boolean handleCodeDxError(Run<?, ?> build, PrintStream buildOutput, String cause) throws AbortException {
+		buildOutput.println(cause);
+		if (errorHandlingBehavior != BuildEffectBehavior.None) {
+			build.setResult(errorHandlingBehavior.getEquivalentResult());
+			return false;
+		} else {
+			buildOutput.println("This will be ignored since errorHandlingBehavior is set to " + errorHandlingBehavior.getLabel());
+			return true;
+		}
+	}
+
 	@Override
 	public void perform(
 			final Run<?, ?> build,
@@ -249,6 +277,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		final PrintStream buildOutput = listener.getLogger();
 
 		buildOutput.println("Publishing build to Code Dx:");
+		buildOutput.println("Error handling set to: " + errorHandlingBehavior.getLabel());
 
 		if (projectId.length() == 0 || projectId.equals("-1")) {
 			buildOutput.println("No project has been selected");
@@ -271,12 +300,29 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			cdxVersion = repeatingClient.getCodeDxVersion();
 			buildOutput.println("Got Code Dx version: " + cdxVersion);
 		} catch (CodeDxClientException e) {
-			throw new IOException("Failed to get Code Dx version; aborting build.", e);
+			e.printStackTrace(buildOutput);
+			if (handleCodeDxError(build, buildOutput, "An error occurred fetching the Code Dx version")) {
+				buildOutput.println("The Code Dx plugin cannot continue without verifying the Code Dx version, exiting");
+			}
+			// we can't continue without a version since we don't want to accidentally put data into the wrong target
+			// by eg using a placeholder version which skips over the Code Dx branch
+			return;
 		}
 
 		ValueResolver valueResolver = new ValueResolver(build, workspace, listener, buildOutput);
 		TargetBranchChecker branchChecker = new TargetBranchChecker(project, repeatingClient, valueResolver, buildOutput);
-		branchChecker.validate(cdxVersion, targetBranchName, baseBranchName);
+		try {
+			branchChecker.validate(cdxVersion, targetBranchName, baseBranchName);
+		} catch (AbortException e) {
+			// configuration error
+			throw e;
+		} catch (IOException e) {
+			e.printStackTrace(buildOutput);
+			handleCodeDxError(build, buildOutput, "An error occurred while validating branch selection");
+			// connection error; this will only happen if a target branch was specified. we can't continue without
+			// applying that target branch, or we might cause data to be written to an unexpected target branch
+			return;
+		}
 
 		project = project.withBranch(branchChecker.getTargetBranchName());
 
@@ -329,11 +375,22 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 				AnalysisMonitor analysisMonitor;
 
+				StartAnalysisResponse response;
 				try {
-					StartAnalysisResponse response = repeatingClient.startAnalysis(project.getProjectId(), effectiveIncludeGitSource, branchChecker.getBaseBranchName(), branchChecker.getTargetBranchName(), toSend);
+					response = repeatingClient.startAnalysis(project.getProjectId(), effectiveIncludeGitSource, branchChecker.getBaseBranchName(), branchChecker.getTargetBranchName(), toSend);
+
+					// (shouldn't be necessary, but this condition was checked in previous impl., so it will be preserved)
+					if (response == null) {
+						handleCodeDxError(build, buildOutput, "Received null data for the analysis job");
+						// everything else has to do with checking for the analysis indicated by the response, nothing
+						// else to do if this fails
+						return;
+					}
+
 					analysisMonitor = effectiveIncludeGitSource
-						? new GitJobAnalysisMonitor(project, response, buildOutput)
-						: new DirectAnalysisMonitor(response, buildOutput);
+							? new GitJobAnalysisMonitor(project, response, buildOutput)
+							: new DirectAnalysisMonitor(response, buildOutput);
+
 				} catch (CodeDxClientException e) {
 					String errorSpecificMessage;
 
@@ -362,7 +419,9 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 						String.format("Response Content: %s", e.getResponseContent()) + '\n' +
 						Util.getStackTrace(e);
 
-					throw new AbortException(message);
+					buildOutput.println(message);
+					handleCodeDxError(build, buildOutput, "Failed to start analysis");
+					return; // nothing else to do if we can't start the analysis, everything else relies on it
 				} finally {
 					// close streams after we're done sending them
 					for(Map.Entry<String, InputStream> entry : toSend.entrySet()){
@@ -371,8 +430,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				}
 
 				buildOutput.println("Code Dx accepted files for analysis");
-
-
 
 				int analysisId = analysisMonitor.waitForStart(repeatingClient);
 
@@ -395,7 +452,11 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 							repeatingClient.setAnalysisName(project, analysisId, expandedAnalysisName);
 							buildOutput.println("Successfully updated analysis name.");
 						} catch (CodeDxClientException e) {
-							throw new IOException("Got error from Code Dx API Client while trying to set the analysis name", e);
+							e.printStackTrace(buildOutput);
+							// this doesn't affect anything else in the plugin, only exit early if we're meant to fail
+							if (!handleCodeDxError(build, buildOutput, "Got error from Code Dx API Client while trying to set the analysis name")) {
+								return;
+							}
 						}
 					}
 				}
@@ -405,7 +466,14 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					return;
 				}
 
-				String status = analysisMonitor.waitForFinish(repeatingClient);
+				String status;
+				try {
+					status = analysisMonitor.waitForFinish(repeatingClient);
+				} catch (CodeDxClientException e) {
+					e.printStackTrace(buildOutput);
+					handleCodeDxError(build, buildOutput, "There was an error querying for the analysis status");
+					return; // nothing else to do if the analysis failed
+				}
 
 				if (Job.COMPLETED.equals(status)) {
 					try {
@@ -460,23 +528,28 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 								startingDate, // the time this process started is the "new" threshold for filtering
 								analysisResultConfiguration.isFailureOnlyNew(),
 								analysisResultConfiguration.isUnstableOnlyNew(),
-								analysisResultConfiguration.getBreakForPolicy(),
+								analysisResultConfiguration.getPolicyBreakBuildBehavior(),
 								project,
 								buildOutput);
 						Result buildResult = checker.checkResult();
 						build.setResult(buildResult);
-						if (buildResult.isWorseThan(Result.SUCCESS)) {
-							throw new AbortException("Build result is non-success, terminating build");
-						}
 					} catch (CodeDxClientException e) {
-						throw new IOException("Fatal Error! There was a problem retrieving analysis results.", e);
+						e.printStackTrace(buildOutput);
+						handleCodeDxError(build, buildOutput, "There was an error fetching/processing analysis results");
 					}
 				} else {
 					buildOutput.println("Analysis status: " + status);
-					if (analysisResultConfiguration.getBreakIfFailed()) {
-						throw new AbortException("Code Dx analysis ended with status '" + status + "' instead of '" + Job.COMPLETED + "', terminating build");
-					}
+					handleCodeDxError(build, buildOutput, "Analysis status was non-success");
 				}
+			}
+			catch (AbortException e) {
+				// re-throw any "expected" exceptions; if we didn't want these to be thrown due to error
+				// handling behavior, they wouldn't have been thrown in the first place
+				throw e;
+			} catch (Exception e) {
+				// any remaining exceptions from this `try` block should be related to comms with Code Dx
+				e.printStackTrace(buildOutput);
+				handleCodeDxError(build, buildOutput, "An unexpected error occurred");
 			} finally {
 				if(sourceAndBinaryZip != null){
 					sourceAndBinaryZip.delete();
@@ -732,6 +805,22 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			}
 
 			return listBox;
+		}
+
+		private ListBoxModel getErrorBehaviorItems() {
+			ListBoxModel listBox = new ListBoxModel();
+			listBox.add(BuildEffectBehavior.None.getLabel(), BuildEffectBehavior.None.name());
+			listBox.add(BuildEffectBehavior.MarkUnstable.getLabel(), BuildEffectBehavior.MarkUnstable.name());
+			listBox.add(BuildEffectBehavior.MarkFailed.getLabel(), BuildEffectBehavior.MarkFailed.name());
+			return listBox;
+		}
+
+		public ListBoxModel doFillErrorHandlingBehaviorItems() {
+			return getErrorBehaviorItems();
+		}
+
+		public ListBoxModel doFillPolicyBreakBuildBehaviorItems() {
+			return getErrorBehaviorItems();
 		}
 
 		public ListBoxModel doFillFailureSeverityItems() {

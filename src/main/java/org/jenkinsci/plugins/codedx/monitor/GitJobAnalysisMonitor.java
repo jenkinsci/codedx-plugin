@@ -36,39 +36,35 @@ public class GitJobAnalysisMonitor implements AnalysisMonitor {
 		this.logger = logger;
 	}
 
-	public int waitForStart(CodeDxClient client) throws InterruptedException, IOException {
+	public int waitForStart(CodeDxClient client) throws InterruptedException, IOException, CodeDxClientException {
 		String gitJobId = originalAnalysisResponse.getJobId();
 		boolean isRunning = true;
 		logger.println("Monitoring git clone job...");
-		try {
-			do {
-				Thread.sleep(3000);
-				String status = client.getJobStatus(gitJobId);
-				if (status != null) {
-					if (Job.QUEUED.equals(status) || Job.RUNNING.equals(status)) {
-						logger.println("Git clone status is " + status);
-						continue;
-					}
 
-					if (Job.FAILED.equals(status)) {
-						throw new AbortException("Fatal Error! The Code Dx git clone job failed.");
-					}
-
-					isRunning = false;
+		do {
+			Thread.sleep(3000);
+			String status = client.getJobStatus(gitJobId);
+			if (status != null) {
+				if (Job.QUEUED.equals(status) || Job.RUNNING.equals(status)) {
+					logger.println("Git clone status is " + status);
+					continue;
 				}
-			} while (isRunning);
 
-			newAnalysisResponse = client.getGitJobResult(gitJobId);
-		} catch (CodeDxClientException e) {
-			throw new IOException("Fatal Error! There was a problem querying for the Git clone job status.", e);
-		}
+				if (Job.FAILED.equals(status)) {
+					throw new AbortException("Fatal Error! The Code Dx git clone job failed.");
+				}
+
+				isRunning = false;
+			}
+		} while (isRunning);
 
 		logger.println("Git clone job completed");
 
+		newAnalysisResponse = client.getGitJobResult(gitJobId);
 		return newAnalysisResponse.getAnalysisId();
 	}
 
-	public String waitForFinish(CodeDxClient client) throws IOException, InterruptedException {
+	public String waitForFinish(CodeDxClient client) throws IOException, InterruptedException, CodeDxClientException {
 		DirectAnalysisMonitor monitor = new DirectAnalysisMonitor(newAnalysisResponse, logger);
 		return monitor.waitForFinish(client);
 	}

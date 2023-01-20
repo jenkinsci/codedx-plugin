@@ -33,31 +33,28 @@ public class DirectAnalysisMonitor implements AnalysisMonitor {
 	}
 
 	// returns analysis ID
-	public int waitForStart(CodeDxClient client) throws IOException, InterruptedException {
+	public int waitForStart(CodeDxClient client) {
 		return analysisResponse.getAnalysisId();
 	}
 
 	// returns job status
-	public String waitForFinish(CodeDxClient client) throws IOException, InterruptedException {
+	public String waitForFinish(CodeDxClient client) throws IOException, InterruptedException, CodeDxClientException {
 		String status = null;
 		String oldStatus = null;
-		try {
-			do {
-				Thread.sleep(3000);
-				oldStatus = status;
-				status = client.getJobStatus(analysisResponse.getJobId());
 
-				if (status != null && !status.equals(oldStatus)) {
-					if (Job.QUEUED.equals(status)) {
-						logger.println("Code Dx analysis is queued");
-					} else if (Job.RUNNING.equals(status)) {
-						logger.println("Code Dx analysis is running");
-					}
+		do {
+			Thread.sleep(3000);
+			oldStatus = status;
+			status = client.getJobStatus(analysisResponse.getJobId());
+
+			if (status != null && !status.equals(oldStatus)) {
+				if (Job.QUEUED.equals(status)) {
+					logger.println("Code Dx analysis is queued");
+				} else if (Job.RUNNING.equals(status)) {
+					logger.println("Code Dx analysis is running");
 				}
-			} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
-		} catch (CodeDxClientException e) {
-			throw new IOException("Fatal Error! There was a problem querying for the analysis status.", e);
-		}
+			}
+		} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
 
 		return status;
 	}

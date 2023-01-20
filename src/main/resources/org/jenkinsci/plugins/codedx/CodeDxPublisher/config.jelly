@@ -51,6 +51,11 @@
 		<f:textbox/>
 	</f:entry>
 
+	<f:entry title="Error Handling" field="errorHandlingBehavior" help="/plugin/codedx/help-errorHandlingBehavior.html">
+		<!-- note: we could use <enum> instead, but it looks like this is semi-broken and unreliable (depending on jenkins version) -->
+		<f:select default="MarkFailed" />
+	</f:entry>
+
 	<f:block>
 		<table id="analysisResultConfiguration">
 			<j:set var="analysisResultConfiguration" value="${instance.analysisResultConfiguration}"/>
@@ -58,16 +63,11 @@
 							 checked="${analysisResultConfiguration != null}"
 							 help="/plugin/codedx/help-analysisResultConfiguration.html">
 
+				<f:entry title="'Break the build' Policy Action" field="policyBreakBuildBehavior" help="/plugin/codedx/help-policyBreakBuildBehavior.html">
+					<f:select default="MarkFailed" value="${analysisResultConfiguration.policyBreakBuildBehavior}" />
+				</f:entry>
+
 				<f:section title="Build Failure Conditions">
-					<f:entry title="Analysis Error" field="breakIfFailed" help="/plugin/codedx/help-breakIfFailed.html">
-						<f:checkbox checked="${analysisResultConfiguration.breakIfFailed}" default="true"/>
-					</f:entry>
-
-					<f:entry title="'Break the build' Policy Action" field="breakForPolicy"
-							 help="/plugin/codedx/help-breakForPolicy.html">
-						<f:checkbox checked="${analysisResultConfiguration.breakForPolicy}" default="true"/>
-					</f:entry>
-
 					<f:entry title="Severity" field="failureSeverity" help="/plugin/codedx/help-failureSeverity.html">
 						<f:select value="${analysisResultConfiguration.failureSeverity}"/>
 					</f:entry>
