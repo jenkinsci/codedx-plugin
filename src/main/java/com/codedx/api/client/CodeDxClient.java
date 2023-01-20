@@ -30,11 +30,13 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.jenkinsci.plugins.codedx.GitFetchConfiguration;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -152,7 +154,6 @@ public class CodeDxClient {
 		);
 	}
 
-
 	/**
 	 * Retrieves all Triage statuses for a given project.
 	 *
@@ -170,7 +171,6 @@ public class CodeDxClient {
 		);
 	}
 
-
 	/**
 	 * Retrieves a specific job from CodeDx
 	 *
@@ -186,6 +186,16 @@ public class CodeDxClient {
 			"jobs/" + id,
 			false,
 			new TypeToken<Job>(){}.getType(),
+			null
+		);
+	}
+
+	public StartAnalysisResponse getGitJobResult(String id) throws CodeDxClientException, IOException {
+		return doHttpRequest(
+			new HttpGet(),
+		"jobs/" + id + "/result",
+			false,
+			new TypeToken<StartAnalysisResponse>(){}.getType(),
 			null
 		);
 	}
@@ -227,7 +237,7 @@ public class CodeDxClient {
 	/**
 	 * Retrieves the total findings count for a given project using the provided Filter
 	 *
-	 * @param projectContext The project context string, a raw projectId optionally concatenated with branch info
+	 * @param project The project context string, a raw projectId optionally concatenated with branch info
 	 * @param filter A Filter object (set to null to not filter)
 	 * @return The count
 	 * @throws CodeDxClientException
@@ -312,6 +322,16 @@ public class CodeDxClient {
 		);
 	}
 
+	public GitConfigResponse getProjectGitConfig(ProjectContext project) throws IOException, CodeDxClientException {
+		return doHttpRequest(
+			new HttpGet(),
+			"gitconf/" + project.getProjectId(),
+			true,
+			new TypeToken<GitConfigResponse>(){}.getType(),
+			null
+		);
+	}
+
 	/**
 	 * Perform an HttpRequest to the given api path, with an optional request body, and parse the response
 	 * @param request Generally a new `HttpGet`, `HttpPost`, or `HttpPut`
@@ -385,14 +405,40 @@ public class CodeDxClient {
 	 * @throws CodeDxClientException
 	 *
 	 */
-	public StartAnalysisResponse startAnalysis(int projectId, String parentBranchName, String targetBranchName, Map<String, InputStream> artifacts) throws IOException, CodeDxClientException {
-		// // (parent branch is pulled from project context, will use default branch if not set)
+	public StartAnalysisResponse startAnalysis(int projectId, boolean includeGitSource, String specificGitBranch, String parentBranchName, String targetBranchName, Map<String, InputStream> artifacts) throws IOException, CodeDxClientException {
+		// (parent branch is pulled from project context, will use default branch if not set)
 		ProjectContext project = new ProjectContext(projectId, parentBranchName);
 
-		String path = "projects/" + project + "/analysis";
+		List<String> queryParams = new ArrayList<>();
 		if (targetBranchName != null && targetBranchName.length() > 0) {
-			path += "?branchName=" + targetBranchName;
+			queryParams.add("branchName=" + targetBranchName);
 		}
+
+		if (includeGitSource) {
+			queryParams.add("includeGitSource=true");
+
+			if (specificGitBranch != null) {
+				queryParams.add("gitBranchName=" + specificGitBranch);
+			}
+		}
+
+		StringBuilder pathBuilder = new StringBuilder();
+		pathBuilder.append("projects/");
+		pathBuilder.append(project);
+		pathBuilder.append("/analysis");
+
+		if (!queryParams.isEmpty()) {
+			for (int i = 0; i < queryParams.size(); i++) {
+				String param = queryParams.get(i);
+				if (i == 0) pathBuilder.append('?');
+				else pathBuilder.append('&');
+
+				pathBuilder.append(param);
+			}
+		}
+
+		String path = pathBuilder.toString();
+
 		HttpPost postRequest = new HttpPost(url + path);
 		postRequest.addHeader(KEY_HEADER, key);
 

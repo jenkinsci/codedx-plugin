@@ -14,29 +14,14 @@
  */
 package com.codedx.api.client;
 
-/**
- * Represents the JSON response data when starting an analysis run.
- *
- * @author anthonyd
- *
- */
-public class StartAnalysisResponse {
+public class GitConfigResponse {
+	private String url, branch;
 
-	private int analysisId;
-	private String jobId;
-
-	StartAnalysisResponse() {
-		analysisId = -1;
-		jobId = null;
+	public String getUrl() {
+		return url;
 	}
 
-	public int getAnalysisId(){ return analysisId; }
-	public void setAnalysisId(int analysisId) { this.analysisId = analysisId; }
-
-	public String getJobId() {
-		return jobId;
-	}
-	public void setJobId(String jobId) {
-		this.jobId = jobId;
+	public String getBranch() {
+		return branch;
 	}
 }

@@ -38,6 +38,9 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
 import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
+import org.jenkinsci.plugins.codedx.monitor.AnalysisMonitor;
+import org.jenkinsci.plugins.codedx.monitor.DirectAnalysisMonitor;
+import org.jenkinsci.plugins.codedx.monitor.GitJobAnalysisMonitor;
 import org.kohsuke.stapler.*;
 
 import javax.net.ssl.SSLHandshakeException;
@@ -49,6 +52,7 @@ import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+import java.time.Instant;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -85,6 +89,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private BuildEffectBehavior errorHandlingBehavior;
 
+	private GitFetchConfiguration gitFetchConfiguration;
+
 	private final static Logger logger = Logger.getLogger(CodeDxPublisher.class.getName());
 
 	/**
@@ -112,6 +118,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		this.targetBranchName = null;
 		this.baseBranchName = null;
 		this.errorHandlingBehavior = BuildEffectBehavior.MarkFailed;
+
+		this.gitFetchConfiguration = null;
 
 		setupClient();
 	}
@@ -230,6 +238,15 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		errorHandlingBehavior = behavior;
 	}
 
+	public GitFetchConfiguration getGitFetchConfiguration() {
+		return gitFetchConfiguration;
+	}
+
+	@DataBoundSetter
+	public void setGitFetchConfiguration(GitFetchConfiguration config) {
+		gitFetchConfiguration = config;
+	}
+
 	// Sets the build status based on `errorHandlingBehavior`. Only meant to be used for Code Dx-specific
 	// errors, eg analysis failure and connection issues. Configuration errors will be thrown as usual
 	// since those issues aren't related to Code Dx itself.
@@ -282,7 +299,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		try {
 			cdxVersion = repeatingClient.getCodeDxVersion();
 			buildOutput.println("Got Code Dx version: " + cdxVersion);
-		} catch (CodeDxClientException e) {
+		} catch (Exception e) {
 			e.printStackTrace(buildOutput);
 			if (handleCodeDxError(build, buildOutput, "An error occurred fetching the Code Dx version")) {
 				buildOutput.println("The Code Dx plugin cannot continue without verifying the Code Dx version, exiting");
@@ -338,14 +355,65 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			}
 		}
 
-		if (toSend.size() > 0) {
+		GitFetchConfiguration effectiveGitConfig = gitFetchConfiguration;
+		if (effectiveGitConfig != null) {
+			buildOutput.println("Verifying git config for Code Dx project...");
+			try {
+				GitConfigResponse response = repeatingClient.getProjectGitConfig(project);
+				if (response.getUrl().isEmpty()) {
+					buildOutput.println("'Include Git Source' was enabled but the project does not have a Git config assigned. 'Include Git Source' will be disabled for this run.");
+					effectiveGitConfig = null;
+				}
+			} catch (Exception e) {
+				if (!handleCodeDxError(build, buildOutput, "There was a problem fetching the project's Git config")) {
+					return;
+				}
+				buildOutput.println("'Include Git Source' will be disabled for this run.");
+				effectiveGitConfig = null;
+			}
+		}
+
+		if (toSend.size() > 0 || effectiveGitConfig != null) {
 			try {
 				buildOutput.println("Submitting files to Code Dx for analysis");
 
-				StartAnalysisResponse response;
+				AnalysisMonitor analysisMonitor;
 
+				StartAnalysisResponse response;
 				try {
-					response = repeatingClient.startAnalysis(project.getProjectId(), branchChecker.getBaseBranchName(), branchChecker.getTargetBranchName(), toSend);
+					boolean includeGitSource = effectiveGitConfig != null;
+					String targetGitBranch = null;
+					if (includeGitSource) {
+						targetGitBranch = effectiveGitConfig.getSpecificBranch();
+						if (targetGitBranch != null) {
+							targetGitBranch = valueResolver.resolve("Git branch", targetGitBranch);
+							buildOutput.println("Using Git branch for Code Dx: " + targetGitBranch);
+						} else {
+							buildOutput.println("No Git branch specified, using Code Dx project's default Git branch");
+						}
+					}
+
+					response = repeatingClient.startAnalysis(
+							project.getProjectId(),
+							includeGitSource,
+							targetGitBranch,
+							branchChecker.getBaseBranchName(),
+							branchChecker.getTargetBranchName(),
+							toSend
+					);
+
+					// (shouldn't be necessary, but this condition was checked in previous impl., so it will be preserved)
+					if (response == null) {
+						handleCodeDxError(build, buildOutput, "Received null data for the analysis job");
+						// everything else has to do with checking for the analysis indicated by the response, nothing
+						// else to do if this fails
+						return;
+					}
+
+					analysisMonitor = effectiveGitConfig != null
+							? new GitJobAnalysisMonitor(response, buildOutput)
+							: new DirectAnalysisMonitor(response, buildOutput);
+
 				} catch (CodeDxClientException e) {
 					String errorSpecificMessage;
 
@@ -384,23 +452,19 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					}
 				}
 
-				// (shouldn't be necessary, but this condition was checked in previous impl., so it will be preserved)
-				if (response == null) {
-					handleCodeDxError(build, buildOutput, "Received null data for the analysis job");
-					// everything else has to do with checking for the analysis indicated by the response, nothing
-					// else to do if this fails
-					return;
-				}
-
 				buildOutput.println("Code Dx accepted files for analysis");
 
+				int analysisId = analysisMonitor.waitForStart(repeatingClient);
+
 				// Set the analysis name on the server
-				if(analysisName == null || analysisName.length() == 0){
+				if(analysisName == null || analysisName.length() == 0) {
 					buildOutput.println("No 'Analysis Name' was chosen.");
+				} else if (analysisId == -1) {
+					buildOutput.println("Code Dx did not provide an analysis ID - the 'Analysis Name' will not be applied.");
 				} else {
 					String expandedAnalysisName = valueResolver.resolve("analysis name", analysisName);
 					buildOutput.println("Analysis Name: " + expandedAnalysisName);
-					buildOutput.println("Analysis Id: " + response.getAnalysisId());
+					buildOutput.println("Analysis Id: " + analysisId);
 
 					if(cdxVersion.compareTo(CodeDxVersion.MIN_FOR_ANALYSIS_NAMES) < 0){
 						buildOutput.println("The connected Code Dx server is only version " + cdxVersion +
@@ -408,7 +472,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 								CodeDxVersion.MIN_FOR_ANALYSIS_NAMES + "). The analysis name will not be set.");
 					} else {
 						try {
-							repeatingClient.setAnalysisName(project, response.getAnalysisId(), expandedAnalysisName);
+							repeatingClient.setAnalysisName(project, analysisId, expandedAnalysisName);
 							buildOutput.println("Successfully updated analysis name.");
 						} catch (CodeDxClientException e) {
 							e.printStackTrace(buildOutput);
@@ -425,21 +489,9 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					return;
 				}
 
-				String status = null;
-				String oldStatus = null;
+				String status;
 				try {
-					do {
-						Thread.sleep(3000);
-						oldStatus = status;
-						status = repeatingClient.getJobStatus(response.getJobId());
-						if (status != null && !status.equals(oldStatus)) {
-							if (Job.QUEUED.equals(status)) {
-								buildOutput.println("Code Dx analysis is queued");
-							} else if (Job.RUNNING.equals(status)) {
-								buildOutput.println("Code Dx analysis is running");
-							}
-						}
-					} while (Job.QUEUED.equals(status) || Job.RUNNING.equals(status));
+					status = analysisMonitor.waitForFinish(repeatingClient);
 				} catch (CodeDxClientException e) {
 					e.printStackTrace(buildOutput);
 					handleCodeDxError(build, buildOutput, "There was an error querying for the analysis status");

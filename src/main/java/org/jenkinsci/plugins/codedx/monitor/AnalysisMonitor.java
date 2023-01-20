@@ -12,31 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package com.codedx.api.client;
+package org.jenkinsci.plugins.codedx.monitor;
 
-/**
- * Represents the JSON response data when starting an analysis run.
- *
- * @author anthonyd
- *
- */
-public class StartAnalysisResponse {
+import com.codedx.api.client.CodeDxClient;
+import com.codedx.api.client.CodeDxClientException;
 
-	private int analysisId;
-	private String jobId;
+import java.io.IOException;
 
-	StartAnalysisResponse() {
-		analysisId = -1;
-		jobId = null;
-	}
-
-	public int getAnalysisId(){ return analysisId; }
-	public void setAnalysisId(int analysisId) { this.analysisId = analysisId; }
-
-	public String getJobId() {
-		return jobId;
-	}
-	public void setJobId(String jobId) {
-		this.jobId = jobId;
-	}
+public interface AnalysisMonitor {
+	int waitForStart(CodeDxClient client) throws IOException, InterruptedException, CodeDxClientException;
+	String waitForFinish(CodeDxClient client) throws IOException, InterruptedException, CodeDxClientException;
 }

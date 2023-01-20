@@ -12,31 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package com.codedx.api.client;
+package org.jenkinsci.plugins.codedx;
 
-/**
- * Represents the JSON response data when starting an analysis run.
- *
- * @author anthonyd
- *
- */
-public class StartAnalysisResponse {
+import org.kohsuke.stapler.DataBoundConstructor;
 
-	private int analysisId;
-	private String jobId;
+public class GitFetchConfiguration {
+	private String specificBranch;
 
-	StartAnalysisResponse() {
-		analysisId = -1;
-		jobId = null;
+	@DataBoundConstructor
+	public GitFetchConfiguration(String specificBranch) {
+		this.specificBranch = specificBranch;
 	}
 
-	public int getAnalysisId(){ return analysisId; }
-	public void setAnalysisId(int analysisId) { this.analysisId = analysisId; }
-
-	public String getJobId() {
-		return jobId;
+	public String getSpecificBranch() {
+		if (specificBranch != null && specificBranch.trim().length() > 0) {
+			return specificBranch;
+		} else {
+			return null;
+		}
 	}
-	public void setJobId(String jobId) {
-		this.jobId = jobId;
+
+	public void setSpecificBranch(String branch) {
+		specificBranch = branch;
 	}
 }
