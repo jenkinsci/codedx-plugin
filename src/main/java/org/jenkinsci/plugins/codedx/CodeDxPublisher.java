@@ -364,8 +364,12 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					buildOutput.println("'Include Git Source' was enabled but the project does not have a Git config assigned. 'Include Git Source' will be disabled for this run.");
 					effectiveGitConfig = null;
 				}
-			} catch (CodeDxClientException e) {
-				throw new IOException("Fatal Error! There was a problem fetching the project's Git config.", e);
+			} catch (Exception e) {
+				if (!handleCodeDxError(build, buildOutput, "There was a problem fetching the project's Git config")) {
+					return;
+				}
+				buildOutput.println("'Include Git Source' will be disabled for this run.");
+				effectiveGitConfig = null;
 			}
 		}
 
