@@ -30,6 +30,7 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.jenkinsci.plugins.codedx.GitFetchConfiguration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -404,7 +405,7 @@ public class CodeDxClient {
 	 * @throws CodeDxClientException
 	 *
 	 */
-	public StartAnalysisResponse startAnalysis(int projectId, Boolean includeGitSource, String parentBranchName, String targetBranchName, Map<String, InputStream> artifacts) throws IOException, CodeDxClientException {
+	public StartAnalysisResponse startAnalysis(int projectId, GitFetchConfiguration gitConfig, String parentBranchName, String targetBranchName, Map<String, InputStream> artifacts) throws IOException, CodeDxClientException {
 		String projectSpecifier = Integer.toString(projectId);
 		if (parentBranchName != null && parentBranchName.length() > 0) {
 			// (parent branch is pulled from project context, will use default branch if not set)
@@ -416,8 +417,12 @@ public class CodeDxClient {
 			queryParams.add("branchName=" + targetBranchName);
 		}
 
-		if (includeGitSource) {
+		if (gitConfig != null) {
 			queryParams.add("includeGitSource=true");
+
+			if (gitConfig.getSpecificBranch() != null) {
+				queryParams.add("gitBranchName=" + gitConfig.getSpecificBranch());
+			}
 		}
 
 		StringBuilder pathBuilder = new StringBuilder();

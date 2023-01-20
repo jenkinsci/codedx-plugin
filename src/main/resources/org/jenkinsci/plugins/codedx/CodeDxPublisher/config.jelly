@@ -31,9 +31,15 @@
 		<f:textbox default="**"/>
 	</f:entry>
 
-	<f:entry title="Include Git Source" field="includeGitSource" help="/plugin/codedx/help-includeGitSource.html">
-		<f:checkbox/>
-	</f:entry>
+	<table id="gitFetchConfiguration">
+		<j:set var="gitFetchConfiguration" value="${instance.gitFetchConfiguration}" />
+		<f:optionalBlock title="Include Git Source" name="gitFetchConfiguration"
+						 checked="${gitFetchConfiguration != null}">
+			<f:entry title="Specific Branch Name" field="specificBranch">
+				<f:textbox value="${gitFetchConfiguration.specificBranch}" />
+			</f:entry>
+		</f:optionalBlock>
+	</table>
 
 	<f:entry title="Tool Output Files" field="toolOutputFiles" help="/plugin/codedx/help-toolOutputFiles.html">
 		<f:textbox/>

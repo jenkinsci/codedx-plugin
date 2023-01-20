@@ -77,8 +77,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private String analysisName;
 
-	private Boolean includeGitSource;
-
 	// Contains the fields applicable when the user chooses to have Jenkins wait for
 	// analysis runs to complete.
 	private AnalysisResultConfiguration analysisResultConfiguration;
@@ -90,6 +88,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 	private String targetBranchName, baseBranchName;
 
 	private BuildEffectBehavior errorHandlingBehavior;
+
+	private GitFetchConfiguration gitFetchConfiguration;
 
 	private final static Logger logger = Logger.getLogger(CodeDxPublisher.class.getName());
 
@@ -119,7 +119,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		this.baseBranchName = null;
 		this.errorHandlingBehavior = BuildEffectBehavior.MarkFailed;
 
-		this.includeGitSource = false;
+		this.gitFetchConfiguration = null;
 
 		setupClient();
 	}
@@ -190,15 +190,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		setupClient();
 	}
 
-	public Boolean isIncludeGitSource() {
-		return this.includeGitSource;
-	}
-
-	@DataBoundSetter
-	public void setIncludeGitSource(Boolean include) {
-		this.includeGitSource = include;
-	}
-
 	public String getAnalysisName(){ return analysisName; }
 
 	private String getLatestAnalysisUrl() {
@@ -245,6 +236,15 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 	@DataBoundSetter
 	public void setErrorHandlingBehavior(BuildEffectBehavior behavior) {
 		errorHandlingBehavior = behavior;
+	}
+
+	public GitFetchConfiguration getGitFetchConfiguration() {
+		return gitFetchConfiguration;
+	}
+
+	@DataBoundSetter
+	public void setGitFetchConfiguration(GitFetchConfiguration config) {
+		gitFetchConfiguration = config;
 	}
 
 	// Sets the build status based on `errorHandlingBehavior`. Only meant to be used for Code Dx-specific
@@ -355,21 +355,21 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			}
 		}
 
-		boolean effectiveIncludeGitSource = includeGitSource;
-		if (effectiveIncludeGitSource) {
+		GitFetchConfiguration effectiveGitConfig = gitFetchConfiguration;
+		if (effectiveGitConfig != null) {
 			buildOutput.println("Verifying git config for Code Dx project...");
 			try {
 				GitConfigResponse response = repeatingClient.getProjectGitConfig(project);
 				if (response.getUrl().isEmpty()) {
 					buildOutput.println("'Include Git Source' was enabled but the project does not have a Git config assigned. 'Include Git Source' will be disabled for this run.");
-					effectiveIncludeGitSource = false;
+					effectiveGitConfig = null;
 				}
 			} catch (CodeDxClientException e) {
 				throw new IOException("Fatal Error! There was a problem fetching the project's Git config.", e);
 			}
 		}
 
-		if (toSend.size() > 0 || effectiveIncludeGitSource) {
+		if (toSend.size() > 0 || effectiveGitConfig != null) {
 			try {
 				buildOutput.println("Submitting files to Code Dx for analysis");
 
@@ -377,7 +377,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 				StartAnalysisResponse response;
 				try {
-					response = repeatingClient.startAnalysis(project.getProjectId(), effectiveIncludeGitSource, branchChecker.getBaseBranchName(), branchChecker.getTargetBranchName(), toSend);
+					response = repeatingClient.startAnalysis(project.getProjectId(), effectiveGitConfig, branchChecker.getBaseBranchName(), branchChecker.getTargetBranchName(), toSend);
 
 					// (shouldn't be necessary, but this condition was checked in previous impl., so it will be preserved)
 					if (response == null) {
@@ -387,7 +387,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 						return;
 					}
 
-					analysisMonitor = effectiveIncludeGitSource
+					analysisMonitor = effectiveGitConfig != null
 							? new GitJobAnalysisMonitor(project, response, buildOutput)
 							: new DirectAnalysisMonitor(response, buildOutput);
 
