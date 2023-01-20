@@ -11,6 +11,7 @@
 	<!-- Warnings regarding unwritten/unused fields - these are serialization classes -->
 	<Match>
 		<Class name="com.codedx.api.client.CodeDxClient$CodeDxVersionResponse" />
+		<Class name="com.codedx.api.client.GitConfigResponse" />
 	</Match>
 
 	<!-- Warnings about not overriding .Equals (these classes should be reference-compared, so default impl. should be ok) -->
@@ -31,6 +32,12 @@
 	<Match>
 		<Class name="org.jenkinsci.plugins.codedx.CodeDxBuildAction$DiffGroupComparator" />
 		<Bug pattern="SE_COMPARATOR_SHOULD_BE_SERIALIZABLE" />
+	</Match>
+
+	<!-- Warnings about try/catch exception mismatch, this class uses broad Exception catches intentionally to respect Error Handling option -->
+	<Match>
+		<Class name="org.jenkinsci.plugins.codedx.CodeDxPublisher" />
+		<Bug pattern="REC_CATCH_EXCEPTION" />
 	</Match>
 
 <!--	<Match>-->

@@ -22,16 +22,13 @@ import java.io.PrintStream;
 import java.util.List;
 
 public class GitJobAnalysisMonitor implements AnalysisMonitor {
-	ProjectContext project;
 	StartAnalysisResponse originalAnalysisResponse, newAnalysisResponse;
 	PrintStream logger;
 
 	public GitJobAnalysisMonitor(
-		ProjectContext project,
 		StartAnalysisResponse originalAnalysisResponse,
 		PrintStream logger
 	) {
-		this.project = project;
 		this.originalAnalysisResponse = originalAnalysisResponse;
 		this.logger = logger;
 	}

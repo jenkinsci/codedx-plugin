@@ -299,7 +299,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		try {
 			cdxVersion = repeatingClient.getCodeDxVersion();
 			buildOutput.println("Got Code Dx version: " + cdxVersion);
-		} catch (CodeDxClientException e) {
+		} catch (Exception e) {
 			e.printStackTrace(buildOutput);
 			if (handleCodeDxError(build, buildOutput, "An error occurred fetching the Code Dx version")) {
 				buildOutput.println("The Code Dx plugin cannot continue without verifying the Code Dx version, exiting");
@@ -411,7 +411,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					}
 
 					analysisMonitor = effectiveGitConfig != null
-							? new GitJobAnalysisMonitor(project, response, buildOutput)
+							? new GitJobAnalysisMonitor(response, buildOutput)
 							: new DirectAnalysisMonitor(response, buildOutput);
 
 				} catch (CodeDxClientException e) {
