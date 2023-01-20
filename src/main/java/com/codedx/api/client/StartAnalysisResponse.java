@@ -30,10 +30,6 @@ public class StartAnalysisResponse {
 		jobId = null;
 	}
 
-	public Boolean hasAnalysisId() {
-		return analysisId != -1;
-	}
-
 	public int getAnalysisId(){ return analysisId; }
 	public void setAnalysisId(int analysisId) { this.analysisId = analysisId; }
 
