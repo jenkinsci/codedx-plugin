@@ -381,7 +381,21 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 				StartAnalysisResponse response;
 				try {
-					response = repeatingClient.startAnalysis(project.getProjectId(), effectiveGitConfig, branchChecker.getBaseBranchName(), branchChecker.getTargetBranchName(), toSend);
+					boolean includeGitSource = effectiveGitConfig != null;
+					String targetGitBranch = includeGitSource ? effectiveGitConfig.getSpecificBranch() : null;
+					if (targetGitBranch != null) {
+						targetGitBranch = valueResolver.resolve("Git branch", targetGitBranch);
+						buildOutput.println("Using Git branch for Code Dx: " + targetGitBranch);
+					}
+
+					response = repeatingClient.startAnalysis(
+							project.getProjectId(),
+							includeGitSource,
+							targetGitBranch,
+							branchChecker.getBaseBranchName(),
+							branchChecker.getTargetBranchName(),
+							toSend
+					);
 
 					// (shouldn't be necessary, but this condition was checked in previous impl., so it will be preserved)
 					if (response == null) {

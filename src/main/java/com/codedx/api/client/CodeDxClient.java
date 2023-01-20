@@ -405,7 +405,7 @@ public class CodeDxClient {
 	 * @throws CodeDxClientException
 	 *
 	 */
-	public StartAnalysisResponse startAnalysis(int projectId, GitFetchConfiguration gitConfig, String parentBranchName, String targetBranchName, Map<String, InputStream> artifacts) throws IOException, CodeDxClientException {
+	public StartAnalysisResponse startAnalysis(int projectId, boolean includeGitSource, String specificGitBranch, String parentBranchName, String targetBranchName, Map<String, InputStream> artifacts) throws IOException, CodeDxClientException {
 		String projectSpecifier = Integer.toString(projectId);
 		if (parentBranchName != null && parentBranchName.length() > 0) {
 			// (parent branch is pulled from project context, will use default branch if not set)
@@ -417,11 +417,11 @@ public class CodeDxClient {
 			queryParams.add("branchName=" + targetBranchName);
 		}
 
-		if (gitConfig != null) {
+		if (includeGitSource) {
 			queryParams.add("includeGitSource=true");
 
-			if (gitConfig.getSpecificBranch() != null) {
-				queryParams.add("gitBranchName=" + gitConfig.getSpecificBranch());
+			if (specificGitBranch != null) {
+				queryParams.add("gitBranchName=" + specificGitBranch);
 			}
 		}
 
