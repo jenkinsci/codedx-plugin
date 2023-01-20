@@ -12,4 +12,7 @@ docker run \
     jenkins/jenkins:lts
 ```
 
-This will start Jenkins on port 9090. In this repo, run `hpi:hpi` to generate an installable package to upload to Jenkins.
+This will start Jenkins on port 9090. In this repo, run `mvn compile hpi:hpi` to generate an installable package
+to upload to Jenkins.
+
+The JVM debugger will be exposed on port 8000.
