@@ -406,11 +406,8 @@ public class CodeDxClient {
 	 *
 	 */
 	public StartAnalysisResponse startAnalysis(int projectId, boolean includeGitSource, String specificGitBranch, String parentBranchName, String targetBranchName, Map<String, InputStream> artifacts) throws IOException, CodeDxClientException {
-		String projectSpecifier = Integer.toString(projectId);
-		if (parentBranchName != null && parentBranchName.length() > 0) {
-			// (parent branch is pulled from project context, will use default branch if not set)
-			projectSpecifier += ";branch=" + parentBranchName;
-		}
+		// (parent branch is pulled from project context, will use default branch if not set)
+		ProjectContext project = new ProjectContext(projectId, parentBranchName);
 
 		List<String> queryParams = new ArrayList<>();
 		if (targetBranchName != null && targetBranchName.length() > 0) {
@@ -427,7 +424,7 @@ public class CodeDxClient {
 
 		StringBuilder pathBuilder = new StringBuilder();
 		pathBuilder.append("projects/");
-		pathBuilder.append(projectSpecifier);
+		pathBuilder.append(project);
 		pathBuilder.append("/analysis");
 
 		if (!queryParams.isEmpty()) {
