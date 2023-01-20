@@ -34,8 +34,8 @@
 	<table id="gitFetchConfiguration">
 		<j:set var="gitFetchConfiguration" value="${instance.gitFetchConfiguration}" />
 		<f:optionalBlock title="Include Git Source" name="gitFetchConfiguration"
-						 checked="${gitFetchConfiguration != null}">
-			<f:entry title="Specific Branch Name" field="specificBranch">
+						 checked="${gitFetchConfiguration != null}" help="/plugin/codedx/help-gitFetchConfiguration.html">
+			<f:entry title="Specific Branch Name" field="specificBranch" help="/plugin/codedx/help-specificBranch.html">
 				<f:textbox value="${gitFetchConfiguration.specificBranch}" />
 			</f:entry>
 		</f:optionalBlock>
