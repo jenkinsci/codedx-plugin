@@ -34,4 +34,6 @@ public enum BuildEffectBehavior {
 	public Result getEquivalentResult() {
 		return equivalentResult;
 	}
+
+	public static final BuildEffectBehavior Default = MarkFailed;
 }

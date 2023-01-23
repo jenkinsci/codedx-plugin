@@ -64,7 +64,11 @@ public class AnalysisResultChecker {
 		this.project = project;
 		this.logger = logger;
 
-		if (policyBehavior != BuildEffectBehavior.None && cdxVersion.compareTo(CodeDxVersion.MIN_FOR_POLICIES) < 0) {
+		if (this.policyBehavior == null) {
+			this.policyBehavior = BuildEffectBehavior.Default;
+		}
+
+		if (this.policyBehavior != BuildEffectBehavior.None && cdxVersion.compareTo(CodeDxVersion.MIN_FOR_POLICIES) < 0) {
 			logger.println(
 				"The discovered Code Dx version " + cdxVersion.toString() + " is older than the minimum required " +
 				"version for Policies (" + CodeDxVersion.MIN_FOR_POLICIES + "), policy-related options will be ignored."
@@ -74,7 +78,6 @@ public class AnalysisResultChecker {
 	}
 
 	public Result checkResult() throws ClientProtocolException, CodeDxClientException, IOException {
-
 		if (policyBehavior != BuildEffectBehavior.None) {
 			logger.println("Checking for build-breaking policy violations...");
 			if (client.projectPolicyShouldBreakTheBuild(project)) {

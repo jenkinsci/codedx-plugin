@@ -254,11 +254,15 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 	// returns true if we ignore the error, false if we want to exit prematurely
 	private Boolean handleCodeDxError(Run<?, ?> build, PrintStream buildOutput, String cause) throws AbortException {
 		buildOutput.println(cause);
-		if (errorHandlingBehavior != BuildEffectBehavior.None) {
-			build.setResult(errorHandlingBehavior.getEquivalentResult());
+
+		BuildEffectBehavior behavior = errorHandlingBehavior;
+		if (behavior == null) behavior = BuildEffectBehavior.Default;
+
+		if (behavior != BuildEffectBehavior.None) {
+			build.setResult(behavior.getEquivalentResult());
 			return false;
 		} else {
-			buildOutput.println("This will be ignored since errorHandlingBehavior is set to " + errorHandlingBehavior.getLabel());
+			buildOutput.println("This will be ignored since errorHandlingBehavior is set to " + behavior.getLabel());
 			return true;
 		}
 	}
