@@ -69,9 +69,11 @@
 							 checked="${analysisResultConfiguration != null}"
 							 help="/plugin/codedx/help-analysisResultConfiguration.html">
 
-				<f:entry title="'Break the build' Policy Action" field="policyBreakBuildBehavior" help="/plugin/codedx/help-policyBreakBuildBehavior.html">
-					<f:select default="MarkFailed" value="${analysisResultConfiguration.policyBreakBuildBehavior}" />
-				</f:entry>
+				<f:section title="Policy Behavior">
+					<f:entry title="'Break build' Action" field="policyBreakBuildBehavior" help="/plugin/codedx/help-policyBreakBuildBehavior.html">
+						<f:select default="MarkFailed" value="${analysisResultConfiguration.policyBreakBuildBehavior}" />
+					</f:entry>
+				</f:section>
 
 				<f:section title="Build Failure Conditions">
 					<f:entry title="Severity" field="failureSeverity" help="/plugin/codedx/help-failureSeverity.html">
