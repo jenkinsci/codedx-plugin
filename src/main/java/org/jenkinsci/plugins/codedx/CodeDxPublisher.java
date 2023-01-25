@@ -52,7 +52,6 @@ import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
-import java.time.Instant;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -87,7 +86,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private String targetBranchName, baseBranchName;
 
-	private BuildEffectBehavior errorHandlingBehavior;
+	private BuildErrorBehavior errorHandlingBehavior;
 
 	private GitFetchConfiguration gitFetchConfiguration;
 
@@ -117,7 +116,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		this.selfSignedCertificateFingerprint = null;
 		this.targetBranchName = null;
 		this.baseBranchName = null;
-		this.errorHandlingBehavior = BuildEffectBehavior.MarkFailed;
+		this.errorHandlingBehavior = BuildErrorBehavior.MarkFailed;
 
 		this.gitFetchConfiguration = null;
 
@@ -229,12 +228,12 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			this.baseBranchName = null;
 	}
 
-	public BuildEffectBehavior getErrorHandlingBehavior() {
+	public BuildErrorBehavior getErrorHandlingBehavior() {
 		return errorHandlingBehavior;
 	}
 
 	@DataBoundSetter
-	public void setErrorHandlingBehavior(BuildEffectBehavior behavior) {
+	public void setErrorHandlingBehavior(BuildErrorBehavior behavior) {
 		errorHandlingBehavior = behavior;
 	}
 
@@ -255,10 +254,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 	private Boolean handleCodeDxError(Run<?, ?> build, PrintStream buildOutput, String cause) throws AbortException {
 		buildOutput.println(cause);
 
-		BuildEffectBehavior behavior = errorHandlingBehavior;
-		if (behavior == null) behavior = BuildEffectBehavior.Default;
+		BuildErrorBehavior behavior = errorHandlingBehavior;
+		if (behavior == null) behavior = BuildErrorBehavior.Default;
 
-		if (behavior != BuildEffectBehavior.None) {
+		if (behavior != BuildErrorBehavior.None) {
 			build.setResult(behavior.getEquivalentResult());
 			return false;
 		} else {
@@ -758,15 +757,16 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return FormValidation.ok();
 		}
 
-		public FormValidation doCheckSourceAndBinaryFiles(@QueryParameter final String value, @QueryParameter final String toolOutputFiles, @AncestorInPath AbstractProject project) {
+		public FormValidation doCheckSourceAndBinaryFiles(@QueryParameter final String value, @QueryParameter final boolean gitFetchConfiguration, @QueryParameter final String toolOutputFiles, @AncestorInPath AbstractProject project) {
 			if (project == null) {
 				return FormValidation.ok();
 			}
 
 			if (value.length() == 0) {
-
-				if (toolOutputFiles.length() == 0)
-					return FormValidation.error("You must specify \"Tool Output Files\" and/or \"Source and Binary Files\"");
+				if (gitFetchConfiguration)
+					return FormValidation.ok();
+				else if (toolOutputFiles.length() == 0)
+					return FormValidation.error("You must specify \"Tool Output Files\" and/or \"Source and Binary Files\", or enable \"Include Git Source\"");
 				else
 					return FormValidation.warning("It is recommended that at least source files are provided to Code Dx.");
 			}
@@ -782,15 +782,14 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			}
 		}
 
-		public FormValidation doCheckToolOutputFiles(@QueryParameter final String value, @QueryParameter final String sourceAndBinaryFiles, @AncestorInPath AbstractProject project) {
+		public FormValidation doCheckToolOutputFiles(@QueryParameter final String value, @QueryParameter final String sourceAndBinaryFiles, @QueryParameter final boolean gitFetchConfiguration, @AncestorInPath AbstractProject project) {
 
 			if (project == null) {
 				return FormValidation.ok();
 			}
 
-			if (value.length() == 0 && sourceAndBinaryFiles.length() == 0) {
-
-				return FormValidation.error("You must specify \"Tool Output Files\" and/or \"Source and Binary Files\"");
+			if (value.length() == 0 && sourceAndBinaryFiles.length() == 0 && !gitFetchConfiguration) {
+				return FormValidation.error("You must specify \"Tool Output Files\" and/or \"Source and Binary Files\", or enable \"Include Git Source\"");
 			}
 
 			return Util.checkCSVFileMatches(value, project.getSomeWorkspace());
@@ -834,20 +833,20 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return listBox;
 		}
 
-		private ListBoxModel getErrorBehaviorItems() {
+		public ListBoxModel doFillErrorHandlingBehaviorItems() {
 			ListBoxModel listBox = new ListBoxModel();
-			listBox.add(BuildEffectBehavior.None.getLabel(), BuildEffectBehavior.None.name());
-			listBox.add(BuildEffectBehavior.MarkUnstable.getLabel(), BuildEffectBehavior.MarkUnstable.name());
-			listBox.add(BuildEffectBehavior.MarkFailed.getLabel(), BuildEffectBehavior.MarkFailed.name());
+			listBox.add(BuildErrorBehavior.None.getLabel(), BuildErrorBehavior.None.name());
+			listBox.add(BuildErrorBehavior.MarkUnstable.getLabel(), BuildErrorBehavior.MarkUnstable.name());
+			listBox.add(BuildErrorBehavior.MarkFailed.getLabel(), BuildErrorBehavior.MarkFailed.name());
 			return listBox;
 		}
 
-		public ListBoxModel doFillErrorHandlingBehaviorItems() {
-			return getErrorBehaviorItems();
-		}
-
 		public ListBoxModel doFillPolicyBreakBuildBehaviorItems() {
-			return getErrorBehaviorItems();
+			ListBoxModel listBox = new ListBoxModel();
+			listBox.add(BuildPolicyBehavior.NoAction.getLabel(), BuildPolicyBehavior.NoAction.name());
+			listBox.add(BuildPolicyBehavior.MarkUnstable.getLabel(), BuildPolicyBehavior.MarkUnstable.name());
+			listBox.add(BuildPolicyBehavior.MarkFailed.getLabel(), BuildPolicyBehavior.MarkFailed.name());
+			return listBox;
 		}
 
 		public ListBoxModel doFillFailureSeverityItems() {
