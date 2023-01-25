@@ -11,6 +11,8 @@
 	<!-- Warnings regarding unwritten/unused fields - these are serialization classes -->
 	<Match>
 		<Class name="com.codedx.api.client.CodeDxClient$CodeDxVersionResponse" />
+	</Match>
+	<Match>
 		<Class name="com.codedx.api.client.GitConfigResponse" />
 	</Match>
 
