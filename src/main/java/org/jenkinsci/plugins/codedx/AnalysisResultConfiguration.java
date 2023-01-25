@@ -14,7 +14,6 @@
  */
 package org.jenkinsci.plugins.codedx;
 
-import hudson.model.Build;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -30,13 +29,13 @@ public class AnalysisResultConfiguration {
 	private boolean failureOnlyNew;
 	private boolean unstableOnlyNew;
 	private int numBuildsInGraph;
-	private BuildEffectBehavior policyBreakBuildBehavior;
+	private BuildPolicyBehavior policyBreakBuildBehavior;
 
 	@DataBoundConstructor
 	public AnalysisResultConfiguration(String failureSeverity,
 			String unstableSeverity, boolean failureOnlyNew,
 			boolean unstableOnlyNew, int numBuildsInGraph,
-			BuildEffectBehavior policyBreakBuildBehavior) {
+			BuildPolicyBehavior policyBreakBuildBehavior) {
 	
 		this.failureSeverity = failureSeverity;
 		this.unstableSeverity = unstableSeverity;
@@ -75,10 +74,10 @@ public class AnalysisResultConfiguration {
 	public void setNumBuildsInGraph(int numBuildsInGraph) {
 		this.numBuildsInGraph = numBuildsInGraph;
 	}
-	public BuildEffectBehavior getPolicyBreakBuildBehavior() {
+	public BuildPolicyBehavior getPolicyBreakBuildBehavior() {
 		return policyBreakBuildBehavior;
 	}
-	public void setPolicyBreakBuildBehavior(BuildEffectBehavior behavior) {
+	public void setPolicyBreakBuildBehavior(BuildPolicyBehavior behavior) {
 		policyBreakBuildBehavior = behavior;
 	}
 }

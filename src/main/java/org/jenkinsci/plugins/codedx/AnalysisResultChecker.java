@@ -45,13 +45,13 @@ public class AnalysisResultChecker {
 	private Date newThreshold;
 	private boolean failureOnlyNew;
 	private boolean unstableOnlyNew;
-	private BuildEffectBehavior policyBehavior;
+	private BuildPolicyBehavior policyBehavior;
 	private PrintStream logger;
 	private ProjectContext project;
 
 	public AnalysisResultChecker(CodeDxClient client, CodeDxVersion cdxVersion, String failureSeverity,
 								 String unstableSeverity, Date newThreshold, boolean failureOnlyNew,
-								 boolean unstableOnlyNew, BuildEffectBehavior policyBehavior, ProjectContext project, PrintStream logger) {
+								 boolean unstableOnlyNew, BuildPolicyBehavior policyBehavior, ProjectContext project, PrintStream logger) {
 
 		this.client = client;
 		this.cdxVersion = cdxVersion;
@@ -65,20 +65,20 @@ public class AnalysisResultChecker {
 		this.logger = logger;
 
 		if (this.policyBehavior == null) {
-			this.policyBehavior = BuildEffectBehavior.Default;
+			this.policyBehavior = BuildPolicyBehavior.Default;
 		}
 
-		if (this.policyBehavior != BuildEffectBehavior.None && cdxVersion.compareTo(CodeDxVersion.MIN_FOR_POLICIES) < 0) {
+		if (this.policyBehavior != BuildPolicyBehavior.NoAction && cdxVersion.compareTo(CodeDxVersion.MIN_FOR_POLICIES) < 0) {
 			logger.println(
 				"The discovered Code Dx version " + cdxVersion.toString() + " is older than the minimum required " +
 				"version for Policies (" + CodeDxVersion.MIN_FOR_POLICIES + "), policy-related options will be ignored."
 			);
-			this.policyBehavior = BuildEffectBehavior.None;
+			this.policyBehavior = BuildPolicyBehavior.NoAction;
 		}
 	}
 
 	public Result checkResult() throws ClientProtocolException, CodeDxClientException, IOException {
-		if (policyBehavior != BuildEffectBehavior.None) {
+		if (policyBehavior != BuildPolicyBehavior.NoAction) {
 			logger.println("Checking for build-breaking policy violations...");
 			if (client.projectPolicyShouldBreakTheBuild(project)) {
 				logger.println("Failure: At least one Policy is violated and set to 'Break build'");

@@ -16,14 +16,14 @@ package org.jenkinsci.plugins.codedx;
 
 import hudson.model.Result;
 
-public enum BuildEffectBehavior {
+public enum BuildPolicyBehavior {
 	MarkFailed("Mark Build as Failed", Result.FAILURE),
 	MarkUnstable("Mark Build as Unstable", Result.UNSTABLE),
-	None("Ignore Errors", Result.SUCCESS);
+	NoAction("No Action", Result.SUCCESS);
 
-	private String label;
-	private Result equivalentResult;
-	BuildEffectBehavior(String label, Result equivalentResult) {
+	private final String label;
+	private final Result equivalentResult;
+	BuildPolicyBehavior(String label, Result equivalentResult) {
 		this.label = label;
 		this.equivalentResult = equivalentResult;
 	}
@@ -35,5 +35,5 @@ public enum BuildEffectBehavior {
 		return equivalentResult;
 	}
 
-	public static final BuildEffectBehavior Default = MarkFailed;
+	public static final BuildPolicyBehavior Default = MarkFailed;
 }
