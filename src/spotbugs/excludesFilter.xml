@@ -42,6 +42,13 @@
 		<Bug pattern="REC_CATCH_EXCEPTION" />
 	</Match>
 
+	<!-- Warnings about redundant null checks, the warning locations either don't make sense or the null check is performed
+	     by a library -->
+	<Match>
+		<Class name="com.codedx.api.client.CodeDxClient" />
+		<Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" />
+	</Match>
+
 <!--	<Match>-->
 <!--		<Class name="com.foobar.ClassWithSomeBugsMatched" />-->
 <!--		<Bug code="DE,UrF,SIC" />-->
