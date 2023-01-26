@@ -280,6 +280,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		final PrintStream buildOutput = listener.getLogger();
 
 		buildOutput.println("Publishing build to Code Dx:");
+
+		if (errorHandlingBehavior == null) {
+			errorHandlingBehavior = BuildErrorBehavior.Default;
+		}
 		buildOutput.println("Error handling set to: " + errorHandlingBehavior.getLabel());
 
 		if (projectId.length() == 0 || projectId.equals("-1")) {
