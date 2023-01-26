@@ -114,7 +114,7 @@ public final class CodeDxVersion implements Comparable<CodeDxVersion> {
 	/**
 	 * Convenience method that determines if this version of Code Dx supports the "New" triage status.
 	 * Logically, this method checks that <code>this &lt; NEW_STATUS_REMOVED || this &gt;= NEW_STATUS_RETURNED</code>
-	 * @return
+	 * @return Whether the "NEW" triage status is supported
 	 */
 	public boolean supportsTriageNew(){
 		// (version < NEW_STATUS_REMOVED) || (version >= NEW_STATUS_RETURNED)

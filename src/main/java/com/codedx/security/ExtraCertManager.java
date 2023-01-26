@@ -26,7 +26,9 @@ public interface ExtraCertManager {
 	 * by the implementation of this interface) occurs, causing it to be
 	 * "forgotten".
 	 * 
-	 * @param cert
+	 * @param cert The certificate to add
+	 * @throws IOException if there is an I/O or format problem with the keystore data, if a password is required but not given, or if the given password was incorrect
+	 * @throws GeneralSecurityException if there is a problem reading/writing data within the keystore
 	 */
 	void addTemporaryCert(Certificate cert) throws IOException, GeneralSecurityException;
 
@@ -35,21 +37,27 @@ public interface ExtraCertManager {
 	 * Certificates added in this way will generally be written to disk, and
 	 * will be available upon restarting the program.
 	 * 
-	 * @param cert
-	 * @throws IOException
-	 * @throws GeneralSecurityException
+	 * @param cert The certificate to add
+	 * @throws IOException if there is an I/O or format problem with the keystore data, if a password is required but not given, or if the given password was incorrect
+	 * @throws GeneralSecurityException if there is a problem reading/writing data within the keystore
 	 */
 	void addPermanentCert(Certificate cert) throws IOException, GeneralSecurityException;
 
 	/**
 	 * Remove all certificates that have been added via
 	 * {@link #addTemporaryCert(Certificate)}.
+	 *
+	 * @throws IOException if there is an I/O or format problem with the keystore data, if a password is required but not given, or if the given password was incorrect
+	 * @throws GeneralSecurityException if there is a problem reading/writing data within the keystore
 	 */
 	void purgeTemporaryCerts() throws IOException, GeneralSecurityException;
 
 	/**
 	 * Remove all certificates that have been added via
 	 * {@link #addPermanentCert(Certificate)}.
+	 *
+	 * @throws IOException if there is an I/O or format problem with the keystore data, if a password is required but not given, or if the given password was incorrect
+	 * @throws GeneralSecurityException if there is a problem reading/writing data within the keystore
 	 */
 	void purgePermanentCerts() throws IOException, GeneralSecurityException;
 
@@ -57,6 +65,9 @@ public interface ExtraCertManager {
 	 * Remove all certificates that have been added either by
 	 * {@link #addTemporaryCert(Certificate)} or
 	 * {@link #addPermanentCert(Certificate)}.
+	 *
+	 * @throws IOException if there is an I/O or format problem with the keystore data, if a password is required but not given, or if the given password was incorrect
+	 * @throws GeneralSecurityException if there is a problem reading/writing data within the keystore
 	 */
 	void purgeAllCerts() throws IOException, GeneralSecurityException;
 
@@ -64,6 +75,8 @@ public interface ExtraCertManager {
 	 * Return a representation of this manager as a KeyStore instance.
 	 * @return A new KeyStore that represents the contents of this certificate
 	 *         manager
+	 *
+	 * @throws GeneralSecurityException if there is a problem reading/writing data within the keystore
 	 */
 	KeyStore asKeyStore() throws GeneralSecurityException;
 }

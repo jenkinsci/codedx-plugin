@@ -120,9 +120,8 @@ public class CodeDxClient {
 	 *
 	 * @return Project list
 	 *
-	 * @throws CodeDxClientException
-	 * @throws ClientProtocolException
-	 * @throws IOException
+	 * @throws IOException If the underlying IO goes wrong
+	 * @throws CodeDxClientException For non 2xx response codes
 	 */
 	public List<Project> getProjects() throws CodeDxClientException, IOException{
 		GetProjectsResponse response = doHttpRequest(
@@ -138,11 +137,10 @@ public class CodeDxClient {
 	/**
 	 * Retrieves a specific project from CodeDx
 	 *
-	 * @param id The project ID
+	 * @param project The project context (project ID and optional branch name)
 	 * @return A project
-	 * @throws CodeDxClientException
-	 * @throws ClientProtocolException
-	 * @throws IOException
+	 * @throws IOException If the underlying IO goes wrong
+	 * @throws CodeDxClientException For non 2xx response codes
 	 */
 	public Project getProject(ProjectContext project) throws CodeDxClientException, IOException{
 		return doHttpRequest(
@@ -155,30 +153,12 @@ public class CodeDxClient {
 	}
 
 	/**
-	 * Retrieves all Triage statuses for a given project.
-	 *
-	 * @throws CodeDxClientException
-	 * @throws ClientProtocolException
-	 * @throws IOException
-	 */
-	public Map<String,TriageStatus> getTriageStatuses(ProjectContext project) throws CodeDxClientException, IOException{
-		return doHttpRequest(
-			new HttpGet(),
-			"projects/" + project.toString() + "/statuses",
-			true,
-			new TypeToken<Map<String,TriageStatus>>(){}.getType(),
-			null
-		);
-	}
-
-	/**
 	 * Retrieves a specific job from CodeDx
 	 *
 	 * @param id The job ID
 	 * @return A Job
-	 * @throws CodeDxClientException
-	 * @throws ClientProtocolException
-	 * @throws IOException
+	 * @throws IOException If the underlying IO goes wrong
+	 * @throws CodeDxClientException For non 2xx response codes
 	 */
 	public Job getJob(String id) throws CodeDxClientException, IOException{
 		return doHttpRequest(
@@ -190,6 +170,13 @@ public class CodeDxClient {
 		);
 	}
 
+	/**
+	 * Retrieves the result of a Git fetch job from Code Dx
+	 * @param id The job ID
+	 * @return A response with the resulting analysis ID
+	 * @throws IOException If the underlying IO goes wrong
+	 * @throws CodeDxClientException For non 2xx response codes
+	 */
 	public StartAnalysisResponse getGitJobResult(String id) throws CodeDxClientException, IOException {
 		return doHttpRequest(
 			new HttpGet(),
@@ -206,43 +193,21 @@ public class CodeDxClient {
 	 *
 	 * @param id The job ID
 	 * @return The Job Status
-	 * @throws CodeDxClientException
-	 * @throws ClientProtocolException
-	 * @throws IOException
+	 * @throws IOException If the underlying IO goes wrong
+	 * @throws CodeDxClientException For non 2xx response codes
 	 */
 	public String getJobStatus(String id) throws CodeDxClientException, IOException{
 		return getJob(id).getStatus();
 	}
 
 	/**
-	 * Retrieves the total findings count for a given run.
-	 *
-	 * @param id The run ID
-	 * @return The count
-	 * @throws CodeDxClientException
-	 * @throws ClientProtocolException
-	 * @throws IOException
-	 */
-	public int getFindingsCount(String id) throws CodeDxClientException, IOException{
-		CountResponse resp = doHttpRequest(
-			new HttpGet(),
-			"runs/" + id + "/findings/count",
-			true,
-			new TypeToken<CountResponse>(){}.getType(),
-			null
-		);
-		return resp.getCount();
-	}
-
-	/**
 	 * Retrieves the total findings count for a given project using the provided Filter
 	 *
-	 * @param project The project context string, a raw projectId optionally concatenated with branch info
+	 * @param project The project context
 	 * @param filter A Filter object (set to null to not filter)
 	 * @return The count
-	 * @throws CodeDxClientException
-	 * @throws ClientProtocolException
-	 * @throws IOException
+	 * @throws IOException If the underlying IO goes wrong
+	 * @throws CodeDxClientException For non 2xx response codes
 	 */
 	public int getFindingsCount(ProjectContext project, Filter filter) throws CodeDxClientException, IOException{
 		CountResponse resp = doHttpRequest(
@@ -258,12 +223,12 @@ public class CodeDxClient {
 	/**
 	 * Retrieves an array of CountGroups using the provided Filter and countBy field name.
 	 *
+	 * @param project The project context (project ID and optional branch name)
 	 * @param filter A Filter object
 	 * @param countBy The field to group the counts by
 	 * @return A list of CountGroups
-	 * @throws CodeDxClientException
-	 * @throws ClientProtocolException
-	 * @throws IOException
+	 * @throws IOException If the underlying IO goes wrong
+	 * @throws CodeDxClientException For non 2xx response codes
 	 */
 	public List<CountGroup> getFindingsGroupedCounts(ProjectContext project, Filter filter, String countBy) throws CodeDxClientException, IOException{
 		return doHttpRequest(
@@ -275,6 +240,14 @@ public class CodeDxClient {
 		);
 	}
 
+	/**
+	 *
+	 * @param project The project context (project ID and optional branch name)
+	 * @param analysisId The analysis ID
+	 * @param name The name to set for the analysis
+	 * @throws IOException If the underlying IO goes wrong
+	 * @throws CodeDxClientException For non 2xx response codes
+	 */
 	public void setAnalysisName(ProjectContext project, int analysisId, String name) throws IOException, CodeDxClientException {
 		JsonObject reqBody = new JsonObject();
 		reqBody.addProperty("name", name);
@@ -399,10 +372,13 @@ public class CodeDxClient {
 	 *
 	 * @return A StartAnalysisResponse object
 	 * @param projectId The project ID
+	 * @param includeGitSource Whether Code Dx should fetch the latest source from Git before analysis
+	 * @param specificGitBranch The specific Git branch to fetch (ignored if includeGitSource=false)
+	 * @param parentBranchName The Code Dx branch to use as the parent if targetBranchName is specified and does not yet exist
+	 * @param targetBranchName The Code Dx branch to store findings in
 	 * @param artifacts An array of streams to send over as analysis artifacts
-	 * @throws ClientProtocolException
-	 * @throws IOException
-	 * @throws CodeDxClientException
+	 * @throws IOException If the underlying IO goes wrong
+	 * @throws CodeDxClientException For non 2xx response codes
 	 *
 	 */
 	public StartAnalysisResponse startAnalysis(int projectId, boolean includeGitSource, String specificGitBranch, String parentBranchName, String targetBranchName, Map<String, InputStream> artifacts) throws IOException, CodeDxClientException {

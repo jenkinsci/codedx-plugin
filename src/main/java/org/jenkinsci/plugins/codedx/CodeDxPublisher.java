@@ -96,6 +96,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 	 * @param url                          URL of the Code Dx server
 	 * @param key                          API key of the Code Dx server
 	 * @param projectId                    Code Dx project ID
+	 * @param analysisName                 The name to use for the analysis
 	 */
 	@DataBoundConstructor
 	public CodeDxPublisher(
@@ -338,7 +339,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		FilePath sourceAndBinaryZip = Archiver.archive(workspace,
 				Util.commaSeparatedToArray(sourceAndBinaryFiles),
 				Util.commaSeparatedToArray(excludedSourceAndBinaryFiles),
-				"source", buildOutput);
+				"source");
 
 		if (sourceAndBinaryZip != null) {
 			buildOutput.println("Adding source/binary zip...");

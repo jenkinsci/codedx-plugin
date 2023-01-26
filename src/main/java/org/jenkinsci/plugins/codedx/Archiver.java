@@ -43,10 +43,10 @@ public class Archiver {
 	 * @param excludePaths Paths in the ANT Glob format to exclude.
 	 * @param prefix Prefix of the zip file to create.
 	 * @return The zip archive FilePath.
-	 * @throws IOException
-	 * @throws InterruptedException
+	 * @throws IOException if there is a problem reading input files or writing output files
+	 * @throws InterruptedException bubbles from workspace.list
 	 */
-	public static FilePath archive(FilePath workspace, String[] paths, String[] excludePaths, String prefix, final PrintStream logger) throws IOException, InterruptedException{
+	public static FilePath archive(FilePath workspace, String[] paths, String[] excludePaths, String prefix) throws IOException, InterruptedException{
 
 		final Set<String> includeFiles = new HashSet<String>();
 		final Set<String> excludeFiles = new HashSet<String>();
