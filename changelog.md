@@ -1,4 +1,15 @@
-## Code Dx Jenkins plugin 3.0.2 `Released 11/10/2020`
+## Code Dx Jenkins Plugin 3.1.0
+
+### Changes
+- Added support for specifying a target branch in Code Dx when analyzing results
+- Added support for Git source fetching during the Code Dx analysis
+- Added support for checking policy violations when verifying build results
+- Added an option to change error handling behavior for internal errors
+
+### Fixes
+- "Normal" build errors such as Failure conditions displayed a stack trace in the logs, giving the impression of an internal error instead of expected behavior
+
+## Code Dx Jenkins Plugin 3.0.2 `Released 11/10/2020`
 
 ### Changes
 - Adds `.zip` extension to source+binary package uploaded to Code Dx
