@@ -2,11 +2,12 @@
 
 Allows Jenkins to push source and build artifacts to [Code
 Dx](https://www.synopsys.com/software-integrity/code-dx.html) and display the aggregated results of its [full
-suite](https://community.synopsys.com/s/document-item?bundleId=codedx&topicId=user_guide%2FAnalysis%2Fimporting-scan-results.html&_LANG=enus) of analysis tools.
+suite](https://community.synopsys.com/s/document-item?bundleId=codedx&topicId=user_guide%2FAnalysis%2Fimporting-scan-results.html&_LANG=enus)
+of analysis tools.
 
 #### Notes
 
-- This plugin is maintained by Code Dx, Inc.
+- This plugin is maintained by Synopsys, Inc.
 - Plugin version 3.0.0 and later support Pipelines projects as well as Freestyle
 
 ## Features
@@ -29,7 +30,7 @@ suite](https://community.synopsys.com/s/document-item?bundleId=codedx&topicId=us
 
 ## Requirements
 
-A [Code Dx server](https://www.synopsys.com/software-integrity/code-dx.html) deployment with an API Key
+Jenkins 2.200 or later, and a [Code Dx server](https://www.synopsys.com/software-integrity/code-dx.html) deployment with an API Key
 created from the Code Dx admin page.
 
 ## Documentation
@@ -37,6 +38,8 @@ created from the Code Dx admin page.
 Consult the latest [Code Dx online
 documentation](https://community.synopsys.com/s/document-item?bundleId=codedx&topicId=plugins_guide%2FJenkins%2Foverview.html&_LANG=enus) for
 instructions on how to configure your build.
+
+[Changelog](./changelog.md)
 
 ## Contact
 
