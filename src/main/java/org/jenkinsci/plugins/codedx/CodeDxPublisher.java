@@ -30,6 +30,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 
@@ -42,6 +43,7 @@ import org.jenkinsci.plugins.codedx.monitor.AnalysisMonitor;
 import org.jenkinsci.plugins.codedx.monitor.DirectAnalysisMonitor;
 import org.jenkinsci.plugins.codedx.monitor.GitJobAnalysisMonitor;
 import org.kohsuke.stapler.*;
+import org.kohsuke.stapler.verb.POST;
 
 import javax.net.ssl.SSLHandshakeException;
 import javax.servlet.ServletException;
@@ -661,6 +663,22 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 	@Extension // This indicates to Jenkins that this is an implementation of an extension point.
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
+		/*
+		Note: Endpoints which make HTTP requests have `Job` as a path parameter so we can do permission
+		      checks whether it's a project (freestyle) or job (pipeline syntax gen.) being tested
+
+		      Endpoints which access workspace contents have `AbstractProject` instead since we need
+		      it to get a workspace path. These endpoints will get `null` for the project in the
+		      pipeline syntax gen. and no-op, which is expected since there's no way to get a workspace
+		      while running in the syntax gen.
+		 */
+
+		private void checkPermissionForRemoteRequests(Item item)
+		{
+			if (item != null) item.checkPermission(Item.CONFIGURE);
+			else Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+		}
+
 		/**
 		 * To persist global configuration information,
 		 * simply store it in a field and call save().
@@ -708,8 +726,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return FormValidation.ok();
 		}
 
-		public FormValidation doCheckUrl(@QueryParameter final String value, @QueryParameter final String selfSignedCertificateFingerprint)
+		@POST
+		public FormValidation doCheckUrl(@QueryParameter final String value, @QueryParameter final String selfSignedCertificateFingerprint, @AncestorInPath Item item)
 				throws IOException, ServletException {
+			checkPermissionForRemoteRequests(item);
 
 			CodeDxClient client = buildClient(value, "", selfSignedCertificateFingerprint);
 
@@ -741,7 +761,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			}
 		}
 
-		public FormValidation doCheckSelfSignedCertificateFingerprint(@QueryParameter final String value, @QueryParameter final String url) {
+		@POST
+		public FormValidation doCheckSelfSignedCertificateFingerprint(@QueryParameter final String value, @QueryParameter final String url, @AncestorInPath Item item) {
+			checkPermissionForRemoteRequests(item);
+
 			if (url != null && ! url.isEmpty() && value != null && ! value.isEmpty()) {
 				CodeDxClient client = buildClient(url, "", value);
 
@@ -800,7 +823,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return Util.checkCSVFileMatches(value, project.getSomeWorkspace());
 		}
 
-		public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String selfSignedCertificateFingerprint, @QueryParameter final String key, @AncestorInPath AbstractProject project) {
+		@POST
+		public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String selfSignedCertificateFingerprint, @QueryParameter final String key, @AncestorInPath Item item) {
+			checkPermissionForRemoteRequests(item);
+
 			ListBoxModel listBox = new ListBoxModel();
 
 			CodeDxClient client = buildClient(url, key, selfSignedCertificateFingerprint);
