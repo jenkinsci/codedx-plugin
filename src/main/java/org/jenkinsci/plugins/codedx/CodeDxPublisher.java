@@ -785,10 +785,13 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return FormValidation.ok();
 		}
 
+		@POST
 		public FormValidation doCheckSourceAndBinaryFiles(@QueryParameter final String value, @QueryParameter final boolean gitFetchConfiguration, @QueryParameter final String toolOutputFiles, @AncestorInPath AbstractProject project) {
 			if (project == null) {
 				return FormValidation.ok();
 			}
+
+			project.checkPermission(AbstractProject.CONFIGURE);
 
 			if (value.length() == 0) {
 				if (gitFetchConfiguration)
@@ -802,19 +805,24 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
 		}
 
+		@POST
 		public FormValidation doCheckExcludedSourceAndBinaryFiles(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
 			if (project == null) {
 				return FormValidation.ok();
 			} else {
+				project.checkPermission(AbstractProject.CONFIGURE);
 				return Util.checkCSVGlobMatches(value, project.getSomeWorkspace());
 			}
 		}
 
+		@POST
 		public FormValidation doCheckToolOutputFiles(@QueryParameter final String value, @QueryParameter final String sourceAndBinaryFiles, @QueryParameter final boolean gitFetchConfiguration, @AncestorInPath AbstractProject project) {
 
 			if (project == null) {
 				return FormValidation.ok();
 			}
+
+			project.checkPermission(AbstractProject.CONFIGURE);
 
 			if (value.length() == 0 && sourceAndBinaryFiles.length() == 0 && !gitFetchConfiguration) {
 				return FormValidation.error("You must specify \"Tool Output Files\" and/or \"Source and Binary Files\", or enable \"Include Git Source\"");

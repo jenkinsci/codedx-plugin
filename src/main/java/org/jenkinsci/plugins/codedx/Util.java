@@ -67,10 +67,12 @@ public class Util {
 
 		if(value.length() != 0  && workspace != null){
 
+			String basePath = workspace.getRemote();
 			for(String path : Util.commaSeparatedToArray(value)){
 
 				try {
-					if(path.length() == 0 || ! new FilePath(workspace, path).exists()){
+					FilePath subPath = new FilePath(workspace, path);
+					if(path.length() == 0 || !subPath.exists() || !subPath.absolutize().getRemote().startsWith(basePath)){
 
 						return FormValidation.warning(path + " does not exist in the workspace.");
 					}
