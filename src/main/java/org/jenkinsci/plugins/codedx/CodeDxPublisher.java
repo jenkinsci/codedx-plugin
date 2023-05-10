@@ -14,6 +14,11 @@
  */
 package org.jenkinsci.plugins.codedx;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.*;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.codedx.api.client.*;
 import com.codedx.api.client.Job;
 import com.codedx.api.client.Project;
@@ -24,17 +29,22 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.model.*;
+import hudson.model.queue.Tasks;
+import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 
+import org.acegisecurity.Authentication;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jenkinsci.plugins.codedx.model.CodeDxReportStatistics;
@@ -42,6 +52,7 @@ import org.jenkinsci.plugins.codedx.model.CodeDxGroupStatistics;
 import org.jenkinsci.plugins.codedx.monitor.AnalysisMonitor;
 import org.jenkinsci.plugins.codedx.monitor.DirectAnalysisMonitor;
 import org.jenkinsci.plugins.codedx.monitor.GitJobAnalysisMonitor;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.verb.POST;
 
@@ -66,7 +77,7 @@ import java.util.logging.Logger;
 public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private final String url;
-	private final String key;
+	private final String keyCredentialId;
 	private final String projectId;
 
 	// Comma separated list of source/binary file Ant GLOB patterns
@@ -96,20 +107,20 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	/**
 	 * @param url                          URL of the Code Dx server
-	 * @param key                          API key of the Code Dx server
+	 * @param keyCredentialId              ID of a Secret Text Credential containing the API key of the Code Dx server
 	 * @param projectId                    Code Dx project ID
 	 * @param analysisName                 The name to use for the analysis
 	 */
 	@DataBoundConstructor
 	public CodeDxPublisher(
 			final String url,
-			final String key,
+			final String keyCredentialId,
 			final String projectId,
 			final String analysisName
 	) {
 		this.projectId = projectId;
 		this.url = url;
-		this.key = key;
+		this.keyCredentialId = keyCredentialId;
 		this.analysisName = analysisName.trim();
 
 		this.sourceAndBinaryFiles = "";
@@ -122,14 +133,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		this.errorHandlingBehavior = BuildErrorBehavior.MarkFailed;
 
 		this.gitFetchConfiguration = null;
-
-		setupClient();
-	}
-
-	private void setupClient() {
-		if (this.client == null) {
-			this.client = buildClient(url, key, selfSignedCertificateFingerprint);
-		}
 	}
 
 	public AnalysisResultConfiguration getAnalysisResultConfiguration() {
@@ -149,8 +152,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		return url;
 	}
 
-	public String getKey() {
-		return key;
+	public String getKeyCredentialId() {
+		return keyCredentialId;
 	}
 
 	public String getSourceAndBinaryFiles() {
@@ -189,14 +192,12 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		this.selfSignedCertificateFingerprint = selfSignedCertificateFingerprint;
 
 		this.client = null;
-		setupClient();
 	}
 
 	public String getAnalysisName(){ return analysisName; }
 
 	private String getLatestAnalysisUrl() {
 		if (projectId.length() != 0 && !projectId.equals("-1")) {
-			setupClient();
 			return client.buildLatestFindingsUrl(Integer.parseInt(projectId));
 		} else {
 			return null;
@@ -278,7 +279,19 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 		Date startingDate = new Date();
 
-		setupClient();
+		StringCredentials apiCredentials = CredentialsProvider.findCredentialById(
+				keyCredentialId,
+				StringCredentials.class,
+				build,
+				URIRequirementBuilder.fromUri(url).build()
+		);
+
+		if (apiCredentials == null) {
+			throw new AbortException("Unable to load credential for API Key");
+		}
+
+		String apiKey = apiCredentials.getSecret().getPlainText();
+		this.client = buildClient(url, apiKey, selfSignedCertificateFingerprint);
 		final Map<String, InputStream> toSend = new HashMap<String, InputStream>();
 		final PrintStream buildOutput = listener.getLogger();
 
@@ -717,12 +730,63 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return FormValidation.ok();
 		}
 
-		public FormValidation doCheckKey(@QueryParameter final String value)
+		public FormValidation doCheckKey(@QueryParameter final Secret value)
 				throws IOException, ServletException {
 
-			if (value.length() == 0)
+			if (value.getPlainText().length() == 0)
 				return FormValidation.error("Please set a Key.");
 
+			return FormValidation.ok();
+		}
+
+		public ListBoxModel doFillKeyCredentialIdItems(@QueryParameter String url, @QueryParameter String keyCredentialId, @AncestorInPath Item item) {
+			if (url == null || url.trim().isEmpty()) {
+				return new StandardListBoxModel();
+			}
+
+			StandardListBoxModel result = new StandardListBoxModel();
+			if (item == null) {
+				if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+					return result.includeCurrentValue(keyCredentialId);
+				}
+			} else {
+				if (!item.hasPermission(Item.EXTENDED_READ)
+						&& !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+					return result.includeCurrentValue(keyCredentialId);
+				}
+			}
+			return result
+					.includeMatchingAs(
+							ACL.SYSTEM,
+							item,
+							StringCredentials.class,
+							URIRequirementBuilder.fromUri(url).build(),
+							CredentialsMatchers.always()
+					)
+					.includeCurrentValue(keyCredentialId);
+		}
+
+		public FormValidation doCheckKeyCredentialId(@QueryParameter String url, @QueryParameter String keyCredentialId, @AncestorInPath Item item)
+				throws IOException, ServletException {
+			if (item == null) {
+				if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+					return FormValidation.ok();
+				}
+			} else {
+				if (!item.hasPermission(Item.EXTENDED_READ)
+						&& !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+					return FormValidation.ok();
+				}
+			}
+			if (StringUtils.isBlank(keyCredentialId)) {
+				return FormValidation.error("API Key credential cannot be blank");
+			}
+			if (keyCredentialId.startsWith("${") && keyCredentialId.endsWith("}")) {
+				return FormValidation.warning("Cannot validate expression based credentials");
+			}
+			if (CredentialsProvider.listCredentials(StringCredentials.class, item, ACL.SYSTEM, URIRequirementBuilder.fromUri(url).build(), CredentialsMatchers.withId(keyCredentialId)).isEmpty()) {
+				return FormValidation.error("Cannot find currently selected credentials");
+			}
 			return FormValidation.ok();
 		}
 
@@ -832,12 +896,30 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		}
 
 		@POST
-		public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String selfSignedCertificateFingerprint, @QueryParameter final String key, @AncestorInPath Item item) {
+		public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String selfSignedCertificateFingerprint, @QueryParameter final String keyCredentialId, @AncestorInPath Item item) {
 			checkPermissionForRemoteRequests(item);
 
 			ListBoxModel listBox = new ListBoxModel();
 
-			CodeDxClient client = buildClient(url, key, selfSignedCertificateFingerprint);
+			if (StringUtils.isBlank(keyCredentialId) || StringUtils.isBlank(url)) {
+				return listBox;
+			}
+
+			StringCredentials keyCredential = CredentialsMatchers.firstOrNull(
+					CredentialsProvider.lookupCredentials(
+							StringCredentials.class,
+							item,
+							ACL.SYSTEM,
+							URIRequirementBuilder.fromUri(url).build()
+					),
+					CredentialsMatchers.withId(keyCredentialId)
+			);
+
+			if (keyCredential == null) {
+				return listBox;
+			}
+
+			CodeDxClient client = buildClient(url, keyCredential.getSecret().getPlainText(), selfSignedCertificateFingerprint);
 
 			try {
 				final List<Project> projects = client.getProjects();
