@@ -720,23 +720,53 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return "Publish to Code Dx";
 		}
 
-		public FormValidation doCheckProjectId(@QueryParameter final String value)
+		public FormValidation doCheckProjectId(@QueryParameter String url, @QueryParameter String selfSignedCertificateFingerprint, @QueryParameter String keyCredentialId, @QueryParameter final String value, @AncestorInPath Item item)
 				throws IOException, ServletException {
-			if (value.length() == 0)
-				return FormValidation.error("Please set a project. If none are shown above, then be sure that system settings are configured correctly.");
-			if (Integer.parseInt(value) == -1)
-				return FormValidation.error("Failed to get available projects, please ensure systems settings are configured correctly.");
+			checkPermissionForRemoteRequests(item);
 
-			return FormValidation.ok();
-		}
+			if (StringUtils.isBlank(url) || StringUtils.isBlank(keyCredentialId)) {
+				// waiting for other fields to populate
+				return FormValidation.ok();
+			}
 
-		public FormValidation doCheckKey(@QueryParameter final Secret value)
-				throws IOException, ServletException {
+			try {
+				StringCredentials keyCredential = CredentialsMatchers.firstOrNull(
+						CredentialsProvider.lookupCredentials(
+								StringCredentials.class,
+								item,
+								ACL.SYSTEM,
+								URIRequirementBuilder.fromUri(url).build()
+						),
+						CredentialsMatchers.withId(keyCredentialId)
+				);
 
-			if (value.getPlainText().length() == 0)
-				return FormValidation.error("Please set a Key.");
+				if (keyCredential == null) {
+					return FormValidation.error("Cannot find currently selected credentials.");
+				}
 
-			return FormValidation.ok();
+				CodeDxClient client = buildClient(url, keyCredential.getSecret().getPlainText(), selfSignedCertificateFingerprint);
+				List<Project> projects = client.getProjects();
+
+				if (value.length() == 0)
+					return FormValidation.error("Please set a project.");
+				int projectId = Integer.parseInt(value);
+
+				if (projectId == -2) {
+					return FormValidation.error("No projects are visible for the given API key.");
+				}
+
+				for (Project project : projects) {
+					if (project.getId() == projectId) return FormValidation.ok();
+				}
+
+				return FormValidation.error("The specified project could not be found.");
+			} catch (CodeDxClientException e) {
+				if (e.getHttpCode() == 403) {
+					return FormValidation.error("The request failed; the API key may be incorrect or disabled.");
+				} else {
+					return FormValidation.error("An unexpected error occurred while listing available projects.");
+				}
+			}
 		}
 
 		public ListBoxModel doFillKeyCredentialIdItems(@QueryParameter String url, @QueryParameter String keyCredentialId, @AncestorInPath Item item) {
@@ -768,6 +798,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 		public FormValidation doCheckKeyCredentialId(@QueryParameter String url, @QueryParameter String keyCredentialId, @AncestorInPath Item item)
 				throws IOException, ServletException {
+			if (StringUtils.isBlank(url)) {
+				// waiting for other fields to populate
+				return FormValidation.ok();
+			}
 			if (item == null) {
 				if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
 					return FormValidation.ok();
@@ -925,30 +959,29 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				final List<Project> projects = client.getProjects();
 
 				Map<String, Boolean> duplicates = new HashMap<String, Boolean>();
-
 				for (Project proj : projects) {
-
 					if (!duplicates.containsKey(proj.getName())) {
 						duplicates.put(proj.getName(), false);
 					} else {
-
 						duplicates.put(proj.getName(), true);
 					}
 				}
 				for (Project proj : projects) {
-
 					if (!duplicates.get(proj.getName())) {
-
 						listBox.add(proj.getName(), Integer.toString(proj.getId()));
 					} else {
-
 						listBox.add(proj.getName() + " (id:" + proj.getId() + ")", Integer.toString(proj.getId()));
 					}
 
 				}
 			} catch (Exception e) {
+				// more detailed info will be given in doCheckProjectId
 				logger.warning("Exception when populating projects dropdown " + e);
 				listBox.add("", "-1");
+			}
+
+			if (listBox.isEmpty()) {
+				listBox.add("", "-2");
 			}
 
 			return listBox;
