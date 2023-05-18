@@ -841,22 +841,26 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				return FormValidation.error("Malformed URL");
 			}
 
-			if (value.toLowerCase().startsWith("http:")) {
-
-				return FormValidation.warning("HTTP is considered insecure, it is recommended that you use HTTPS.");
-			} else if (value.toLowerCase().startsWith("https:")) {
-				try {
-					client.getProjects();
-				} catch (Exception e) {
-					if (e instanceof SSLHandshakeException) {
-						return FormValidation.warning("The SSL Certificate presented by the server is invalid. If this is expected, please input an SHA1 Fingerprint in the \"Advanced\" option");
-					}
-				}
-				return FormValidation.ok();
-			} else {
-
+			if (!value.toLowerCase().startsWith("http:") && !value.toLowerCase().startsWith("https:")) {
 				return FormValidation.error("Invalid protocol, please use HTTPS or HTTP.");
 			}
+
+			try {
+				client.getCodeDxVersion();
+			} catch (CodeDxClientException e) {
+				logger.warning("Exception when attempting to check URL for codedx version: " + e.getMessage());
+				return FormValidation.error("The given URL does not appear to point to Code Dx.");
+			} catch (Exception e) {
+				if (e instanceof SSLHandshakeException) {
+					return FormValidation.warning("The SSL Certificate presented by the server is invalid. If this is expected, please input an SHA1 Fingerprint in the \"Advanced\" option");
+				}
+			}
+
+			if (value.toLowerCase().startsWith("http:")) {
+				return FormValidation.warning("HTTP is considered insecure, it is recommended that you use HTTPS.");
+			}
+
+			return FormValidation.ok();
 		}
 
 		@POST
