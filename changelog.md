@@ -1,3 +1,22 @@
+## Code Dx Jenkins Plugin 4.0.0 `Released 5/10/2023`
+
+### Notice
+
+This release was performed in cooperation with the Jenkins team and is a response to several reported vulnerabilities:
+
+- [CSRF vulnerability and missing permission checks in Code Dx Plugin](https://www.jenkins.io/security/advisory/2023-05-16/#SECURITY-3118)
+- [Missing permission checks in Code Dx Plugin](https://www.jenkins.io/security/advisory/2023-05-16/#SECURITY-3145)
+- [API keys stored and displayed in plain text by Code Dx Plugin](https://www.jenkins.io/security/advisory/2023-05-16/#SECURITY-3146)
+
+It is a breaking change and will require reconfiguring existing projects to use "Secret text" Jenkins Credentials instead of plaintext for API keys.
+
+Plugin version 4.0.0 has several known bugs when configuring via a form in a Freestyle Project or the Pipeline Syntax Generator. In particular, when reconfiguring a Freestyle Project, **_the selected project may be reset and should be verified before saving your updated configuration._**
+
+### Changes
+- The "API Key" field now uses a `credential` instead of a `string` value
+- When configuring Freestyle projects, "Configure" permission on the project is required to make changes
+- When using the Pipeline Syntax Generator tool, the global "Administer" permission is required to create the script
+
 ## Code Dx Jenkins Plugin 3.1.0 `Released 1/26/2023`
 
 ### Changes
