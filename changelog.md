@@ -15,7 +15,7 @@ This release was performed in cooperation with the Jenkins team and is a respons
 - [Missing permission checks in Code Dx Plugin](https://www.jenkins.io/security/advisory/2023-05-16/#SECURITY-3145)
 - [API keys stored and displayed in plain text by Code Dx Plugin](https://www.jenkins.io/security/advisory/2023-05-16/#SECURITY-3146)
 
-It is a breaking change and will require reconfiguring Pipeling and Freestyle Projects.
+It is a breaking change and will require reconfiguring Pipeline and Freestyle Projects.
 
 #### Freestyle Projects
 
@@ -29,7 +29,7 @@ In future releases which fix these bugs, the selected project should still be co
 
 API Keys must be stored in Jenkins Credentials as "Secret text".
 
-The `key` field has been replaced with `keyCredentialId`. For a configured pipeline step such as:
+The `key` field has been replaced with `keyCredentialId`. For a configured Pipeline step such as:
 
 ```groovy
 withCredentials([
