@@ -1,5 +1,12 @@
 ## Code Dx Jenkins Plugin 4.0.0 `Released 5/10/2023`
 
+### Changes
+- The "API Key" field now uses a `credential` instead of a `string` value
+- The "API Key" field ID (`key`) has been renamed to `keyCredentialId`
+- When configuring Freestyle projects, "Configure" permission on the project is required to make changes
+- When using the Pipeline Syntax Generator tool, the global "Administer" permission is required to validate the form and list projects
+  - It can still be used without these permissions, but the "Code Dx Project" field will need to be filled manually since the drop-down will remain empty
+
 ### Notice
 
 This release was performed in cooperation with the Jenkins team and is a response to several reported vulnerabilities:
@@ -8,14 +15,53 @@ This release was performed in cooperation with the Jenkins team and is a respons
 - [Missing permission checks in Code Dx Plugin](https://www.jenkins.io/security/advisory/2023-05-16/#SECURITY-3145)
 - [API keys stored and displayed in plain text by Code Dx Plugin](https://www.jenkins.io/security/advisory/2023-05-16/#SECURITY-3146)
 
-It is a breaking change and will require reconfiguring existing projects to use "Secret text" Jenkins Credentials instead of plaintext for API keys.
+It is a breaking change and will require reconfiguring Pipeling and Freestyle Projects.
+
+#### Freestyle Projects
+
+API Keys must be stored in Jenkins Credentials as "Secret text". Each project must be reconfigured in order to assign an API Key Credential.
 
 Plugin version 4.0.0 has several known bugs when configuring via a form in a Freestyle Project or the Pipeline Syntax Generator. In particular, when reconfiguring a Freestyle Project, **_the selected project may be reset and should be verified before saving your updated configuration._**
 
-### Changes
-- The "API Key" field now uses a `credential` instead of a `string` value
-- When configuring Freestyle projects, "Configure" permission on the project is required to make changes
-- When using the Pipeline Syntax Generator tool, the global "Administer" permission is required to create the script
+In future releases which fix these bugs, the selected project should still be confirmed before saving your changes. These concerns only apply when upgrading from plugin version 3.x or earlier to version 4.0.0.
+
+#### Pipeline Projects
+
+API Keys must be stored in Jenkins Credentials as "Secret text".
+
+The `key` field has been replaced with `keyCredentialId`. For a configured pipeline step such as:
+
+```groovy
+withCredentials([
+  string(credentialsId: 'codedx-api-key', variable: 'API_KEY'),
+  string(credentialsId: 'codedx-url', variable: 'CODEDX_URL'),
+  ...
+]) {
+  step([
+    $class: 'CodeDxPublisher',
+    key: "$API_KEY",
+    url: "$CODEDX_URL",
+    ...
+  ])
+}
+```
+
+It should be updated as:
+
+```groovy
+withCredentials([
+  // credential reference removed from `withCredentials`
+  string(credentialsId: 'codedx-url', variable: 'CODEDX_URL'),
+  ...
+]) {
+  step([
+    $class: 'CodeDxPublisher',
+    keyCredentialId: "API_KEY", // field name changed, value replaced with direct credential ID
+    url: "$CODEDX_URL",
+    ...
+  ])
+}
+```
 
 ## Code Dx Jenkins Plugin 3.1.0 `Released 1/26/2023`
 
