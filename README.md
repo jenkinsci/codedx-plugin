@@ -9,6 +9,8 @@ of analysis tools.
 
 - This plugin is maintained by Synopsys, Inc.
 - Plugin version 3.0.0 and later support Pipelines projects as well as Freestyle
+- **Plugin version 4.0.0 includes fixes for [CVE-2023-2195, CVE-2023-2631](https://www.jenkins.io/security/advisory/2023-05-16/#SECURITY-3118), [CVE-2023-2633, CVE-2023-2632](https://www.jenkins.io/security/advisory/2023-05-16/#SECURITY-3146), [CVE-2023-2196](https://www.jenkins.io/security/advisory/2023-05-16/#SECURITY-3145)**
+  - This is a breaking change - see [changelog.md](changelog.md#code-dx-jenkins-plugin-400-released-5102023) for more info and guidance
 
 ## Features
 
