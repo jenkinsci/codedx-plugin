@@ -56,7 +56,7 @@ withCredentials([
 ]) {
   step([
     $class: 'CodeDxPublisher',
-    keyCredentialId: "API_KEY", // field name changed, value replaced with direct credential ID
+    keyCredentialId: "codedx-api-key", // field name changed, value replaced with direct credential ID
     url: "$CODEDX_URL",
     ...
   ])
