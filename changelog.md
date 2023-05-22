@@ -23,7 +23,7 @@ API Keys must be stored in Jenkins Credentials as "Secret text". Each project mu
 
 Plugin version 4.0.0 has several known bugs when configuring via a form in a Freestyle Project or the Pipeline Syntax Generator. In particular, when reconfiguring a Freestyle Project, **_the selected project may be reset and should be verified before saving your updated configuration._**
 
-In future releases which fix these bugs, the selected project should still be confirmed before saving your changes. These concerns only apply when upgrading from plugin version 3.x or earlier to version 4.0.0.
+In future releases which fix these bugs, the selected project should still be confirmed before saving your changes. These concerns only apply when upgrading from plugin version 3.x or earlier to version 4.x+.
 
 #### Pipeline Projects
 
