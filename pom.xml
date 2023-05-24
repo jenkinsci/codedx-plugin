@@ -82,8 +82,8 @@ limitations under the License
 	</properties>
 
 	<scm>
-		<connection>scm:git:ssh://github.com/jenkinsci/codedx-plugin.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com/jenkinsci/codedx-plugin.git</developerConnection>
+		<connection>scm:git:https://github.com/jenkinsci/codedx-plugin.git</connection>
+		<developerConnection>scm:git:https://github.com/jenkinsci/codedx-plugin.git</developerConnection>
 		<url>https://github.com/jenkinsci/codedx-plugin</url>
 		<tag>HEAD</tag>
 	</scm>
