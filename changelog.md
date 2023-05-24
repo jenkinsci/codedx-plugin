@@ -1,3 +1,14 @@
+## Code Dx Jenkins Plugin 4.0.1 `Released 5/24/2023`
+
+### Fixes
+
+- Updated validation logic to prevent previously-selected project from being reset to the first project when reconfiguring from pre-4.x
+
+### Changes
+
+- Improved error handling to give more useful errors on the relevant fields
+- Sets `compatibleSinceVersion` flag to notify users of required configuration changes (was missing in 4.0.0)
+
 ## Code Dx Jenkins Plugin 4.0.0 `Released 5/10/2023`
 
 ### Changes
