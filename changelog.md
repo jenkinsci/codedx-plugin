@@ -1,3 +1,13 @@
+## Code Dx Jenkins Plugin 4.0.3 `Released 10/30/2024`
+
+### Fixes
+
+- Minor improvements to error detection and handling with the "Server URL" field when configuring with Jenkins UI
+
+## Code Dx Jenkins Plugin 4.0.2 `Released 10/16/2024`
+
+This release only contained changes in documentation, updating some references from "Synopsys" to "Black Duck".
+
 ## Code Dx Jenkins Plugin 4.0.1 `Released 5/24/2023`
 
 ### Fixes
