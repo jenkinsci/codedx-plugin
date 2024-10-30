@@ -12,7 +12,7 @@
 	<groupId>org.jenkins-ci.plugins</groupId>
 	<artifactId>codedx</artifactId>
 	<name>Code Dx Plugin</name>
-	<version>4.0.3</version>
+	<version>4.0.4-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 	<url>https://github.com/jenkinsci/codedx-plugin</url>
 
@@ -85,7 +85,7 @@ limitations under the License
 		<connection>scm:git:https://github.com/jenkinsci/codedx-plugin.git</connection>
 		<developerConnection>scm:git:https://github.com/jenkinsci/codedx-plugin.git</developerConnection>
 		<url>https://github.com/jenkinsci/codedx-plugin</url>
-		<tag>codedx-4.0.3</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<developers>
