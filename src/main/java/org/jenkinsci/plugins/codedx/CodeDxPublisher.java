@@ -761,7 +761,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 				return FormValidation.error("The specified project could not be found.");
 			} catch (CodeDxClientException e) {
-				if (e.getHttpCode() == 403) {
+				if (e.getHttpCode() == 403 || e.getHttpCode() == 401) {
 					return FormValidation.error("The request failed; the API key may be incorrect or disabled.");
 				} else {
 					return FormValidation.error("An unexpected error occurred while listing available projects.");
@@ -853,6 +853,9 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			} catch (Exception e) {
 				if (e instanceof SSLHandshakeException) {
 					return FormValidation.warning("The SSL Certificate presented by the server is invalid. If this is expected, please input an SHA1 Fingerprint in the \"Advanced\" option");
+				} else {
+					logger.warning("Unexpected error when checking for codedx version: " + e.getMessage());
+					return FormValidation.error("An unexpected error occurred, please check the URL.");
 				}
 			}
 
