@@ -322,8 +322,10 @@ public class CodeDxClient {
 		String apiPath = (isXApi ? url.replace("/api/", "/x/") : url) + path;
 		request.setURI(URI.create(apiPath));
 
-		// set authentication headers
-		request.addHeader(KEY_HEADER, key);
+		if (!key.isEmpty()) {
+			// set authentication headers
+			request.addHeader(KEY_HEADER, key);
+		}
 
 		// if a request body is provided, and the request is able to add entities, JSONify it and use it as the request "entity"
 		if(requestBody != null && request instanceof HttpEntityEnclosingRequest){
