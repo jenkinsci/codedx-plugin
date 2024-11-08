@@ -305,6 +305,16 @@ public class CodeDxClient {
 		);
 	}
 
+	public CreateProjectResponse createProject(String projectName, String defaultBranchName) throws IOException, CodeDxClientException {
+		return doHttpRequest(
+			new HttpPost(),
+			"projects",
+			false,
+			new TypeToken<CreateProjectResponse>(){}.getType(),
+			new CreateProjectRequest(projectName, defaultBranchName)
+		);
+	}
+
 	/**
 	 * Perform an HttpRequest to the given api path, with an optional request body, and parse the response
 	 * @param request Generally a new `HttpGet`, `HttpPost`, or `HttpPut`

@@ -341,7 +341,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 		ProjectContext projectContext;
 		try {
-			projectContext = new ProjectContext(project.resolveProjectId(repeatingClient));
+			projectContext = new ProjectContext(project.resolveProjectId(repeatingClient, baseBranchName));
 		} catch (AbortException e) {
 			throw e;
 		} catch (Exception e) {
@@ -974,7 +974,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	// ref: https://github.com/jenkinsci/design-library-plugin/blob/57437b2b495f2c19ea2393e9c6f7bf654954e211/src/main/java/io/jenkins/plugins/designlibrary/Select.java
 	public static abstract class ProjectSelection implements ExtensionPoint, Describable<ProjectSelection> {
-		public abstract int resolveProjectId(CodeDxClient client) throws IOException, CodeDxClientException;
+		public abstract int resolveProjectId(CodeDxClient client, String defaultBranch) throws IOException, CodeDxClientException;
 
 		public Descriptor<ProjectSelection> getDescriptor() {
 			return Jenkins.get().getDescriptor(getClass());
@@ -1000,7 +1000,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		}
 
 		@Override
-		public int resolveProjectId(CodeDxClient client) throws IOException {
+		public int resolveProjectId(CodeDxClient client, String defaultBranch) throws IOException {
 			try {
 				return Integer.parseInt(projectId);
 			} catch (NumberFormatException e) {
@@ -1146,10 +1146,12 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	public static class NamedProject extends ProjectSelection {
 		private String projectName;
+		private Boolean autoCreate;
 
 		@DataBoundConstructor
-		public NamedProject(String projectName) {
+		public NamedProject(String projectName, Boolean autoCreate) {
 			this.projectName = projectName;
+			this.autoCreate = autoCreate;
 		}
 
 		public String getProjectName() {
@@ -1161,8 +1163,17 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			this.projectName = projectName;
 		}
 
+		public Boolean isAutoCreate() {
+			return this.autoCreate;
+		}
+
+		@DataBoundSetter
+		public void setAutoCreate(Boolean autoCreate) {
+			this.autoCreate = autoCreate;
+		}
+
 		@Override
-		public int resolveProjectId(CodeDxClient client) throws IOException, CodeDxClientException {
+		public int resolveProjectId(CodeDxClient client, String defaultBranch) throws IOException, CodeDxClientException {
 			List<Project> matches = new LinkedList<>();
 
 			for (Project project : client.getProjects()) {
@@ -1171,11 +1182,18 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				}
 			}
 
-			if (matches.size() != 1) {
-				throw new AbortException(String.format("Expected to find 1 project named '%s', but found %d.", projectName, matches.size()));
+			switch (matches.size()) {
+				case 0:
+					if (autoCreate) {
+						return client.createProject(projectName, defaultBranch).getId();
+					}
+					break;
+
+				case 1:
+					return matches.get(0).getId();
 			}
 
-			return matches.get(0).getId();
+			throw new AbortException(String.format("Expected to find 1 project named '%s', but found %d.", projectName, matches.size()));
 		}
 
 		@Extension
