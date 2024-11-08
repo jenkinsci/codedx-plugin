@@ -105,9 +105,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 	private final static Logger logger = Logger.getLogger(CodeDxPublisher.class.getName());
 
 	protected Object readResolve() {
-		logger.warning(String.format("CALLING readResolve [project=%s] [projectId=%s]", project, projectId));
 		if (project == null && projectId != null) {
-			logger.warning("SETTINGS SpecificProject with " + projectId);
 			project = new SpecificProject(projectId);
 		}
 		return this;
@@ -321,7 +319,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		}
 		buildOutput.println("Error handling set to: " + errorHandlingBehavior.getLabel());
 
-		buildOutput.println(String.format("Publishing to Code Dx server at %s: ", url));
+		buildOutput.println("Publishing to Code Dx server at: " + url);
 
 		final CodeDxClient repeatingClient = new CodeDxRepeatingClient(this.client, buildOutput);
 
@@ -339,9 +337,12 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return;
 		}
 
+		buildOutput.println("Resolving Code Dx project...");
 		ProjectContext projectContext;
 		try {
-			projectContext = new ProjectContext(project.resolveProjectId(repeatingClient, baseBranchName));
+			int projectId = project.resolveProjectId(buildOutput, repeatingClient, baseBranchName);
+			buildOutput.println(String.format("Resolved final project ID '%d'", projectId));
+			projectContext = new ProjectContext(projectId);
 		} catch (AbortException e) {
 			throw e;
 		} catch (Exception e) {
@@ -974,7 +975,11 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	// ref: https://github.com/jenkinsci/design-library-plugin/blob/57437b2b495f2c19ea2393e9c6f7bf654954e211/src/main/java/io/jenkins/plugins/designlibrary/Select.java
 	public static abstract class ProjectSelection implements ExtensionPoint, Describable<ProjectSelection> {
-		public abstract int resolveProjectId(CodeDxClient client, String defaultBranch) throws IOException, CodeDxClientException;
+		public abstract int resolveProjectId(
+			PrintStream log,
+			CodeDxClient client,
+			String defaultBranch
+		) throws IOException, CodeDxClientException;
 
 		public Descriptor<ProjectSelection> getDescriptor() {
 			return Jenkins.get().getDescriptor(getClass());
@@ -987,6 +992,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		private String projectId;
 
 		@DataBoundConstructor
+		public SpecificProject() {
+			this.projectId = null;
+		}
+
 		public SpecificProject(String projectId) {
 			this.projectId = projectId;
 		}
@@ -995,13 +1004,15 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return projectId;
 		}
 
+		@DataBoundSetter
 		public void setProjectId(String projectId) {
 			this.projectId = projectId;
 		}
 
 		@Override
-		public int resolveProjectId(CodeDxClient client, String defaultBranch) throws IOException {
+		public int resolveProjectId(PrintStream log, CodeDxClient client, String defaultBranch) throws IOException {
 			try {
+				log.println("Using Specific Project ID");
 				return Integer.parseInt(projectId);
 			} catch (NumberFormatException e) {
 				throw new AbortException("Invalid project ID: " + projectId);
@@ -1146,12 +1157,12 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	public static class NamedProject extends ProjectSelection {
 		private String projectName;
-		private Boolean autoCreate;
+		private boolean autoCreate;
 
 		@DataBoundConstructor
-		public NamedProject(String projectName, Boolean autoCreate) {
-			this.projectName = projectName;
-			this.autoCreate = autoCreate;
+		public NamedProject() {
+			this.projectName = null;
+			this.autoCreate = false;
 		}
 
 		public String getProjectName() {
@@ -1163,29 +1174,41 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			this.projectName = projectName;
 		}
 
-		public Boolean isAutoCreate() {
+		public boolean isAutoCreate() {
 			return this.autoCreate;
 		}
 
 		@DataBoundSetter
-		public void setAutoCreate(Boolean autoCreate) {
+		public void setAutoCreate(boolean autoCreate) {
 			this.autoCreate = autoCreate;
 		}
 
 		@Override
-		public int resolveProjectId(CodeDxClient client, String defaultBranch) throws IOException, CodeDxClientException {
+		public int resolveProjectId(PrintStream log, CodeDxClient client, String defaultBranch) throws IOException, CodeDxClientException {
+			log.println("Using Named Project");
+
+			if (projectName == null || projectName.trim().isEmpty()) {
+				throw new AbortException("Project name was not specified.");
+			}
+
 			List<Project> matches = new LinkedList<>();
 
+			log.println("Fetching list of projects");
 			for (Project project : client.getProjects()) {
 				if (project.getName().equals(projectName)) {
 					matches.add(project);
 				}
 			}
+			log.println(String.format("Found %d total projects", matches.size()));
 
 			switch (matches.size()) {
 				case 0:
+					log.println("Did not find any matching projects");
 					if (autoCreate) {
+						log.println("Auto-create is enabled, creating project with default branch");
 						return client.createProject(projectName, defaultBranch).getId();
+					} else {
+						log.println("Auto-create is NOT enabled");
 					}
 					break;
 
@@ -1253,8 +1276,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 					if (numMatching == 1) {
 						return FormValidation.ok();
+					} else if (numMatching == 0) {
+						return FormValidation.warning("Found %d matching projects. The job will fail if multiple projects are matched.", numMatching);
 					} else {
-						return FormValidation.warning("Found %d matching projects. The job will fail if there isn't exactly one matching project when it runs.", numMatching);
+						return FormValidation.warning("Found no matching projects. The job will fail if no project is matched and auto-create is disabled.");
 					}
 
 				} catch (CodeDxClientException e) {
