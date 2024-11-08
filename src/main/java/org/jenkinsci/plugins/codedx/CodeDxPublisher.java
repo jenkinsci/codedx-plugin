@@ -706,10 +706,10 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 	Note: Endpoints which make HTTP requests have `Job` as a path parameter so we can do permission
 		  checks whether it's a project (freestyle) or job (pipeline syntax gen.) being tested
 
-		  Endpoints which access workspace contents have `AbstractProject` instead since we need
-		  it to get a workspace path. These endpoints will get `null` for the project in the
-		  pipeline syntax gen. and no-op, which is expected since there's no way to get a workspace
-		  while running in the syntax gen.
+	      Endpoints which access workspace contents have `AbstractProject` instead since we need
+	      it to get a workspace path. These endpoints will get `null` for the project in the
+	      pipeline syntax gen. and no-op, which is expected since there's no way to get a workspace
+	      while running in the syntax gen.
 	 */
 	private static void checkPermissionForRemoteRequests(Item item) {
 		if (item != null) item.checkPermission(Item.CONFIGURE);
