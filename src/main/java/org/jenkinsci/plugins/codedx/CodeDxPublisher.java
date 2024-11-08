@@ -338,6 +338,12 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		}
 
 		buildOutput.println("Resolving Code Dx project...");
+
+		if (project == null || project.isEmpty()) {
+			buildOutput.println("No project has been selected");
+			return;
+		}
+
 		ProjectContext projectContext;
 		try {
 			int projectId = project.resolveProjectId(buildOutput, repeatingClient, baseBranchName);
@@ -981,6 +987,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			String defaultBranch
 		) throws IOException, CodeDxClientException;
 
+		public abstract boolean isEmpty();
+
 		public Descriptor<ProjectSelection> getDescriptor() {
 			return Jenkins.get().getDescriptor(getClass());
 		}
@@ -1007,6 +1015,11 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		@DataBoundSetter
 		public void setProjectId(String projectId) {
 			this.projectId = projectId;
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return projectId == null || projectId.isEmpty() || projectId.equals("-1");
 		}
 
 		@Override
@@ -1181,6 +1194,11 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		@DataBoundSetter
 		public void setAutoCreate(boolean autoCreate) {
 			this.autoCreate = autoCreate;
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return projectName == null || projectName.isEmpty();
 		}
 
 		@Override
