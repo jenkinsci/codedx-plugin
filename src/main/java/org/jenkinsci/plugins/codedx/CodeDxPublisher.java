@@ -24,10 +24,7 @@ import com.codedx.api.client.Job;
 import com.codedx.api.client.Project;
 import com.codedx.security.JenkinsSSLConnectionSocketFactoryFactory;
 import com.codedx.util.CodeDxVersion;
-import hudson.AbortException;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.Extension;
+import hudson.*;
 import hudson.model.*;
 import hudson.model.queue.Tasks;
 import hudson.security.ACL;
@@ -56,6 +53,7 @@ import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.verb.POST;
 
+import javax.annotation.Nonnull;
 import javax.net.ssl.SSLHandshakeException;
 import javax.servlet.ServletException;
 
@@ -78,7 +76,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private final String url;
 	private final String keyCredentialId;
-	private final String projectId;
+	private volatile String projectId;
+	private ProjectSelection project;
 
 	// Comma separated list of source/binary file Ant GLOB patterns
 	private String sourceAndBinaryFiles;
@@ -105,20 +104,29 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private final static Logger logger = Logger.getLogger(CodeDxPublisher.class.getName());
 
+	protected Object readResolve() {
+		logger.warning(String.format("CALLING readResolve [project=%s] [projectId=%s]", project, projectId));
+		if (project == null && projectId != null) {
+			logger.warning("SETTINGS SpecificProject with " + projectId);
+			project = new SpecificProject(projectId);
+		}
+		return this;
+	}
+
 	/**
 	 * @param url                          URL of the Code Dx server
 	 * @param keyCredentialId              ID of a Secret Text Credential containing the API key of the Code Dx server
-	 * @param projectId                    Code Dx project ID
 	 * @param analysisName                 The name to use for the analysis
 	 */
 	@DataBoundConstructor
 	public CodeDxPublisher(
 			final String url,
 			final String keyCredentialId,
-			final String projectId,
 			final String analysisName
 	) {
-		this.projectId = projectId;
+		// (note: `projectId` is deprecated)
+		this.projectId = null;
+		this.project = null;
 		this.url = url;
 		this.keyCredentialId = keyCredentialId;
 		this.analysisName = analysisName.trim();
@@ -144,8 +152,27 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		this.analysisResultConfiguration = analysisResultConfiguration;
 	}
 
+	public ProjectSelection getProject() { return project; }
+
+	@DataBoundSetter
+	public void setProject(ProjectSelection project) {
+		this.project = project;
+	}
+
+	public DescriptorExtensionList<ProjectSelection, Descriptor<ProjectSelection>> getProjectDescriptors() {
+		return Jenkins.get().getDescriptorList(ProjectSelection.class);
+	}
+
+	/* Getter/setter for old `projectId` field needed for backward compatibility with older pipeline scripts */
+	@Deprecated
 	public String getProjectId() {
-		return projectId;
+		return this.projectId;
+	}
+
+	@Deprecated
+	@DataBoundSetter
+	public void setProjectId(String projectId) {
+		this.project = new SpecificProject(projectId);
 	}
 
 	public String getUrl() {
@@ -195,14 +222,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 	}
 
 	public String getAnalysisName(){ return analysisName; }
-
-	private String getLatestAnalysisUrl() {
-		if (projectId.length() != 0 && !projectId.equals("-1")) {
-			return client.buildLatestFindingsUrl(Integer.parseInt(projectId));
-		} else {
-			return null;
-		}
-	}
 
 	public String getTargetBranchName() {
 		return targetBranchName;
@@ -302,19 +321,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		}
 		buildOutput.println("Error handling set to: " + errorHandlingBehavior.getLabel());
 
-		if (projectId.length() == 0 || projectId.equals("-1")) {
-			buildOutput.println("No project has been selected");
-			return;
-		}
-
-		ProjectContext project;
-		try {
-			project = new ProjectContext(Integer.parseInt(projectId));
-		} catch (NumberFormatException e) {
-			throw new AbortException("Invalid project ID: " + projectId);
-		}
-
-		buildOutput.println(String.format("Publishing to Code Dx server at %s to Code Dx project %s: ", url, projectId));
+		buildOutput.println(String.format("Publishing to Code Dx server at %s: ", url));
 
 		final CodeDxClient repeatingClient = new CodeDxRepeatingClient(this.client, buildOutput);
 
@@ -332,8 +339,19 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return;
 		}
 
+		ProjectContext projectContext;
+		try {
+			projectContext = new ProjectContext(project.resolveProjectId(repeatingClient));
+		} catch (AbortException e) {
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace(buildOutput);
+			handleCodeDxError(build, buildOutput, "An error occurred while resolving the Code Dx project");
+			return;
+		}
+
 		ValueResolver valueResolver = new ValueResolver(build, workspace, listener, buildOutput);
-		TargetBranchChecker branchChecker = new TargetBranchChecker(project, repeatingClient, valueResolver, buildOutput);
+		TargetBranchChecker branchChecker = new TargetBranchChecker(projectContext, repeatingClient, valueResolver, buildOutput);
 		try {
 			branchChecker.validate(cdxVersion, targetBranchName, baseBranchName);
 		} catch (AbortException e) {
@@ -347,7 +365,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return;
 		}
 
-		project = project.withBranch(branchChecker.getTargetBranchName());
+		projectContext = projectContext.withBranch(branchChecker.getTargetBranchName());
 
 		buildOutput.println("Creating source/binary zip...");
 
@@ -382,7 +400,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		if (effectiveGitConfig != null) {
 			buildOutput.println("Verifying git config for Code Dx project...");
 			try {
-				GitConfigResponse response = repeatingClient.getProjectGitConfig(project);
+				GitConfigResponse response = repeatingClient.getProjectGitConfig(projectContext);
 				if (response.getUrl().isEmpty()) {
 					buildOutput.println("'Include Git Source' was enabled but the project does not have a Git config assigned. 'Include Git Source' will be disabled for this run.");
 					effectiveGitConfig = null;
@@ -417,7 +435,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					}
 
 					response = repeatingClient.startAnalysis(
-							project.getProjectId(),
+							projectContext.getProjectId(),
 							includeGitSource,
 							targetGitBranch,
 							branchChecker.getBaseBranchName(),
@@ -495,7 +513,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 								CodeDxVersion.MIN_FOR_ANALYSIS_NAMES + "). The analysis name will not be set.");
 					} else {
 						try {
-							repeatingClient.setAnalysisName(project, analysisId, expandedAnalysisName);
+							repeatingClient.setAnalysisName(projectContext, analysisId, expandedAnalysisName);
 							buildOutput.println("Successfully updated analysis name.");
 						} catch (CodeDxClientException e) {
 							e.printStackTrace(buildOutput);
@@ -529,14 +547,14 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 						Filter notGoneFilter = new Filter();
 						notGoneFilter.setNotStatus(new String[]{Filter.STATUS_GONE});
-						List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(project, notGoneFilter, "severity");
+						List<CountGroup> severityCounts = repeatingClient.getFindingsGroupedCounts(projectContext, notGoneFilter, "severity");
 
 						buildOutput.println("Fetching status counts");
 
 						Filter notAssignedFilter = new Filter();
 						notAssignedFilter.setNotStatus(new String[]{ Filter.STATUS_ASSIGNED, Filter.STATUS_GONE });
 
-						List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(project, notAssignedFilter, "status");
+						List<CountGroup> statusCounts = repeatingClient.getFindingsGroupedCounts(projectContext, notAssignedFilter, "status");
 
 						Filter assignedFilter = new Filter();
 						assignedFilter.setStatus(new String[]{Filter.STATUS_ASSIGNED});
@@ -545,7 +563,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 						//Since CodeDx splits assigned status into different statuses (one per user),
 						//we need to get the total assigned count and add our own CountGroup.
-						int assignedCount = repeatingClient.getFindingsCount(project, assignedFilter);
+						int assignedCount = repeatingClient.getFindingsCount(projectContext, assignedFilter);
 
 						if (assignedCount > 0) {
 
@@ -565,7 +583,15 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 						CodeDxResult result = new CodeDxResult(statMap, build);
 
 						buildOutput.println("Adding CodeDx build action");
-						build.addAction(new CodeDxBuildAction(build, analysisResultConfiguration, getLatestAnalysisUrl(), result));
+
+						build.addAction(
+								new CodeDxBuildAction(
+										build,
+										analysisResultConfiguration,
+										client.buildLatestFindingsUrl(projectContext.getProjectId()),
+										result
+								)
+						);
 
 						AnalysisResultChecker checker = new AnalysisResultChecker(repeatingClient,
 								cdxVersion,
@@ -575,7 +601,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 								analysisResultConfiguration.isFailureOnlyNew(),
 								analysisResultConfiguration.isUnstableOnlyNew(),
 								analysisResultConfiguration.getPolicyBreakBuildBehavior(),
-								project,
+								projectContext,
 								buildOutput);
 						Result buildResult = checker.checkResult();
 						build.setResult(buildResult);
@@ -669,29 +695,27 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		return (DescriptorImpl) super.getDescriptor();
 	}
 
+	/*
+	Note: Endpoints which make HTTP requests have `Job` as a path parameter so we can do permission
+		  checks whether it's a project (freestyle) or job (pipeline syntax gen.) being tested
+
+		  Endpoints which access workspace contents have `AbstractProject` instead since we need
+		  it to get a workspace path. These endpoints will get `null` for the project in the
+		  pipeline syntax gen. and no-op, which is expected since there's no way to get a workspace
+		  while running in the syntax gen.
+	 */
+	private static void checkPermissionForRemoteRequests(Item item) {
+		if (item != null) item.checkPermission(Item.CONFIGURE);
+		else Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+	}
+
+
 	/**
 	 * Descriptor for {@link CodeDxPublisher}. Used as a singleton.
 	 * The class is marked as public so that it can be accessed from views.
 	 */
 	@Extension // This indicates to Jenkins that this is an implementation of an extension point.
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-
-		/*
-		Note: Endpoints which make HTTP requests have `Job` as a path parameter so we can do permission
-		      checks whether it's a project (freestyle) or job (pipeline syntax gen.) being tested
-
-		      Endpoints which access workspace contents have `AbstractProject` instead since we need
-		      it to get a workspace path. These endpoints will get `null` for the project in the
-		      pipeline syntax gen. and no-op, which is expected since there's no way to get a workspace
-		      while running in the syntax gen.
-		 */
-
-		private void checkPermissionForRemoteRequests(Item item)
-		{
-			if (item != null) item.checkPermission(Item.CONFIGURE);
-			else Jenkins.get().checkPermission(Jenkins.ADMINISTER);
-		}
-
 		/**
 		 * To persist global configuration information,
 		 * simply store it in a field and call save().
@@ -718,55 +742,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		 */
 		public String getDisplayName() {
 			return "Publish to Code Dx";
-		}
-
-		public FormValidation doCheckProjectId(@QueryParameter String url, @QueryParameter String selfSignedCertificateFingerprint, @QueryParameter String keyCredentialId, @QueryParameter final String value, @AncestorInPath Item item)
-				throws IOException, ServletException {
-			checkPermissionForRemoteRequests(item);
-
-			if (StringUtils.isBlank(url) || StringUtils.isBlank(keyCredentialId)) {
-				// waiting for other fields to populate
-				return FormValidation.ok();
-			}
-
-			try {
-				StringCredentials keyCredential = CredentialsMatchers.firstOrNull(
-						CredentialsProvider.lookupCredentials(
-								StringCredentials.class,
-								item,
-								ACL.SYSTEM,
-								URIRequirementBuilder.fromUri(url).build()
-						),
-						CredentialsMatchers.withId(keyCredentialId)
-				);
-
-				if (keyCredential == null) {
-					return FormValidation.error("Cannot find currently selected credentials.");
-				}
-
-				CodeDxClient client = buildClient(url, keyCredential.getSecret().getPlainText(), selfSignedCertificateFingerprint);
-				List<Project> projects = client.getProjects();
-
-				if (value.length() == 0)
-					return FormValidation.error("Please set a project.");
-				int projectId = Integer.parseInt(value);
-
-				if (projectId == -2) {
-					return FormValidation.error("No projects are visible for the given API key.");
-				}
-
-				for (Project project : projects) {
-					if (project.getId() == projectId) return FormValidation.ok();
-				}
-
-				return FormValidation.error("The specified project could not be found.");
-			} catch (CodeDxClientException e) {
-				if (e.getHttpCode() == 403 || e.getHttpCode() == 401) {
-					return FormValidation.error("The request failed; the API key may be incorrect or disabled.");
-				} else {
-					return FormValidation.error("An unexpected error occurred while listing available projects.");
-				}
-			}
 		}
 
 		public ListBoxModel doFillKeyCredentialIdItems(@QueryParameter String url, @QueryParameter String keyCredentialId, @AncestorInPath Item item) {
@@ -936,64 +911,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return Util.checkCSVFileMatches(value, project.getSomeWorkspace());
 		}
 
-		@POST
-		public ListBoxModel doFillProjectIdItems(@QueryParameter final String url, @QueryParameter final String selfSignedCertificateFingerprint, @QueryParameter final String keyCredentialId, @AncestorInPath Item item) {
-			checkPermissionForRemoteRequests(item);
-
-			ListBoxModel listBox = new ListBoxModel();
-
-			if (StringUtils.isBlank(keyCredentialId) || StringUtils.isBlank(url)) {
-				return listBox;
-			}
-
-			StringCredentials keyCredential = CredentialsMatchers.firstOrNull(
-					CredentialsProvider.lookupCredentials(
-							StringCredentials.class,
-							item,
-							ACL.SYSTEM,
-							URIRequirementBuilder.fromUri(url).build()
-					),
-					CredentialsMatchers.withId(keyCredentialId)
-			);
-
-			if (keyCredential == null) {
-				return listBox;
-			}
-
-			CodeDxClient client = buildClient(url, keyCredential.getSecret().getPlainText(), selfSignedCertificateFingerprint);
-
-			try {
-				final List<Project> projects = client.getProjects();
-
-				Map<String, Boolean> duplicates = new HashMap<String, Boolean>();
-				for (Project proj : projects) {
-					if (!duplicates.containsKey(proj.getName())) {
-						duplicates.put(proj.getName(), false);
-					} else {
-						duplicates.put(proj.getName(), true);
-					}
-				}
-				for (Project proj : projects) {
-					if (!duplicates.get(proj.getName())) {
-						listBox.add(proj.getName(), Integer.toString(proj.getId()));
-					} else {
-						listBox.add(proj.getName() + " (id:" + proj.getId() + ")", Integer.toString(proj.getId()));
-					}
-
-				}
-			} catch (Exception e) {
-				// more detailed info will be given in doCheckProjectId
-				logger.warning("Exception when populating projects dropdown " + e);
-				listBox.add("", "-1");
-			}
-
-			if (listBox.isEmpty()) {
-				listBox.add("", "-2");
-			}
-
-			return listBox;
-		}
-
 		public ListBoxModel doFillErrorHandlingBehaviorItems() {
 			ListBoxModel listBox = new ListBoxModel();
 			listBox.add(BuildErrorBehavior.None.getLabel(), BuildErrorBehavior.None.name());
@@ -1042,7 +959,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			//  (easier when there are many fields; need set* methods for this, like setUseFrench)
 
 			save();
-			System.out.println("Code Dx descriptor configure method");
 			return super.configure(req, formData);
 		}
 
@@ -1054,6 +970,284 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	private static boolean isFingerprintMismatch(SSLHandshakeException exception) {
 		return exception.getMessage().contains("None of the TrustManagers trust this certificate chain");
+	}
+
+	// ref: https://github.com/jenkinsci/design-library-plugin/blob/57437b2b495f2c19ea2393e9c6f7bf654954e211/src/main/java/io/jenkins/plugins/designlibrary/Select.java
+	public static abstract class ProjectSelection implements ExtensionPoint, Describable<ProjectSelection> {
+		public abstract int resolveProjectId(CodeDxClient client) throws IOException, CodeDxClientException;
+
+		public Descriptor<ProjectSelection> getDescriptor() {
+			return Jenkins.get().getDescriptor(getClass());
+		}
+	}
+
+	public static class ProjectSelectionDescriptor extends Descriptor<ProjectSelection> {}
+
+	public static class SpecificProject extends ProjectSelection {
+		private String projectId;
+
+		@DataBoundConstructor
+		public SpecificProject(String projectId) {
+			this.projectId = projectId;
+		}
+
+		public String getProjectId() {
+			return projectId;
+		}
+
+		public void setProjectId(String projectId) {
+			this.projectId = projectId;
+		}
+
+		@Override
+		public int resolveProjectId(CodeDxClient client) throws IOException {
+			try {
+				return Integer.parseInt(projectId);
+			} catch (NumberFormatException e) {
+				throw new AbortException("Invalid project ID: " + projectId);
+			}
+		}
+
+		@Extension
+		public static final class DescriptorImpl extends ProjectSelectionDescriptor {
+			@Nonnull
+			@Override
+			public String getDisplayName() {
+				return "Specific Project";
+			}
+
+			@POST
+			public FormValidation doCheckProjectId(
+					@RelativePath("..")
+					@QueryParameter String url,
+					@RelativePath("..")
+					@QueryParameter String selfSignedCertificateFingerprint,
+					@RelativePath("..")
+					@QueryParameter String keyCredentialId,
+
+					@QueryParameter final String value,
+					@AncestorInPath Item item
+			) throws IOException, ServletException {
+				checkPermissionForRemoteRequests(item);
+
+				if (StringUtils.isBlank(url) || StringUtils.isBlank(keyCredentialId)) {
+					// waiting for other fields to populate
+					return FormValidation.ok();
+				}
+
+				try {
+					StringCredentials keyCredential = CredentialsMatchers.firstOrNull(
+							CredentialsProvider.lookupCredentials(
+									StringCredentials.class,
+									item,
+									ACL.SYSTEM,
+									URIRequirementBuilder.fromUri(url).build()
+							),
+							CredentialsMatchers.withId(keyCredentialId)
+					);
+
+					if (keyCredential == null) {
+						return FormValidation.error("Cannot find currently selected credentials.");
+					}
+
+					CodeDxClient client = buildClient(url, keyCredential.getSecret().getPlainText(), selfSignedCertificateFingerprint);
+					List<Project> projects = client.getProjects();
+
+					if (value.length() == 0)
+						return FormValidation.error("Please set a project.");
+					int projectId = Integer.parseInt(value);
+
+					if (projectId == -2) {
+						return FormValidation.error("No projects are visible for the given API key.");
+					}
+
+					for (Project project : projects) {
+						if (project.getId() == projectId) return FormValidation.ok();
+					}
+
+					return FormValidation.error("The specified project could not be found.");
+				} catch (CodeDxClientException e) {
+					if (e.getHttpCode() == 403 || e.getHttpCode() == 401) {
+						return FormValidation.error("The request failed; the API key may be incorrect or disabled.");
+					} else {
+						return FormValidation.error("An unexpected error occurred while listing available projects.");
+					}
+				}
+			}
+
+			@POST
+			public ListBoxModel doFillProjectIdItems(
+					@RelativePath("..")
+					@QueryParameter final String url,
+					@RelativePath("..")
+					@QueryParameter final String selfSignedCertificateFingerprint,
+					@RelativePath("..")
+					@QueryParameter final String keyCredentialId,
+
+					@AncestorInPath Item item
+			) {
+				checkPermissionForRemoteRequests(item);
+
+				ListBoxModel listBox = new ListBoxModel();
+
+				if (StringUtils.isBlank(keyCredentialId) || StringUtils.isBlank(url)) {
+					return listBox;
+				}
+
+				StringCredentials keyCredential = CredentialsMatchers.firstOrNull(
+						CredentialsProvider.lookupCredentials(
+								StringCredentials.class,
+								item,
+								ACL.SYSTEM,
+								URIRequirementBuilder.fromUri(url).build()
+						),
+						CredentialsMatchers.withId(keyCredentialId)
+				);
+
+				if (keyCredential == null) {
+					return listBox;
+				}
+
+				CodeDxClient client = buildClient(url, keyCredential.getSecret().getPlainText(), selfSignedCertificateFingerprint);
+
+				try {
+					final List<Project> projects = client.getProjects();
+
+					Map<String, Boolean> duplicates = new HashMap<String, Boolean>();
+					for (Project proj : projects) {
+						if (!duplicates.containsKey(proj.getName())) {
+							duplicates.put(proj.getName(), false);
+						} else {
+							duplicates.put(proj.getName(), true);
+						}
+					}
+					for (Project proj : projects) {
+						if (!duplicates.get(proj.getName())) {
+							listBox.add(proj.getName(), Integer.toString(proj.getId()));
+						} else {
+							listBox.add(proj.getName() + " (id:" + proj.getId() + ")", Integer.toString(proj.getId()));
+						}
+
+					}
+				} catch (Exception e) {
+					// more detailed info will be given in doCheckProjectId
+					logger.warning("Exception when populating projects dropdown " + e);
+					listBox.add("", "-1");
+				}
+
+				if (listBox.isEmpty()) {
+					listBox.add("", "-2");
+				}
+
+				return listBox;
+			}
+		}
+	}
+
+	public static class NamedProject extends ProjectSelection {
+		private String projectName;
+
+		@DataBoundConstructor
+		public NamedProject(String projectName) {
+			this.projectName = projectName;
+		}
+
+		public String getProjectName() {
+			return projectName;
+		}
+
+		@DataBoundSetter
+		public void setProjectName(String projectName) {
+			this.projectName = projectName;
+		}
+
+		@Override
+		public int resolveProjectId(CodeDxClient client) throws IOException, CodeDxClientException {
+			List<Project> matches = new LinkedList<>();
+
+			for (Project project : client.getProjects()) {
+				if (project.getName().equals(projectName)) {
+					matches.add(project);
+				}
+			}
+
+			if (matches.size() != 1) {
+				throw new AbortException(String.format("Expected to find 1 project named '%s', but found %d.", projectName, matches.size()));
+			}
+
+			return matches.get(0).getId();
+		}
+
+		@Extension
+		public static final class DescriptorImpl extends ProjectSelectionDescriptor {
+			@Nonnull
+			@Override
+			public String getDisplayName() {
+				return "Project Name";
+			}
+
+			@POST
+			public FormValidation doCheckProjectName(
+					@RelativePath("..")
+					@QueryParameter String url,
+					@RelativePath("..")
+					@QueryParameter String selfSignedCertificateFingerprint,
+					@RelativePath("..")
+					@QueryParameter String keyCredentialId,
+
+					@QueryParameter final String value,
+					@AncestorInPath Item item
+			) throws IOException {
+				checkPermissionForRemoteRequests(item);
+
+				if (StringUtils.isBlank(keyCredentialId) || StringUtils.isBlank(url)) {
+					return FormValidation.ok();
+				}
+
+				StringCredentials keyCredential = CredentialsMatchers.firstOrNull(
+						CredentialsProvider.lookupCredentials(
+								StringCredentials.class,
+								item,
+								ACL.SYSTEM,
+								URIRequirementBuilder.fromUri(url).build()
+						),
+						CredentialsMatchers.withId(keyCredentialId)
+				);
+
+				if (keyCredential == null) {
+					return FormValidation.ok();
+				}
+
+				if (StringUtils.isBlank(value)) {
+					return FormValidation.error("Please specify a project name.");
+				}
+
+				CodeDxClient client = buildClient(url, keyCredential.getSecret().getPlainText(), selfSignedCertificateFingerprint);
+				try {
+					List<Project> projects = client.getProjects();
+
+					int numMatching = 0;
+					for (Project project : projects) {
+						if (project.getName().equals(value)) {
+							numMatching++;
+						}
+					}
+
+					if (numMatching == 1) {
+						return FormValidation.ok();
+					} else {
+						return FormValidation.warning("Found %d matching projects. The job will fail if there isn't exactly one matching project when it runs.", numMatching);
+					}
+
+				} catch (CodeDxClientException e) {
+					if (e.getHttpCode() == 403 || e.getHttpCode() == 401) {
+						return FormValidation.error("The request failed; the API key may be incorrect or disabled.");
+					} else {
+						return FormValidation.error("An unexpected error occurred while listing available projects.");
+					}
+				}
+			}
+		}
 	}
 }
 
