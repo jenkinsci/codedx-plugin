@@ -51,7 +51,7 @@ public class ProjectResolver {
 			case 0:
 				log.println("Did not find any matching projects");
 				if (selection.isAutoCreate()) {
-					log.println("Auto-create is enabled, creating project with default branch");
+					log.println(String.format("Auto-create is enabled, creating project with default branch '%s'", newProjectDefaultBranch));
 					return client.createProject(projectName, newProjectDefaultBranch).getId();
 				} else {
 					log.println("Auto-create is NOT enabled");

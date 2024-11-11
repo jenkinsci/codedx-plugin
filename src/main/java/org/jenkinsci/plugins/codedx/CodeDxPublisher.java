@@ -344,9 +344,19 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return;
 		}
 
+		ValueResolver valueResolver = new ValueResolver(build, workspace, listener, buildOutput);
+
+		String resolvedBaseBranchName = baseBranchName != null
+			? valueResolver.resolve("base branch", baseBranchName)
+			: null;
+
+		String resolvedTargetBranchName = targetBranchName != null
+			? valueResolver.resolve("target branch", targetBranchName)
+			: null;
+
 		ProjectContext projectContext;
 		try {
-			int projectId = new ProjectResolver(buildOutput, client).resolveProjectId(project, baseBranchName);
+			int projectId = new ProjectResolver(buildOutput, client).resolveProjectId(project, resolvedBaseBranchName);
 			buildOutput.println(String.format("Resolved final project ID '%d'", projectId));
 			projectContext = new ProjectContext(projectId);
 		} catch (AbortException e) {
@@ -357,10 +367,9 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 			return;
 		}
 
-		ValueResolver valueResolver = new ValueResolver(build, workspace, listener, buildOutput);
-		TargetBranchChecker branchChecker = new TargetBranchChecker(projectContext, repeatingClient, valueResolver, buildOutput);
+		TargetBranchChecker branchChecker = new TargetBranchChecker(projectContext, repeatingClient, buildOutput);
 		try {
-			branchChecker.validate(cdxVersion, targetBranchName, baseBranchName);
+			branchChecker.validate(cdxVersion, resolvedTargetBranchName, resolvedBaseBranchName);
 		} catch (AbortException e) {
 			// configuration error
 			throw e;
@@ -1232,9 +1241,9 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					if (numMatching == 1) {
 						return FormValidation.ok();
 					} else if (numMatching == 0) {
-						return FormValidation.warning("Found %d matching projects. The job will fail if multiple projects are matched.", numMatching);
-					} else {
 						return FormValidation.warning("Found no matching projects. The job will fail if no project is matched and auto-create is disabled.");
+					} else {
+						return FormValidation.warning("Found %d matching projects. The job will fail if multiple projects are matched.", numMatching);
 					}
 
 				} catch (CodeDxClientException e) {

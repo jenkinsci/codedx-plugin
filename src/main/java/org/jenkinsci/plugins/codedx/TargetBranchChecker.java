@@ -28,15 +28,13 @@ import java.util.List;
 public class TargetBranchChecker {
 	final private ProjectContext project;
 	final private CodeDxClient client;
-	final private ValueResolver resolver;
 	final private PrintStream logger;
 
 	private String targetBranchName, baseBranchName;
 
-	public TargetBranchChecker(ProjectContext project, CodeDxClient client, ValueResolver resolver, PrintStream logger) {
+	public TargetBranchChecker(ProjectContext project, CodeDxClient client, PrintStream logger) {
 		this.project = project;
 		this.client = client;
-		this.resolver = resolver;
 		this.logger = logger;
 
 		this.targetBranchName = this.baseBranchName = null;
@@ -65,9 +63,9 @@ public class TargetBranchChecker {
 			return;
 		}
 
-		this.targetBranchName = resolver.resolve("target branch", targetBranch);
+		this.targetBranchName = targetBranch;
 		if (baseBranch != null) {
-			this.baseBranchName = resolver.resolve("base branch", baseBranch);
+			this.baseBranchName = baseBranch;
 		}
 
 		logger.println("Validating base branch selection...");
