@@ -346,7 +346,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 		ProjectContext projectContext;
 		try {
-			int projectId = project.resolveProjectId(buildOutput, repeatingClient, baseBranchName);
+			int projectId = new ProjectResolver(buildOutput, client).resolveProjectId(project, baseBranchName);
 			buildOutput.println(String.format("Resolved final project ID '%d'", projectId));
 			projectContext = new ProjectContext(projectId);
 		} catch (AbortException e) {
@@ -996,12 +996,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 
 	// ref: https://github.com/jenkinsci/design-library-plugin/blob/57437b2b495f2c19ea2393e9c6f7bf654954e211/src/main/java/io/jenkins/plugins/designlibrary/Select.java
 	public static abstract class ProjectSelection implements ExtensionPoint, Describable<ProjectSelection> {
-		public abstract int resolveProjectId(
-			PrintStream log,
-			CodeDxClient client,
-			String defaultBranch
-		) throws IOException, CodeDxClientException;
-
 		public abstract boolean isEmpty();
 
 		public Descriptor<ProjectSelection> getDescriptor() {
@@ -1035,16 +1029,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		@Override
 		public boolean isEmpty() {
 			return projectId == null || projectId.isEmpty() || projectId.equals("-1");
-		}
-
-		@Override
-		public int resolveProjectId(PrintStream log, CodeDxClient client, String defaultBranch) throws IOException {
-			try {
-				log.println("Using Specific Project ID");
-				return Integer.parseInt(projectId);
-			} catch (NumberFormatException e) {
-				throw new AbortException("Invalid project ID: " + projectId);
-			}
 		}
 
 		@Extension
@@ -1197,42 +1181,6 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		@Override
 		public boolean isEmpty() {
 			return projectName == null || projectName.isEmpty();
-		}
-
-		@Override
-		public int resolveProjectId(PrintStream log, CodeDxClient client, String defaultBranch) throws IOException, CodeDxClientException {
-			log.println("Using Named Project");
-
-			if (projectName == null || projectName.trim().isEmpty()) {
-				throw new AbortException("Project name was not specified.");
-			}
-
-			List<Project> matches = new LinkedList<>();
-
-			log.println("Fetching list of projects");
-			for (Project project : client.getProjects()) {
-				if (project.getName().equals(projectName)) {
-					matches.add(project);
-				}
-			}
-			log.println(String.format("Found %d total projects", matches.size()));
-
-			switch (matches.size()) {
-				case 0:
-					log.println("Did not find any matching projects");
-					if (autoCreate) {
-						log.println("Auto-create is enabled, creating project with default branch");
-						return client.createProject(projectName, defaultBranch).getId();
-					} else {
-						log.println("Auto-create is NOT enabled");
-					}
-					break;
-
-				case 1:
-					return matches.get(0).getId();
-			}
-
-			throw new AbortException(String.format("Expected to find 1 project named '%s', but found %d.", projectName, matches.size()));
 		}
 
 		@Extension
