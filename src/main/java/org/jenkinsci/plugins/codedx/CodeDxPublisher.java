@@ -716,6 +716,21 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 		else Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 	}
 
+	private static String loadApiKeyCredential(Item context, String serverUrl, String credentialId) {
+		StringCredentials keyCredential = CredentialsMatchers.firstOrNull(
+				CredentialsProvider.lookupCredentials(
+						StringCredentials.class,
+						context,
+						ACL.SYSTEM,
+						URIRequirementBuilder.fromUri(serverUrl).build()
+				),
+				CredentialsMatchers.withId(credentialId)
+		);
+
+		if (keyCredential == null) return null;
+
+		return keyCredential.getSecret().getPlainText();
+	}
 
 	/**
 	 * Descriptor for {@link CodeDxPublisher}. Used as a singleton.
@@ -1060,21 +1075,13 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 				}
 
 				try {
-					StringCredentials keyCredential = CredentialsMatchers.firstOrNull(
-							CredentialsProvider.lookupCredentials(
-									StringCredentials.class,
-									item,
-									ACL.SYSTEM,
-									URIRequirementBuilder.fromUri(url).build()
-							),
-							CredentialsMatchers.withId(keyCredentialId)
-					);
+					String apiKey = loadApiKeyCredential(item, url, keyCredentialId);
 
-					if (keyCredential == null) {
+					if (apiKey == null) {
 						return FormValidation.error("Cannot find currently selected credentials.");
 					}
 
-					CodeDxClient client = buildClient(url, keyCredential.getSecret().getPlainText(), selfSignedCertificateFingerprint);
+					CodeDxClient client = buildClient(url, apiKey, selfSignedCertificateFingerprint);
 					List<Project> projects = client.getProjects();
 
 					if (value.length() == 0)
@@ -1118,21 +1125,12 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					return listBox;
 				}
 
-				StringCredentials keyCredential = CredentialsMatchers.firstOrNull(
-						CredentialsProvider.lookupCredentials(
-								StringCredentials.class,
-								item,
-								ACL.SYSTEM,
-								URIRequirementBuilder.fromUri(url).build()
-						),
-						CredentialsMatchers.withId(keyCredentialId)
-				);
-
-				if (keyCredential == null) {
+				String apiKey = loadApiKeyCredential(item, url, keyCredentialId);
+				if (apiKey == null) {
 					return listBox;
 				}
 
-				CodeDxClient client = buildClient(url, keyCredential.getSecret().getPlainText(), selfSignedCertificateFingerprint);
+				CodeDxClient client = buildClient(url, apiKey, selfSignedCertificateFingerprint);
 
 				try {
 					final List<Project> projects = client.getProjects();
@@ -1263,17 +1261,8 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					return FormValidation.ok();
 				}
 
-				StringCredentials keyCredential = CredentialsMatchers.firstOrNull(
-						CredentialsProvider.lookupCredentials(
-								StringCredentials.class,
-								item,
-								ACL.SYSTEM,
-								URIRequirementBuilder.fromUri(url).build()
-						),
-						CredentialsMatchers.withId(keyCredentialId)
-				);
-
-				if (keyCredential == null) {
+				String apiKey = loadApiKeyCredential(item, url, keyCredentialId);
+				if (apiKey == null) {
 					return FormValidation.ok();
 				}
 
@@ -1281,7 +1270,7 @@ public class CodeDxPublisher extends Recorder implements SimpleBuildStep {
 					return FormValidation.error("Please specify a project name.");
 				}
 
-				CodeDxClient client = buildClient(url, keyCredential.getSecret().getPlainText(), selfSignedCertificateFingerprint);
+				CodeDxClient client = buildClient(url, apiKey, selfSignedCertificateFingerprint);
 				try {
 					List<Project> projects = client.getProjects();
 
