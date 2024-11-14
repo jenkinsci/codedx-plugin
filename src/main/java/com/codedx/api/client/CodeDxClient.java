@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -399,14 +401,14 @@ public class CodeDxClient {
 
 		List<String> queryParams = new ArrayList<>();
 		if (targetBranchName != null && targetBranchName.length() > 0) {
-			queryParams.add("branchName=" + targetBranchName);
+			queryParams.add("branchName=" + URLEncoder.encode(targetBranchName, Charset.defaultCharset().name()));
 		}
 
 		if (includeGitSource) {
 			queryParams.add("includeGitSource=true");
 
 			if (specificGitBranch != null) {
-				queryParams.add("gitBranchName=" + specificGitBranch);
+				queryParams.add("gitBranchName=" + URLEncoder.encode(specificGitBranch, Charset.defaultCharset().name()));
 			}
 		}
 
