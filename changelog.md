@@ -1,3 +1,16 @@
+## Code Dx Jenkins Plugin 4.1.0 `Released 11/14/2024`
+
+### Changes
+
+- The "Code Dx Project" field has been changed to a dropdown for selecting a project selection method
+  - The original field is now available by selecting "Specific Project" in this dropdown, revealing another "Project" dropdown which now contains the list of available projects. Existing projects and pipelines will not need updates
+  - A new "Named Project" option is now available for selecting a project by name
+    - This selection also provides an "auto-create project" checkbox
+
+### Fixes
+
+- Special characters in branch names would cause analysis jobs to fail
+
 ## Code Dx Jenkins Plugin 4.0.3 `Released 10/30/2024`
 
 ### Fixes
